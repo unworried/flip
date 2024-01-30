@@ -4,11 +4,10 @@ pub enum Token {
     Eof,
     Newline,
 
-    Ident,
     Assign,
-
-    Number,
-    String,
+    //Ident(String),
+    Int(String), // Seperate into litterals. keep as int(string)??
+    String(String),
 
     /// Operators
     Equal,
@@ -55,14 +54,21 @@ impl From<u8> for Token {
 }
 
 impl From<String> for Token {
-    fn from(chars: String) -> Self {
-        match chars.as_str() {
+    fn from(value: String) -> Self {
+        match value.as_str() {
             "==" => Self::Equal,
             "!=" => Self::NotEqual,
             "<=" => Self::LesserThanEqual,
             ">=" => Self::GreaterThanEqual,
 
-            _ => Self::Illegal,
+            _ => {
+                // TODO: Split from Ident
+                if value.chars().all(|b| b.is_ascii_digit()) {
+                    Self::Int(value)
+                } else {
+                    Self::String(value)
+                }
+            }
         }
     }
 }
@@ -75,7 +81,7 @@ mod tests {
     fn illegal() {
         assert_eq!(Token::from(b' '), Token::Illegal);
     }
-   
+
     #[test]
     fn eof() {
         assert_eq!(Token::from(0), Token::Eof);
