@@ -53,7 +53,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_read_char() {
+    fn read_char() {
+        let input = "A";
+        let mut lex = Lexer::new(input.to_string());
+
+        assert_eq!(lex.ch, b'A');
+
+        lex.read_char();
+        assert_eq!(lex.ch, 0);
+    }
+
+    #[test]
+    fn read_chars_from_input() {
         let input = "LET foo = 1";
         let mut lex = Lexer::new(input.to_string());
 
@@ -64,7 +75,33 @@ mod tests {
     }
 
     #[test]
-    fn test_peek_next_char() {
+    fn read_char_from_empty_input() {
+        let input = "";
+        let lex = Lexer::new(input.to_string());
+
+        assert_eq!(lex.ch, 0);
+    }
+
+    #[test]
+    fn peek_char() {
+        let input = "AB";
+        let lex = Lexer::new(input.to_string());
+
+        assert_eq!(lex.ch, b'A');
+        assert_eq!(lex.peek(), b'B');
+    }
+
+    #[test]
+    fn peek_char_test_pure() {
+        let input = "AB";
+        let lex = Lexer::new(input.to_string());
+
+        assert_eq!(lex.peek(), b'B');
+        assert_eq!(lex.peek(), b'B');
+    }
+
+    #[test]
+    fn peek_all_chars() {
         let input = "LET bar = 55";
         let mut lex = Lexer::new(input.to_string());
 
@@ -73,5 +110,14 @@ mod tests {
             lex.read_char();
             assert_eq!(lex.ch, next_char);
         }
+    }
+
+    #[test]
+    fn peek_char_eof() {
+        let input = "A";
+        let lex = Lexer::new(input.to_string());
+
+        assert_eq!(lex.ch, b'A');
+        assert_eq!(lex.peek(), 0);
     }
 }
