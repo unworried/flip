@@ -1,12 +1,14 @@
-use crate::lexer::{Lexer, Token};
+use crate::{
+    ast::Ast,
+    lexer::{Lexer, Token},
+};
 use std::mem;
 
 pub struct Parser<'a> {
     lexer: &'a mut Lexer,
-    current_token: Token,
-    next_token: Token,
+    pub current_token: Token,
+    pub next_token: Token,
 }
-
 
 impl<'a> Parser<'a> {
     pub fn new(lexer: &'a mut Lexer) -> Self {
@@ -19,17 +21,25 @@ impl<'a> Parser<'a> {
             next_token,
         }
     }
-    
+
+    pub fn parse(&mut self) -> Ast {
+        Ast::parse(self)
+    }
+
     pub fn step(&mut self) {
         // Cheaper than cloning
         self.current_token = self.lexer.next_token();
         mem::swap(&mut self.current_token, &mut self.next_token);
     }
+
+    pub fn is_eof(&self) -> bool {
+        self.current_token == Token::Eof
+    }
 }
 
-pub trait Parse 
-    where Self: Sized 
+pub trait Parse<'a>
+where
+    Self: Sized,
 {
-    fn parse(parser: &mut Parser) -> Self;
+    fn parse(parser: &mut Parser<'a>) -> Self;
 }
-         
