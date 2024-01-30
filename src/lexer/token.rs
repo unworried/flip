@@ -35,10 +35,21 @@ pub enum Token {
     EndWhile,
 }
 
+impl Token {
+    // TODO: Check, may not need this. call directly?
+    pub fn new_string(value: String) -> Self {
+        Self::String(value)
+    }
+
+    pub fn new_int(value: String) -> Self {
+        Self::Int(value)
+    }
+}
+
 impl From<u8> for Token {
     fn from(ch: u8) -> Self {
         match ch {
-            b'=' => Self::Equal,
+            b'=' => Self::Assign,
             b'+' => Self::Plus,
             b'-' => Self::Minus,
             b'*' => Self::Asterisk,
@@ -99,7 +110,7 @@ mod tests {
 
     #[test]
     fn equal() {
-        assert_eq!(Token::from(b'='), Token::Equal);
+        assert_eq!(Token::from(String::from("==")), Token::Equal);
     }
 
     #[test]
