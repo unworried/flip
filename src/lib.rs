@@ -1,7 +1,8 @@
 use anyhow::Result;
 
-#[derive(Debug)]
-pub enum Token {}
+use self::token::Token;
+
+mod token;
 
 pub struct Lexer {
     input: Vec<u8>,
@@ -22,7 +23,12 @@ impl Lexer {
     }
 
     pub fn next_token(&mut self) -> Result<Token> {
-        todo!()
+        self.skip_whitespace();
+
+        let token: Token = self.ch.into();
+
+        self.read_char();
+        Ok(token)
     }
 
     fn peek(&self) -> u8 {
@@ -44,7 +50,9 @@ impl Lexer {
     }
 
     fn skip_whitespace(&mut self) {
-        todo!()
+        while self.ch.is_ascii_whitespace() {
+            self.read_char();
+        }
     }
 }
 
@@ -64,7 +72,7 @@ mod tests {
     }
 
     #[test]
-    fn read_chars_from_input() {
+    fn read_multiple_chars() {
         let input = "LET foo = 1";
         let mut lex = Lexer::new(input.to_string());
 
@@ -75,7 +83,7 @@ mod tests {
     }
 
     #[test]
-    fn read_char_from_empty_input() {
+    fn read_char_empty_input() {
         let input = "";
         let lex = Lexer::new(input.to_string());
 
@@ -101,7 +109,7 @@ mod tests {
     }
 
     #[test]
-    fn peek_all_chars() {
+    fn peek_multiple_chars() {
         let input = "LET bar = 55";
         let mut lex = Lexer::new(input.to_string());
 
@@ -119,5 +127,43 @@ mod tests {
 
         assert_eq!(lex.ch, b'A');
         assert_eq!(lex.peek(), 0);
+    }
+
+    #[test]
+    fn tokenize_operations() {
+        let input = "+-*/";
+        let mut lex = Lexer::new(input.to_string());
+
+        let tokens = vec![
+            Token::Plus,
+            Token::Minus,
+            Token::Asterisk,
+            Token::ForwardSlash,
+        ];
+
+        for token in tokens {
+            let next_token = lex.next_token().unwrap();
+            println!("expected: {:?}, got: {:?}", token, next_token);
+            assert_eq!(next_token, token);
+        }
+    }
+
+    #[test]
+    fn tokenize_operations_whitespace() {
+        let input = "+- */";
+        let mut lex = Lexer::new(input.to_string());
+
+        let tokens = vec![
+            Token::Plus,
+            Token::Minus,
+            Token::Asterisk,
+            Token::ForwardSlash,
+        ];
+
+        for token in tokens {
+            let next_token = lex.next_token().unwrap();
+            println!("expected: {:?}, got: {:?}", token, next_token);
+            assert_eq!(next_token, token);
+        }
     }
 }
