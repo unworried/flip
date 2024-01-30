@@ -37,7 +37,8 @@ impl Lexer {
                 if self.peek() == b'=' {
                     let prev_ch = self.ch;
                     self.read_char();
-                    Token::from(format!("{}{}", prev_ch, self.ch))
+                    // FIXME: Change to Vec<u8> From impl or seperate pub fn
+                    Token::from(format!("{}{}", prev_ch as char, self.ch as char))
                 } else {
                     Token::from(self.ch)
                 }
@@ -92,7 +93,7 @@ impl Lexer {
             integer.push(self.ch as char);
 
             match self.peek() {
-                b'0'..=b'9' => {},
+                b'0'..=b'9' => {}
                 _ => break,
             }
 
@@ -263,6 +264,10 @@ mod tests {
             Token::Minus,
             Token::Asterisk,
             Token::ForwardSlash,
+            Token::GreaterThan,
+            Token::GreaterThanEqual,
+            Token::Assign,
+            Token::NotEqual,
         ];
 
         check_tokens(input, expected);

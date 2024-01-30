@@ -9,6 +9,7 @@ fn main() {
                 let token = tokenizer.next_token();
                 println!("{} ", token);
                 if let Token::Eof = token {
+                    println!();
                     break;
                 }
             }
