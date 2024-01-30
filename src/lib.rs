@@ -25,7 +25,22 @@ impl Lexer {
     pub fn next_token(&mut self) -> Result<Token> {
         self.skip_whitespace();
 
-        let token: Token = self.ch.into();
+        let token = match self.ch {
+            b'=' | b'!' | b'>' | b'<' => {
+                if self.peek() == b'=' {
+                    let prev_ch = self.ch;
+                    self.read_char();
+                    Token::from(format!("{}{}", prev_ch, self.ch))
+                } else {
+                    Token::from(self.ch)
+                }
+            }
+            _ => Token::from(self.ch),
+        };
+
+        if token == Token::Illegal {
+            return Err(anyhow::anyhow!("illegal token: {}", self.ch as char));
+        }
 
         self.read_char();
         Ok(token)
@@ -130,7 +145,16 @@ mod tests {
     }
 
     #[test]
-    fn tokenize_operations() {
+    fn tokenize_whitespace() {
+        let input = " ";
+        let mut lex = Lexer::new(input.to_string());
+
+        let next_token = lex.next_token().unwrap();
+        assert_eq!(next_token, Token::Eof);
+    }
+    
+    #[test]
+    fn tokenize_multiple_operations() {
         let input = "+-*/";
         let mut lex = Lexer::new(input.to_string());
 
@@ -149,7 +173,7 @@ mod tests {
     }
 
     #[test]
-    fn tokenize_operations_whitespace() {
+    fn tokenize_multiple_operations_whitespace() {
         let input = "+- */";
         let mut lex = Lexer::new(input.to_string());
 
