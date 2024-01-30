@@ -31,6 +31,8 @@ impl Lexer {
 
             b'0'..=b'9' => return Token::Int(self.read_integer()),
 
+            b'a'..=b'z' | b'A'..=b'Z' => return Token::from(self.read_identifier()),
+
             b'=' | b'!' | b'>' | b'<' => {
                 if self.peek() == b'=' {
                     let prev_ch = self.ch;
@@ -71,7 +73,8 @@ impl Lexer {
         self.read_char();
 
         while self.ch != b'\"' {
-            if self.ch == EOF { // TODO: something more robust
+            if self.ch == EOF {
+                // TODO: something more robust
                 panic!("Unexpected EOF: missing trailing \" ");
             }
 
@@ -91,6 +94,17 @@ impl Lexer {
         }
 
         integer
+    }
+
+    fn read_identifier(&mut self) -> String {
+        let mut identifier = String::new();
+
+        while self.ch.is_ascii_alphanumeric() {
+            identifier.push(self.ch as char);
+            self.read_char();
+        }
+
+        identifier
     }
 
     fn skip_whitespace(&mut self) {
@@ -113,8 +127,10 @@ impl Lexer {
 mod tests {
     use super::*;
 
-    fn check_tokens(mut lex: Lexer, tokens: Vec<Token>) {
-        for token in tokens {
+    fn check_tokens(input: &str, expected: Vec<Token>) {
+        let mut lex = Lexer::new(input.to_string());
+
+        for token in expected {
             let next_token = lex.next_token();
             println!("expected: {:?}, got: {:?}", token, next_token);
             assert_eq!(next_token, token);
@@ -202,46 +218,43 @@ mod tests {
     #[test]
     fn tokenize_arithmetic_operations() {
         let input = "+-*/";
-        let lex = Lexer::new(input.to_string());
 
-        let tokens = vec![
+        let expected = vec![
             Token::Plus,
             Token::Minus,
             Token::Asterisk,
             Token::ForwardSlash,
         ];
 
-        check_tokens(lex, tokens);
+        check_tokens(input, expected);
     }
 
     #[test]
     fn tokenize_with_whitespace() {
         let input = "+- */";
-        let lex = Lexer::new(input.to_string());
 
-        let tokens = vec![
+        let expected = vec![
             Token::Plus,
             Token::Minus,
             Token::Asterisk,
             Token::ForwardSlash,
         ];
 
-        check_tokens(lex, tokens);
+        check_tokens(input, expected);
     }
 
     #[test]
     fn tokenize_operations() {
         let input = "+- */ >>= = !=";
-        let lex = Lexer::new(input.to_string());
 
-        let tokens = vec![
+        let expected = vec![
             Token::Plus,
             Token::Minus,
             Token::Asterisk,
             Token::ForwardSlash,
         ];
 
-        check_tokens(lex, tokens);
+        check_tokens(input, expected);
     }
 
     #[test]
@@ -267,9 +280,8 @@ mod tests {
     #[test]
     fn tokenize_with_comment() {
         let input = "+- # comment here == <= >= != = -- , ;\n */";
-        let lex = Lexer::new(input.to_string());
 
-        let tokens = vec![
+        let expected = vec![
             Token::Plus,
             Token::Minus,
             Token::Newline,
@@ -277,15 +289,14 @@ mod tests {
             Token::ForwardSlash,
         ];
 
-        check_tokens(lex, tokens);
+        check_tokens(input, expected);
     }
 
     #[test]
     fn tokenize_string() {
         let input = "+- \"string12345\" # comment \n */";
-        let lex = Lexer::new(input.to_string());
 
-        let tokens = vec![
+        let expected = vec![
             Token::Plus,
             Token::Minus,
             Token::String(String::from("string12345")),
@@ -294,15 +305,14 @@ mod tests {
             Token::ForwardSlash,
         ];
 
-        check_tokens(lex, tokens);
+        check_tokens(input, expected);
     }
 
     #[test]
     fn tokenize_int() {
         let input = "+-123 98654#comment\n*/";
-        let lex = Lexer::new(input.to_string());
-        
-        let tokens = vec![
+
+        let expected = vec![
             Token::Plus,
             Token::Minus,
             Token::Int(String::from("123")),
@@ -312,6 +322,28 @@ mod tests {
             Token::ForwardSlash,
         ];
 
-        check_tokens(lex, tokens);
+        check_tokens(input, expected);
+    }
+
+    #[test]
+    fn tokenize_complete() {
+        let input = "IF+-123 foo*THEN/98654#comment\n*/";
+
+        let expected = vec![
+            Token::If,
+            Token::Plus,
+            Token::Minus,
+            Token::Int(String::from("123")),
+            Token::Ident(String::from("foo")),
+            Token::Asterisk,
+            Token::Then,
+            Token::ForwardSlash,
+            Token::Int(String::from("98654")),
+            Token::Newline,
+            Token::Asterisk,
+            Token::ForwardSlash,
+        ];
+
+        check_tokens(input, expected)
     }
 }

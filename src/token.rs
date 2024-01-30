@@ -5,7 +5,7 @@ pub enum Token {
     Newline,
 
     Assign,
-    //Ident(String),
+    Ident(String),
     Int(String), // Seperate into litterals. keep as int(string)??
     String(String),
 
@@ -61,14 +61,19 @@ impl From<String> for Token {
             "<=" => Self::LesserThanEqual,
             ">=" => Self::GreaterThanEqual,
 
-            _ => {
-                // TODO: Split from Ident
-                if value.chars().all(|b| b.is_ascii_digit()) {
-                    Self::Int(value)
-                } else {
-                    Self::String(value)
-                }
-            }
+            "LABEL" => Self::Label,
+            "GOTO" => Self::Goto,
+            "PRINT" => Self::Print,
+            "INPUT" => Self::Input,
+            "LET" => Self::Let,
+            "IF" => Self::If,
+            "THEN" => Self::Then,
+            "ENDIF" => Self::EndIf,
+            "WHILE" => Self::While,
+            "REPEAT" => Self::Repeat,
+            "ENDWHILE" => Self::EndWhile,
+
+            _ => Self::Ident(value),
         }
     }
 }
