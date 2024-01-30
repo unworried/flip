@@ -1,4 +1,4 @@
-use self::token::Token;
+pub use self::token::Token;
 
 mod token;
 
@@ -27,11 +27,11 @@ impl Lexer {
         self.skip_comment();
 
         let token = match self.ch {
-            b'\"' => Token::new_string(self.read_string()),
+            b'\"' => Token::String(self.read_string()),
 
-            b'0'..=b'9' => return Token::new_int(self.read_integer()),
+            b'0'..=b'9' => Token::Int(self.read_integer()),
 
-            b'a'..=b'z' | b'A'..=b'Z' => return Token::from(self.read_identifier()),
+            b'a'..=b'z' | b'A'..=b'Z' => Token::from(self.read_identifier()),
 
             b'=' | b'!' | b'>' | b'<' => {
                 if self.peek() == b'=' {
@@ -88,8 +88,14 @@ impl Lexer {
     fn read_integer(&mut self) -> String {
         let mut integer = String::new();
 
-        while let b'0'..=b'9' = self.ch {
+        loop {
             integer.push(self.ch as char);
+
+            match self.peek() {
+                b'0'..=b'9' => {},
+                _ => break,
+            }
+
             self.read_char();
         }
 
@@ -99,8 +105,13 @@ impl Lexer {
     fn read_identifier(&mut self) -> String {
         let mut identifier = String::new();
 
-        while self.ch.is_ascii_alphanumeric() {
+        loop {
             identifier.push(self.ch as char);
+
+            if !self.peek().is_ascii_alphanumeric() {
+                break;
+            }
+
             self.read_char();
         }
 

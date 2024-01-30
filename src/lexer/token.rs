@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 #[derive(Debug, PartialEq)]
 pub enum Token {
     Illegal,
@@ -35,14 +37,9 @@ pub enum Token {
     EndWhile,
 }
 
-impl Token {
-    // TODO: Check, may not need this. call directly?
-    pub fn new_string(value: String) -> Self {
-        Self::String(value)
-    }
-
-    pub fn new_int(value: String) -> Self {
-        Self::Int(value)
+impl Display for Token {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?} ", self)
     }
 }
 
