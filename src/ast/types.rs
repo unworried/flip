@@ -3,10 +3,13 @@ use crate::{
     parser::{Parse, Parser},
 };
 
+#[derive(Debug, PartialEq)]
 pub enum Primitive {
     Int(i64),
     // Add more
 }
+
+// TODO: Add error handling 
 
 impl<'a> Parse<'a> for Primitive {
     fn parse(parser: &mut Parser<'a>) -> Self {
@@ -20,6 +23,7 @@ impl<'a> Parse<'a> for Primitive {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub enum Literal {
     String(String),
     // Add more

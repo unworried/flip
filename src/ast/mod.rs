@@ -23,6 +23,7 @@ impl<'a> Parse<'a> for Ast {
     }
 }
 
+#[derive(Debug, PartialEq)]
 enum Statement {
     Print(statements::Print),
 }
@@ -36,6 +37,7 @@ impl<'a> Parse<'a> for Statement {
     }
 }
 
+#[derive(Debug, PartialEq)]
 enum Expression {
     Identifier(String), // TODO: Change to struct
     Primitive(types::Primitive),
@@ -44,7 +46,7 @@ enum Expression {
 
 impl<'a> Parse<'a> for Expression {
     fn parse(parser: &mut Parser<'a>) -> Self {
-        match &parser.next_token {
+        match &parser.current_token {
             Token::Ident(value) => Self::Identifier(value.to_owned()),
             Token::Int(_) => Self::Primitive(types::Primitive::parse(parser)),
             Token::String(_) => Self::Literal(types::Literal::parse(parser)),
