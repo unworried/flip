@@ -3,9 +3,11 @@ use crate::{
     parser::{Parse, Parser},
 };
 
-mod statements;
-mod types;
+mod display;
+mod expression;
+mod statement;
 
+#[derive(Debug)]
 pub struct Ast {
     statements: Vec<Statement>,
 }
@@ -13,10 +15,12 @@ pub struct Ast {
 impl<'a> Parse<'a> for Ast {
     fn parse(parser: &mut Parser<'a>) -> Self {
         let mut statements = Vec::new();
-        while !parser.is_eof() {
+        while !parser.current_token(Token::Eof) {
             statements.push(Statement::parse(parser));
 
-            parser.step();
+            //while parser.current_token(Token::Newline) { // TODO: Review This
+             //   parser.step();
+            //}
         }
 
         Self { statements }
@@ -25,14 +29,16 @@ impl<'a> Parse<'a> for Ast {
 
 #[derive(Debug, PartialEq)]
 enum Statement {
-    Print(statements::Print),
+    Print(statement::Print),
+    Conditional(statement::Conditional),
 }
 
 impl<'a> Parse<'a> for Statement {
     fn parse(parser: &mut Parser<'a>) -> Self {
         match &parser.current_token {
-            Token::Print => Self::Print(statements::Print::parse(parser)),
-            _ => unimplemented!(), // Handle Err
+            Token::Print => Self::Print(statement::Print::parse(parser)),
+            Token::If => Self::Conditional(statement::Conditional::parse(parser)),
+            _ => unimplemented!("{}", &parser.current_token), // Handle Err
         }
     }
 }
@@ -40,17 +46,17 @@ impl<'a> Parse<'a> for Statement {
 #[derive(Debug, PartialEq)]
 enum Expression {
     Identifier(String), // TODO: Change to struct
-    Primitive(types::Primitive),
-    Literal(types::Literal),
+    Primitive(expression::Primitive),
+    Literal(expression::Literal),
 }
 
 impl<'a> Parse<'a> for Expression {
     fn parse(parser: &mut Parser<'a>) -> Self {
         match &parser.current_token {
             Token::Ident(value) => Self::Identifier(value.to_owned()),
-            Token::Int(_) => Self::Primitive(types::Primitive::parse(parser)),
-            Token::String(_) => Self::Literal(types::Literal::parse(parser)),
-            _ => unimplemented!(), // Handle Err
+            Token::Int(_) => Self::Primitive(expression::Primitive::parse(parser)),
+            Token::String(_) => Self::Literal(expression::Literal::parse(parser)),
+            _ => unimplemented!("{}", &parser.current_token), // Handle Err
         }
     }
 }

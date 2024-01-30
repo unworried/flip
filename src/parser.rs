@@ -32,8 +32,12 @@ impl<'a> Parser<'a> {
         mem::swap(&mut self.current_token, &mut self.next_token);
     }
 
-    pub fn is_eof(&self) -> bool {
-        self.current_token == Token::Eof
+    pub fn current_token(&self, token: Token) -> bool {
+        self.current_token == token 
+    }
+
+    pub fn next_token(&self, token: Token) -> bool {
+        self.next_token == token
     }
 }
 

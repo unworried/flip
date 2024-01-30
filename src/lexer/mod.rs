@@ -49,6 +49,10 @@ impl Lexer {
             _ => Token::from(self.ch),
         };
 
+        if token == Token::Illegal {
+            panic!("Illegal token: {}", self.ch as char); // TODO: Remove later
+        }
+
         self.read_char();
         token
     }
@@ -78,7 +82,7 @@ impl Lexer {
         while self.ch != b'\"' {
             if self.ch == EOF {
                 // TODO: something more robust
-                panic!("Unexpected EOF: missing trailing \" ");
+                panic!("Unexpected EOF: missing trailing \"");
             }
 
             string.push(self.ch as char);
