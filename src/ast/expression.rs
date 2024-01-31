@@ -10,15 +10,12 @@ pub struct Identifier {
 
 impl<'a> Parse<'a> for Identifier {
     fn parse(parser: &mut Parser<'a>) -> Self {
-        let identifier = match &parser.current_token {
+        match &parser.next_token {
             Token::Ident(value) => Self {
                 value: value.to_owned(),
             },
             value => unimplemented!("Unexpected token {:?}", value),
-        };
-
-        parser.step();
-        identifier
+        }
     }
 }
 
@@ -70,10 +67,10 @@ impl<'a> Parse<'a> for Literal {
 mod tests {
     use super::*;
     use crate::lexer::Lexer;
-    
+
     #[test]
     fn identifier() {
-        let mut lexer = Lexer::new("test".to_string());
+        let mut lexer = Lexer::new("KEYWORD test".to_string());
         let mut parser = Parser::new(&mut lexer);
 
         assert_eq!(
@@ -89,10 +86,7 @@ mod tests {
         let mut lexer = Lexer::new("123".to_string());
         let mut parser = Parser::new(&mut lexer);
 
-        assert_eq!(
-            Primitive::parse(&mut parser),
-            Primitive::Int(123)
-        );
+        assert_eq!(Primitive::parse(&mut parser), Primitive::Int(123));
     }
 
     #[test]

@@ -21,6 +21,8 @@ impl<'a> Parse<'a> for Ast {
             statements.push(Statement::parse(parser));
 
             parser.step();
+
+
         }
 
         Self { statements }

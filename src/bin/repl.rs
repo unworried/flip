@@ -13,6 +13,7 @@ fn main() {
      * TODO: parser not recieving newline token?
      *
      */
+    println!("{:#?}", line);
 
     let mut tokenizer = Lexer::new(line.to_string());
     let mut parser = Parser::new(&mut tokenizer);

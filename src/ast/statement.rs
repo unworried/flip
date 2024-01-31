@@ -1,4 +1,4 @@
-use super::{Expression, Statement};
+use super::{expression, Expression, Statement};
 use crate::{
     lexer::Token,
     parser::{Parse, Parser},
@@ -14,6 +14,7 @@ impl<'a> Parse<'a> for Print {
         parser.step();
 
         let expression = Expression::parse(parser);
+
         Self { expression }
     }
 }
@@ -96,20 +97,19 @@ impl<'a> Parse<'a> for Loop {
     }
 }
 
-/*pub struct Label {
-    pub name: expression::Identifier,
+pub struct Label {
+    pub ident: expression::Identifier,
 }
 
 impl<'a> Parse<'a> for Label {
     fn parse(parser: &mut Parser<'a>) -> Self {
         parser.step();
 
-        let name = expression::Identifier::parse(parser);
+        let ident = expression::Identifier::parse(parser);
 
-        Self { name }
+        Self { ident }
     }
-}*/
-// TODO: Come back to
+}
 
 #[cfg(test)]
 mod tests {
