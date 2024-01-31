@@ -49,10 +49,6 @@ impl Lexer {
             _ => Token::from(self.ch),
         };
 
-        if token == Token::Illegal {
-            panic!("Illegal token: {}", self.ch as char); // TODO: Remove later
-        }
-
         self.read_char();
         token
     }
@@ -126,7 +122,8 @@ impl Lexer {
     }
 
     fn skip_whitespace(&mut self) {
-        while self.ch.is_ascii_whitespace() {
+        // u8.is_ascii_whitespace() but without the newline
+        while matches!(self.ch, b'\t' | b'\x0C' | b'\r' | b' ') {
             self.read_char();
         }
     }

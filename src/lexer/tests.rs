@@ -85,6 +85,8 @@ fn tokenize_whitespace() {
     let mut lex = Lexer::new(input.to_string());
 
     let next_token = lex.next_token();
+    assert_eq!(next_token, Token::Newline);
+    let next_token = lex.next_token();
     assert_eq!(next_token, Token::Eof);
 }
 
@@ -204,7 +206,7 @@ fn tokenize_int() {
 
 #[test]
 fn tokenize_complete() {
-    let input = "IF+-123 foo*THEN/98654#comment\n*/";
+    let input = "IF+-123 foo*THEN \n/98654#comment\n*/";
 
     let expected = vec![
         Token::If,
@@ -214,6 +216,7 @@ fn tokenize_complete() {
         Token::Ident(String::from("foo")),
         Token::Asterisk,
         Token::Then,
+        Token::Newline,
         Token::ForwardSlash,
         Token::Int(String::from("98654")),
         Token::Newline,

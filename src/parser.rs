@@ -30,10 +30,11 @@ impl<'a> Parser<'a> {
         // Cheaper than cloning
         self.current_token = self.lexer.next_token();
         mem::swap(&mut self.current_token, &mut self.next_token);
+        println!("cur: {}, next: {}", self.current_token, self.next_token)
     }
 
     pub fn current_token(&self, token: Token) -> bool {
-        self.current_token == token 
+        self.current_token == token
     }
 
     pub fn next_token(&self, token: Token) -> bool {

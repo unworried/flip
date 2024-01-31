@@ -16,11 +16,12 @@ impl<'a> Parse<'a> for Ast {
     fn parse(parser: &mut Parser<'a>) -> Self {
         let mut statements = Vec::new();
         while !parser.current_token(Token::Eof) {
+            println!("Current Token: {:?}", &parser.current_token);
             statements.push(Statement::parse(parser));
 
-            //while parser.current_token(Token::Newline) { // TODO: Review This
-             //   parser.step();
-            //}
+            while parser.current_token(Token::Newline) { // TODO: Review This
+                parser.step();
+            } // Doesnt work for first line new line
         }
 
         Self { statements }

@@ -20,7 +20,7 @@ impl<'a> Parse<'a> for Print {
 
 #[derive(Debug, PartialEq)]
 pub struct Conditional {
-    pub condition: String, // TODO: Implement conditions
+    pub condition: Expression, // TODO: Implement conditions
     pub resolution: Vec<Statement>,
 }
 
@@ -33,10 +33,8 @@ impl<'a> Parse<'a> for Conditional {
         if !parser.current_token(Token::Then) {
             panic!("Expected THEN");
         }
-        println!("current: {:?}", parser.current_token);
-        println!("next: {:?}", parser.next_token);
+        parser.step();
 
-        println!("Condition: {:?}", parser.current_token);
         if !parser.current_token(Token::Newline) {
             panic!("Expected newline");
         }
@@ -53,7 +51,7 @@ impl<'a> Parse<'a> for Conditional {
         parser.step();
 
         Self {
-            condition: condition.to_string(),
+            condition,
             resolution,
         }
     }
@@ -78,6 +76,32 @@ mod tests {
 
         let expected = Statement::Print(Print {
             expression: Expression::Literal(Literal::String("hello, world!".to_string())),
+        });
+
+        check_abstract_tree(input, expected)
+    }
+
+
+    #[test]
+    fn print_statement_newline() {
+        let input = "PRINT \"hello, world!\"\n";
+
+        let expected = Statement::Print(Print {
+            expression: Expression::Literal(Literal::String("hello, world!".to_string())),
+        });
+
+        check_abstract_tree(input, expected)
+    }
+
+    #[test]
+    fn conditional_statement() {
+        let input = "IF \"TMP\" THEN\nPRINT \"hello, world!\" ENDIF\n";
+
+        let expected = Statement::Conditional(Conditional {
+            condition: Expression::Literal(Literal::String("TMP".to_string())),
+            resolution: vec![Statement::Print(Print {
+                expression: Expression::Literal(Literal::String("hello, world!".to_string())),
+            })],
         });
 
         check_abstract_tree(input, expected)
