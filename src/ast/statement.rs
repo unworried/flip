@@ -11,7 +11,7 @@ pub struct Print {
 
 impl<'a> Parse<'a> for Print {
     fn parse(parser: &mut Parser<'a>) -> Self {
-        parser.step();
+        //parser.step(); WARN: CHANGEGP1
 
         let expression = Expression::parse(parser);
 
@@ -27,7 +27,7 @@ pub struct If {
 
 impl<'a> Parse<'a> for If {
     fn parse(parser: &mut Parser<'a>) -> Self {
-        parser.step();
+        //parser.step(); WARN: CHANGEGP1
 
         let condition = Expression::parse(parser);
 
@@ -59,14 +59,14 @@ impl<'a> Parse<'a> for If {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Loop {
+pub struct While {
     pub condition: Expression, // TODO: Impl Condtions
     pub resolution: Vec<Statement>,
 }
 
-impl<'a> Parse<'a> for Loop {
+impl<'a> Parse<'a> for While {
     fn parse(parser: &mut Parser<'a>) -> Self {
-        parser.step();
+        //parser.step(); WARN: CHANGEGP1
 
         let condition = Expression::parse(parser);
 
@@ -114,7 +114,8 @@ impl<'a> Parse<'a> for Label {
 #[cfg(test)]
 mod tests {
     use crate::{
-        ast::Statement, if_stmt, int_primitive, lexer::Lexer, loop_stmt, parser::Parser, print_stmt, string_literal
+        ast::Statement, if_stmt, int_primitive, lexer::Lexer, while_stmt, parser::Parser,
+        print_stmt, string_literal,
     };
 
     fn check_abstract_tree(input: &str, expected: Vec<Statement>) {
@@ -192,7 +193,7 @@ mod tests {
     fn loop_statement() {
         let input = "WHILE \"TMP\" REPEAT\nPRINT \"hello, world!\" ENDWHILE";
 
-        let expected = vec![loop_stmt!(
+        let expected = vec![while_stmt!(
             string_literal!("TMP"),
             vec![print_stmt!(string_literal!("hello, world!"))]
         )];
@@ -204,7 +205,7 @@ mod tests {
     fn loop_statement_newline() {
         let input = "WHILE \"TMP\" REPEAT\nPRINT \"hello, world!\" ENDWHILE\n";
 
-        let expected = vec![loop_stmt!(
+        let expected = vec![while_stmt!(
             string_literal!("TMP"),
             vec![print_stmt!(string_literal!("hello, world!"))]
         )];
@@ -216,7 +217,7 @@ mod tests {
     fn loop_statement_nested_statements() {
         let input = "WHILE \"TMP\" REPEAT\nPRINT \"hello, world!\"\nPRINT \"hello, world 2!\"\nPRINT \"hello, world 3!\"\nENDWHILE";
 
-        let expected = vec![loop_stmt!(
+        let expected = vec![while_stmt!(
             string_literal!("TMP"),
             vec![
                 print_stmt!(string_literal!("hello, world!")),
@@ -232,13 +233,13 @@ mod tests {
     fn loop_statement_nested_block_statements() {
         let input = "WHILE \"TMP\" REPEAT\nPRINT \"hello, world!\"\nIF \"TMP\" THEN\nWHILE \"TMP\" REPEAT\nPRINT \"hello, world 3!\"\nENDWHILE\nENDIF\nENDWHILE";
 
-        let expected = vec![loop_stmt!(
+        let expected = vec![while_stmt!(
             string_literal!("TMP"),
             vec![
                 print_stmt!(string_literal!("hello, world!")),
                 if_stmt!(
                     string_literal!("TMP"),
-                    vec![loop_stmt!(
+                    vec![while_stmt!(
                         string_literal!("TMP"),
                         vec![print_stmt!(string_literal!("hello, world 3!"))]
                     )]

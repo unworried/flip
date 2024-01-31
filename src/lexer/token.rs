@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-#[derive(Debug, PartialEq, Clone)] // TODO: try to remove clone
+#[derive(Debug, PartialEq)] // TODO: try to remove clone
 pub enum Token {
     Illegal,
     Eof,

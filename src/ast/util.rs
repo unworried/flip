@@ -18,9 +18,9 @@ macro_rules! if_stmt {
 }
 
 #[macro_export]
-macro_rules! loop_stmt {
+macro_rules! while_stmt {
     ($condition:expr, $resolution:expr) => {
-        $crate::ast::Statement::Loop($crate::ast::statement::Loop {
+        $crate::ast::Statement::While($crate::ast::statement::While {
             condition: $condition,
             resolution: $resolution,
         })

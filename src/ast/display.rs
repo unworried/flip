@@ -37,6 +37,7 @@ impl Display for Print {
 impl Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::Binary(value) => write!(f, "{:#?}", value),
             Self::Identifier(value) => write!(f, "{:?}", value),
             Self::Primitive(value) => write!(f, "{:?}", value),
             Self::Literal(value) => write!(f, "{:?}", value),
