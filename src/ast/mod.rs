@@ -6,6 +6,8 @@ use crate::{
 mod display;
 mod expression;
 mod statement;
+#[cfg(test)]
+mod util;
 
 #[derive(Debug)]
 pub struct Ast {

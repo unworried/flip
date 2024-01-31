@@ -113,8 +113,9 @@ impl<'a> Parse<'a> for Label {
 
 #[cfg(test)]
 mod tests {
-    use crate::ast::{expression::Literal, statement::*};
-    use crate::{ast::Statement, lexer::Lexer, parser::Parser};
+    use crate::{
+        ast::Statement, if_stmt, int_primitive, lexer::Lexer, loop_stmt, parser::Parser, print_stmt, string_literal
+    };
 
     fn check_abstract_tree(input: &str, expected: Vec<Statement>) {
         let mut lex = Lexer::new(input.to_string());
@@ -128,23 +129,37 @@ mod tests {
     }
 
     #[test]
-    fn print_statement() {
+    fn print_string_statement() {
         let input = "PRINT \"hello, world!\"";
 
-        let expected = vec![Statement::Print(Print {
-            expression: Expression::Literal(Literal::String("hello, world!".to_string())),
-        })];
+        let expected = vec![print_stmt!(string_literal!("hello, world!"))];
 
         check_abstract_tree(input, expected)
     }
 
     #[test]
-    fn print_statement_newline() {
+    fn print_string_statement_newline() {
         let input = "PRINT \"hello, world!\"\n";
 
-        let expected = vec![Statement::Print(Print {
-            expression: Expression::Literal(Literal::String("hello, world!".to_string())),
-        })];
+        let expected = vec![print_stmt!(string_literal!("hello, world!"))];
+
+        check_abstract_tree(input, expected)
+    }
+
+    #[test]
+    fn print_int_statement() {
+        let input = "PRINT 123";
+
+        let expected = vec![print_stmt!(int_primitive!(123))];
+
+        check_abstract_tree(input, expected)
+    }
+
+    #[test]
+    fn print_int_statement_newline() {
+        let input = "PRINT 123\n";
+
+        let expected = vec![print_stmt!(int_primitive!(123))];
 
         check_abstract_tree(input, expected)
     }
@@ -153,12 +168,10 @@ mod tests {
     fn if_statement() {
         let input = "IF \"TMP\" THEN\nPRINT \"hello, world!\" ENDIF";
 
-        let expected = vec![Statement::If(If {
-            condition: Expression::Literal(Literal::String("TMP".to_string())),
-            resolution: vec![Statement::Print(Print {
-                expression: Expression::Literal(Literal::String("hello, world!".to_string())),
-            })],
-        })];
+        let expected = vec![if_stmt!(
+            string_literal!("TMP"),
+            vec![print_stmt!(string_literal!("hello, world!"))]
+        )];
 
         check_abstract_tree(input, expected)
     }
@@ -167,12 +180,10 @@ mod tests {
     fn if_statement_newline() {
         let input = "IF \"TMP\" THEN\nPRINT \"hello, world!\" ENDIF\n";
 
-        let expected = vec![Statement::If(If {
-            condition: Expression::Literal(Literal::String("TMP".to_string())),
-            resolution: vec![Statement::Print(Print {
-                expression: Expression::Literal(Literal::String("hello, world!".to_string())),
-            })],
-        })];
+        let expected = vec![if_stmt!(
+            string_literal!("TMP"),
+            vec![print_stmt!(string_literal!("hello, world!"))]
+        )];
 
         check_abstract_tree(input, expected)
     }
@@ -181,12 +192,10 @@ mod tests {
     fn loop_statement() {
         let input = "WHILE \"TMP\" REPEAT\nPRINT \"hello, world!\" ENDWHILE";
 
-        let expected = vec![Statement::Loop(Loop {
-            condition: Expression::Literal(Literal::String("TMP".to_string())),
-            resolution: vec![Statement::Print(Print {
-                expression: Expression::Literal(Literal::String("hello, world!".to_string())),
-            })],
-        })];
+        let expected = vec![loop_stmt!(
+            string_literal!("TMP"),
+            vec![print_stmt!(string_literal!("hello, world!"))]
+        )];
 
         check_abstract_tree(input, expected)
     }
@@ -195,12 +204,10 @@ mod tests {
     fn loop_statement_newline() {
         let input = "WHILE \"TMP\" REPEAT\nPRINT \"hello, world!\" ENDWHILE\n";
 
-        let expected = vec![Statement::Loop(Loop {
-            condition: Expression::Literal(Literal::String("TMP".to_string())),
-            resolution: vec![Statement::Print(Print {
-                expression: Expression::Literal(Literal::String("hello, world!".to_string())),
-            })],
-        })];
+        let expected = vec![loop_stmt!(
+            string_literal!("TMP"),
+            vec![print_stmt!(string_literal!("hello, world!"))]
+        )];
 
         check_abstract_tree(input, expected)
     }
@@ -209,20 +216,14 @@ mod tests {
     fn loop_statement_nested_statements() {
         let input = "WHILE \"TMP\" REPEAT\nPRINT \"hello, world!\"\nPRINT \"hello, world 2!\"\nPRINT \"hello, world 3!\"\nENDWHILE";
 
-        let expected = vec![Statement::Loop(Loop {
-            condition: Expression::Literal(Literal::String("TMP".to_string())),
-            resolution: vec![
-                Statement::Print(Print {
-                    expression: Expression::Literal(Literal::String("hello, world!".to_string())),
-                }),
-                Statement::Print(Print {
-                    expression: Expression::Literal(Literal::String("hello, world 2!".to_string())),
-                }),
-                Statement::Print(Print {
-                    expression: Expression::Literal(Literal::String("hello, world 3!".to_string())),
-                }),
-            ],
-        })];
+        let expected = vec![loop_stmt!(
+            string_literal!("TMP"),
+            vec![
+                print_stmt!(string_literal!("hello, world!")),
+                print_stmt!(string_literal!("hello, world 2!")),
+                print_stmt!(string_literal!("hello, world 3!")),
+            ]
+        )];
 
         check_abstract_tree(input, expected)
     }
@@ -231,26 +232,19 @@ mod tests {
     fn loop_statement_nested_block_statements() {
         let input = "WHILE \"TMP\" REPEAT\nPRINT \"hello, world!\"\nIF \"TMP\" THEN\nWHILE \"TMP\" REPEAT\nPRINT \"hello, world 3!\"\nENDWHILE\nENDIF\nENDWHILE";
 
-        // Help me
-        let expected = vec![Statement::Loop(Loop {
-            condition: Expression::Literal(Literal::String("TMP".to_string())),
-            resolution: vec![
-                Statement::Print(Print {
-                    expression: Expression::Literal(Literal::String("hello, world!".to_string())),
-                }),
-                Statement::If(If {
-                    condition: Expression::Literal(Literal::String("TMP".to_string())),
-                    resolution: vec![Statement::Loop(Loop {
-                        condition: Expression::Literal(Literal::String("TMP".to_string())),
-                        resolution: vec![Statement::Print(Print {
-                            expression: Expression::Literal(Literal::String(
-                                "hello, world 3!".to_string(),
-                            )),
-                        })],
-                    })],
-                }),
-            ],
-        })];
+        let expected = vec![loop_stmt!(
+            string_literal!("TMP"),
+            vec![
+                print_stmt!(string_literal!("hello, world!")),
+                if_stmt!(
+                    string_literal!("TMP"),
+                    vec![loop_stmt!(
+                        string_literal!("TMP"),
+                        vec![print_stmt!(string_literal!("hello, world 3!"))]
+                    )]
+                )
+            ]
+        )];
 
         check_abstract_tree(input, expected)
     }
