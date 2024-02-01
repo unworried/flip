@@ -1,7 +1,7 @@
 #[macro_export]
 macro_rules! print_stmt {
     ($expression:expr) => {
-        $crate::ast::Statement::Print($crate::ast::statement::Print {
+        $crate::ast::Stmt::Print($crate::ast::statement::Print {
             expression: $expression,
         })
     };
@@ -10,7 +10,7 @@ macro_rules! print_stmt {
 #[macro_export]
 macro_rules! if_stmt {
     ($condition:expr, $resolution:expr) => {
-        $crate::ast::Statement::If($crate::ast::statement::If {
+        $crate::ast::Stmt::If($crate::ast::statement::If {
             condition: $condition,
             resolution: $resolution,
         })
@@ -20,7 +20,7 @@ macro_rules! if_stmt {
 #[macro_export]
 macro_rules! while_stmt {
     ($condition:expr, $resolution:expr) => {
-        $crate::ast::Statement::While($crate::ast::statement::While {
+        $crate::ast::Stmt::While($crate::ast::statement::While {
             condition: $condition,
             resolution: $resolution,
         })
@@ -30,9 +30,7 @@ macro_rules! while_stmt {
 #[macro_export]
 macro_rules! literal {
     ($kind:tt => $value:expr) => {
-        $crate::ast::Expression::Literal($crate::ast::expression::Literal::$kind(
-            $value.to_string(),
-        ))
+        $crate::ast::Expr::Literal($crate::ast::expression::Literal::$kind($value.to_string()))
     };
 }
 
@@ -46,7 +44,7 @@ macro_rules! string_literal {
 #[macro_export]
 macro_rules! primitive {
     ($kind:tt => $value:expr) => {
-        $crate::ast::Expression::Primitive($crate::ast::expression::Primitive::$kind($value))
+        $crate::ast::Expr::Primitive($crate::ast::expression::Primitive::$kind($value))
     };
 }
 

@@ -3,12 +3,12 @@ use crate::{
     parser::{Parse, Parser},
 };
 
-use super::Expression;
+use super::Expr;
 
 #[derive(Debug, PartialEq)]
 pub struct Unary {
     pub operator: UnOp,
-    pub right: Box<Expression>, //Check out rust_ast::ptr smart pointer
+    pub right: Box<Expr>, //Check out rust_ast::ptr smart pointer
 }
 
 #[derive(Debug, PartialEq)]
@@ -20,14 +20,18 @@ pub enum UnOp {
 #[derive(Debug, PartialEq)]
 pub struct Binary {
     pub operator: BinOp,
-    pub left: Box<Expression>,
-    pub right: Box<Expression>,
+    pub left: Box<Primitive>,
+    pub right: Box<Primitive>,
 }
 
+// TODO: Add support for Box<Expr> instead of Box<Primitive>
 impl<'a> Parse<'a> for Binary {
     fn parse(parser: &mut Parser<'a>) -> Self {
-        println!("{:#?}", parser.current_token);
-        let left = Box::new(Expression::parse(parser)); // TODO: need to fix step positioning
+        let left = match &parser.current_token {
+            Token::Int(_) => Box::new(Primitive::parse(parser)), // TODO: change
+            _ => unimplemented!("Unexpected token {:?}", parser.current_token),
+        };
+
         parser.step();
 
         let operator = match &parser.current_token {
@@ -46,7 +50,10 @@ impl<'a> Parse<'a> for Binary {
 
         parser.step();
 
-        let right = Box::new(Expression::parse(parser));
+        let right = match &parser.current_token {
+            Token::Int(_) => Box::new(Primitive::parse(parser)), // TODO: change
+            _ => unimplemented!("Unexpected token {:?}", parser.current_token),
+        };
 
         Self {
             operator,
@@ -88,17 +95,12 @@ impl BinOp {
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub struct Identifier {
-    pub value: String,
-}
+pub type Ident = String;
 
-impl<'a> Parse<'a> for Identifier {
+impl<'a> Parse<'a> for Ident {
     fn parse(parser: &mut Parser<'a>) -> Self {
         match &parser.next_token {
-            Token::Ident(value) => Self {
-                value: value.to_owned(),
-            },
+            Token::Ident(value) => value.to_owned(),
             value => unimplemented!("Unexpected token {:?}", value),
         }
     }
@@ -114,13 +116,10 @@ pub enum Primitive {
 
 impl<'a> Parse<'a> for Primitive {
     fn parse(parser: &mut Parser<'a>) -> Self {
-        let primitive = match &parser.current_token {
+        match &parser.current_token {
             Token::Int(value) => Self::Int(value.parse().unwrap()),
             value => unimplemented!("Unexpected token {:?}", value),
-        };
-
-        parser.step();
-        primitive
+        }
     }
 }
 
@@ -132,13 +131,10 @@ pub enum Literal {
 
 impl<'a> Parse<'a> for Literal {
     fn parse(parser: &mut Parser<'a>) -> Self {
-        let literal = match &parser.current_token {
+        match &parser.current_token {
             Token::String(value) => Self::String(value.to_owned()),
             value => unimplemented!("Unexpected token {:?}", value),
-        };
-
-        parser.step();
-        literal
+        }
     }
 }
 
@@ -158,12 +154,7 @@ mod tests {
         let mut lexer = Lexer::new("KEYWORD test".to_string());
         let mut parser = Parser::new(&mut lexer);
 
-        assert_eq!(
-            Identifier::parse(&mut parser),
-            Identifier {
-                value: "test".to_owned()
-            }
-        );
+        assert_eq!(Ident::parse(&mut parser), "test".to_owned());
     }
 
     #[test]

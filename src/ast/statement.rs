@@ -1,4 +1,4 @@
-use super::{expression, Expression, Statement};
+use super::{expression, Expr, Stmt};
 use crate::{
     lexer::Token,
     parser::{Parse, Parser},
@@ -6,14 +6,13 @@ use crate::{
 
 #[derive(Debug, PartialEq)]
 pub struct Print {
-    pub expression: Expression,
+    pub expression: Expr,
 }
 
+/// Grammar: "PRINT" (expression)
 impl<'a> Parse<'a> for Print {
     fn parse(parser: &mut Parser<'a>) -> Self {
-        //parser.step(); WARN: CHANGEGP1
-
-        let expression = Expression::parse(parser);
+        let expression = Expr::parse(parser);
 
         Self { expression }
     }
@@ -21,15 +20,14 @@ impl<'a> Parse<'a> for Print {
 
 #[derive(Debug, PartialEq)]
 pub struct If {
-    pub condition: Expression, // TODO: Implement conditions
-    pub resolution: Vec<Statement>,
+    pub condition: Expr, // TODO: Implement conditions
+    pub resolution: Vec<Stmt>,
 }
 
+/// Grammar: "IF" (condition) "THEN" \n {statement}* "ENDIF"
 impl<'a> Parse<'a> for If {
     fn parse(parser: &mut Parser<'a>) -> Self {
-        //parser.step(); WARN: CHANGEGP1
-
-        let condition = Expression::parse(parser);
+        let condition = Expr::parse(parser);
 
         if !parser.current_token(Token::Then) {
             panic!("Expected THEN");
@@ -43,7 +41,7 @@ impl<'a> Parse<'a> for If {
 
         let mut resolution = Vec::new();
         while !parser.current_token(Token::EndIf) {
-            resolution.push(Statement::parse(parser));
+            resolution.push(Stmt::parse(parser));
         }
 
         if !parser.current_token(Token::EndIf) {
@@ -60,15 +58,16 @@ impl<'a> Parse<'a> for If {
 
 #[derive(Debug, PartialEq)]
 pub struct While {
-    pub condition: Expression, // TODO: Impl Condtions
-    pub resolution: Vec<Statement>,
+    pub condition: Expr, // TODO: Impl Condtions
+    pub resolution: Vec<Stmt>,
 }
 
+/// Grammar: "WHILE" (condition) "REPEAT" \n {statement}* "ENDWHILE"
 impl<'a> Parse<'a> for While {
     fn parse(parser: &mut Parser<'a>) -> Self {
         //parser.step(); WARN: CHANGEGP1
 
-        let condition = Expression::parse(parser);
+        let condition = Expr::parse(parser);
 
         if !parser.current_token(Token::Repeat) {
             panic!("Expected REPEAT");
@@ -82,7 +81,7 @@ impl<'a> Parse<'a> for While {
 
         let mut resolution = Vec::new();
         while !parser.current_token(Token::EndWhile) {
-            resolution.push(Statement::parse(parser));
+            resolution.push(Stmt::parse(parser));
         }
 
         if !parser.current_token(Token::EndWhile) {
@@ -98,14 +97,15 @@ impl<'a> Parse<'a> for While {
 }
 
 pub struct Label {
-    pub ident: expression::Identifier,
+    pub ident: expression::Ident,
 }
 
+/// Grammar: "LABEL" (ident)
 impl<'a> Parse<'a> for Label {
     fn parse(parser: &mut Parser<'a>) -> Self {
         parser.step();
 
-        let ident = expression::Identifier::parse(parser);
+        let ident = expression::Ident::parse(parser);
 
         Self { ident }
     }
@@ -114,11 +114,11 @@ impl<'a> Parse<'a> for Label {
 #[cfg(test)]
 mod tests {
     use crate::{
-        ast::Statement, if_stmt, int_primitive, lexer::Lexer, while_stmt, parser::Parser,
-        print_stmt, string_literal,
+        ast::Stmt, if_stmt, int_primitive, lexer::Lexer, parser::Parser, print_stmt,
+        string_literal, while_stmt,
     };
 
-    fn check_abstract_tree(input: &str, expected: Vec<Statement>) {
+    fn check_abstract_tree(input: &str, expected: Vec<Stmt>) {
         let mut lex = Lexer::new(input.to_string());
         let mut parser = Parser::new(&mut lex);
         let result = parser.parse();

@@ -5,24 +5,30 @@ use crate::{
 
 use self::expression::BinOp;
 
+// For testing/debugging
 mod display;
 mod expression;
 mod statement;
+
 #[cfg(test)]
 mod util;
 
 #[derive(Debug)]
-pub struct Ast {
-    statements: Vec<Statement>,
+pub struct Program {
+    statements: Vec<Stmt>,
 }
 
-impl<'a> Parse<'a> for Ast {
+/// Grammar: {statement} \n
+impl<'a> Parse<'a> for Program {
     fn parse(parser: &mut Parser<'a>) -> Self {
         let mut statements = Vec::new();
         while !parser.current_token(Token::Eof) {
-            statements.push(Statement::parse(parser));
+            statements.push(Stmt::parse(parser));
 
-            parser.step();
+            parser.step(); // Change to do while
+            while parser.current_token(Token::Newline) {
+                parser.step();
+            }
         }
 
         Self { statements }
@@ -30,7 +36,7 @@ impl<'a> Parse<'a> for Ast {
 }
 
 #[derive(Debug, PartialEq)]
-enum Statement {
+enum Stmt {
     // "PRINT" (expression)
     Print(statement::Print),
     // "IF" (condition) "THEN" \n {statement} "ENDIF"
@@ -47,9 +53,11 @@ enum Statement {
     //Input(statement::Input),
 }
 
-impl<'a> Parse<'a> for Statement {
+impl<'a> Parse<'a> for Stmt {
     fn parse(parser: &mut Parser<'a>) -> Self {
-        let statement = match &parser.current_token {
+        let token = parser.eat();
+
+        let statement = match &token {
             Token::Print => Self::Print(statement::Print::parse(parser)),
             Token::If => Self::If(statement::If::parse(parser)),
             Token::While => Self::While(statement::While::parse(parser)),
@@ -58,26 +66,23 @@ impl<'a> Parse<'a> for Statement {
 
         while parser.current_token(Token::Newline) {
             parser.step();
-        } // Should this not be in statement parser. return result??
-
+        } // Dont think this should be here
         statement
     }
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Expression {
+pub enum Expr {
     Binary(expression::Binary),
     // Unary(expression::Unary
-    Identifier(expression::Identifier), // Might not belong here
+    Ident(expression::Ident), // Might not belong here
     Primitive(expression::Primitive),
     Literal(expression::Literal),
 }
 
-impl<'a> Parse<'a> for Expression {
+impl<'a> Parse<'a> for Expr {
     fn parse(parser: &mut Parser<'a>) -> Self {
-        parser.step();
-
-        match &parser.current_token {
+        let expr = match &parser.current_token {
             Token::Int(_) => {
                 if BinOp::token_match(&parser.next_token) {
                     Self::Binary(expression::Binary::parse(parser))
@@ -85,10 +90,14 @@ impl<'a> Parse<'a> for Expression {
                     Self::Primitive(expression::Primitive::parse(parser))
                 }
             }
-            Token::Ident(_) => Self::Identifier(expression::Identifier::parse(parser)),
+            Token::Ident(_) => Self::Ident(expression::Ident::parse(parser)),
             Token::String(_) => Self::Literal(expression::Literal::parse(parser)),
             _ => unimplemented!("{}", &parser.current_token), // Handle Err
-        }
+        };
+
+        parser.step();
+
+        expr
     }
 }
 
@@ -98,13 +107,17 @@ mod tests {
 
     #[test]
     fn tmp_panic_out() {
-        let input = "PRINT 1 + 2";
+        let input = r#"WHILE 1 REPEAT
+                IF 1 == 2 THEN
+                    PRINT 1
+                ENDIF
+            ENDWHILE"#;
         let mut lex = Lexer::new(input.to_string());
         let mut parser = Parser::new(&mut lex);
 
         let result = parser.parse();
-        println!("{:#?}", result);
+        println!("{}", result);
 
-        panic!("tmp panic out");
+        panic!("Debug Panic");
     }
 }
