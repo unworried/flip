@@ -7,6 +7,7 @@ WHILE 1 >= 1 REPEAT
     ENDIF
 ENDWHILE
 
+INPUT baz
 LET bar = baz * 3 + 2
 IF foo > 0 THEN
     PRINT "foo is positive!"

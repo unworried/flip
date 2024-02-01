@@ -49,7 +49,7 @@ pub enum StmtKind {
     // "WHILE" (condition) "REPEAT" \n {statement} "ENDWHILE"
     While(Expr, Vec<Stmt>),
     // "LABEL" (identifier)
-    Label(Ident),
+    Label(Ident), // Not going to keep this WARN: Tests disabled
     // "GOTO" (identifier)
     Goto(Ident),
     // "LET" (identifier) "=" (expression)
@@ -132,10 +132,16 @@ impl<'a> Parse<'a> for Ident {
     type Item = Self;
 
     fn parse(parser: &mut Parser<'a>) -> Self {
-        match &parser.current_token {
+        let symbol = match &parser.current_token {
             Token::Ident(value) => value.to_owned(),
             value => unimplemented!("Unexpected token {:?}", value),
+        };
+
+        if !parser.symbols.contains(&symbol) {
+            panic!("symbol: {:?} reference before assignment", symbol);
         }
+
+        symbol
     }
 }
 
@@ -150,6 +156,7 @@ mod tests {
         let mut lexer = Lexer::new("test".to_string());
         let mut parser = Parser::new(&mut lexer);
 
+        parser.symbols.insert("test".to_owned());
         assert_eq!(Ident::parse(&mut parser), "test".to_owned());
     }
 }

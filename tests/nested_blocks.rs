@@ -13,6 +13,5 @@ fn nested_blocks_bas() {
     
     let actual = parser.parse();
     println!("{:#?}", actual);
-    panic!();
 }
 

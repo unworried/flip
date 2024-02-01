@@ -13,7 +13,7 @@ pub fn P<T: 'static>(value: T) -> P<T> {
     }
 }
 
-impl <T: ?Sized + Debug> Debug for P<T> {
+impl<T: ?Sized + Debug> Debug for P<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         Debug::fmt(&self.ptr, f)
     }
