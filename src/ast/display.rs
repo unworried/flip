@@ -1,11 +1,11 @@
 use std::fmt::Display;
 
-use super::{ExprKind, Program, StmtKind};
+use super::{ExprKind, Block, StmtKind};
 
 // TODO: Move out of here and create builder pattern in extern crate. Doesn't need to be apart of
 // lib
 
-impl Display for Program {
+impl Display for Block {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for statement in &self.statements {
             writeln!(f, "{}", statement.kind)?;

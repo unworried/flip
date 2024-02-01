@@ -1,7 +1,8 @@
 pub use self::ptr::*;
+use std::collections::HashSet;
 
 use crate::{
-    ast::Program,
+    ast::{Block, Ident},
     lexer::{Lexer, Token},
 };
 use std::mem;
@@ -12,6 +13,9 @@ pub struct Parser<'a> {
     lexer: &'a mut Lexer,
     pub current_token: Token,
     pub next_token: Token,
+
+    // Look at better solutions in future
+    pub symbols: HashSet<Ident>,
 }
 
 pub trait Parse<'a>
@@ -31,11 +35,12 @@ impl<'a> Parser<'a> {
             lexer,
             current_token,
             next_token,
+            symbols: HashSet::new(),
         }
     }
 
-    pub fn parse(&mut self) -> Program {
-        Program::parse(self)
+    pub fn parse(&mut self) -> Block {
+        Block::parse(self, Token::Eof)
     }
 
     pub fn step(&mut self) {
@@ -52,8 +57,8 @@ impl<'a> Parser<'a> {
         prev_token
     }
 
-    pub fn current_token(&self, token: Token) -> bool {
-        self.current_token == token
+    pub fn current_token(&self, token: &Token) -> bool {
+        &self.current_token == token
     }
 
     pub fn next_token(&self, token: Token) -> bool {
@@ -104,7 +109,7 @@ mod tests {
         let input = "1";
         let mut lex = Lexer::new(input.to_string());
         let parser = Parser::new(&mut lex);
-        assert!(parser.current_token(Token::Int(1.to_string())));
+        assert!(parser.current_token(&Token::Int(1.to_string())));
     }
 
     #[test]

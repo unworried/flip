@@ -1,4 +1,4 @@
-use super::{expression, Expr, Stmt, StmtKind};
+use super::{Block, Expr, Ident, StmtKind};
 use crate::{
     lexer::Token,
     parser::{Parse, Parser},
@@ -24,23 +24,20 @@ impl<'a> Parse<'a> for If {
     fn parse(parser: &mut Parser<'a>) -> StmtKind {
         let condition = Expr::parse(parser);
 
-        if !parser.current_token(Token::Then) {
-            panic!("Expected THEN");
+        if !parser.current_token(&Token::Then) {
+            panic!("expected: THEN, actual: {:?}", parser.current_token);
         }
         parser.step();
 
-        if !parser.current_token(Token::Newline) {
-            panic!("Expected newline");
+        if !parser.current_token(&Token::Newline) {
+            panic!("expected: newline, actual: {:?}", parser.current_token);
         }
         parser.step();
 
-        let mut resolution = Vec::new();
-        while !parser.current_token(Token::EndIf) {
-            resolution.push(Stmt::parse(parser));
-        }
+        let resolution = Block::parse(parser, Token::EndIf).statements;
 
-        if !parser.current_token(Token::EndIf) {
-            panic!("Expected ENDIF");
+        if !parser.current_token(&Token::EndIf) {
+            panic!("expected: ENDIF, actual: {:?}", parser.current_token);
         }
         parser.step();
 
@@ -56,23 +53,20 @@ impl<'a> Parse<'a> for While {
     fn parse(parser: &mut Parser<'a>) -> Self::Item {
         let condition = Expr::parse(parser);
 
-        if !parser.current_token(Token::Repeat) {
-            panic!("Expected REPEAT");
+        if !parser.current_token(&Token::Repeat) {
+            panic!("expected: REPEAT, actual: {:?}", parser.current_token);
         }
         parser.step();
 
-        if !parser.current_token(Token::Newline) {
-            panic!("Expected newline");
+        if !parser.current_token(&Token::Newline) {
+            panic!("expected: newline, actual: {:?}", parser.current_token);
         }
         parser.step();
 
-        let mut resolution = Vec::new();
-        while !parser.current_token(Token::EndWhile) {
-            resolution.push(Stmt::parse(parser));
-        }
+        let resolution = Block::parse(parser, Token::EndWhile).statements;
 
-        if !parser.current_token(Token::EndWhile) {
-            panic!("Expected ENDWHILE");
+        if !parser.current_token(&Token::EndWhile) {
+            panic!("expected: ENDWHILE, actual: {:?}", parser.current_token);
         }
         parser.step();
 
@@ -86,7 +80,8 @@ impl<'a> Parse<'a> for Label {
     type Item = StmtKind;
 
     fn parse(parser: &mut Parser<'a>) -> Self::Item {
-        let ident = expression::Ident::parse(parser);
+        let ident = Ident::parse(parser);
+        parser.step();
 
         StmtKind::Label(ident)
     }
@@ -98,7 +93,8 @@ impl<'a> Parse<'a> for Goto {
     type Item = StmtKind;
 
     fn parse(parser: &mut Parser<'a>) -> Self::Item {
-        let ident = expression::Ident::parse(parser);
+        let ident = Ident::parse(parser);
+        parser.step();
 
         StmtKind::Goto(ident)
     }
@@ -110,16 +106,19 @@ impl<'a> Parse<'a> for Let {
     type Item = StmtKind;
 
     fn parse(parser: &mut Parser<'a>) -> Self::Item {
-        let ident = expression::Ident::parse(parser);
-        // TODO: May be able to move this to expr so wont need parser step here or into ident parse
+        let ident = Ident::parse(parser);
         parser.step();
 
-        if !parser.current_token(Token::Assign) {
-            panic!("Expected EQUAL");
+        if !parser.current_token(&Token::Assign) {
+            panic!("expected: Assignment, actual: {:?}", parser.current_token);
         }
         parser.step();
 
         let expression = Expr::parse(parser);
+
+        if !parser.symbols.insert(ident.to_owned()) { // Should this be to_owned??
+            panic!("symbol: {:?} already defined", ident);
+        }
 
         StmtKind::Let(ident, expression)
     }
@@ -131,7 +130,7 @@ impl<'a> Parse<'a> for Input {
     type Item = StmtKind;
 
     fn parse(parser: &mut Parser<'a>) -> Self::Item {
-        let ident = expression::Ident::parse(parser);
+        let ident = Ident::parse(parser);
 
         StmtKind::Input(ident)
     }

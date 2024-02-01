@@ -3,7 +3,7 @@ use crate::{
     parser::{Parse, Parser, P},
 };
 
-use super::{Expr, ExprKind};
+use super::{Expr, ExprKind, Ident};
 
 #[derive(Debug)]
 pub struct Unary;
@@ -106,19 +106,6 @@ impl BinOp {
     }
 }
 
-pub type Ident = String;
-
-impl<'a> Parse<'a> for Ident {
-    type Item = Self;
-
-    fn parse(parser: &mut Parser<'a>) -> Self {
-        match &parser.current_token {
-            Token::Ident(value) => value.to_owned(),
-            value => unimplemented!("Unexpected token {:?}", value),
-        }
-    }
-}
-
 #[derive(Debug, PartialEq)]
 pub enum Literal {
     String(String),
@@ -142,15 +129,6 @@ impl<'a> Parse<'a> for Literal {
 mod tests {
     use super::*;
     use crate::{int_literal, lexer::Lexer, parser::P};
-
-    #[test]
-    fn identifier() {
-        let mut lexer = Lexer::new("test".to_string());
-        let mut parser = Parser::new(&mut lexer);
-
-        println!("{:?}", parser.current_token);
-        assert_eq!(Ident::parse(&mut parser), "test".to_owned());
-    }
 
     #[test]
     fn literal_int() {

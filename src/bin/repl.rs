@@ -5,7 +5,7 @@ fn main() {
     //if let Ok(line) = line {
     //"PRINT \"hello, world!\"\nLET foo = 1001\nIF foo == 1001 THEN\nPRINT \"true\"\nENDIF"
     let line = r#"PRINT "hello, world!"
-        IF "foo == 1001" THEN
+        IF 1 == 1 THEN
             PRINT "true"
         ENDIF"#;
 
@@ -13,7 +13,6 @@ fn main() {
      * TODO: parser not recieving newline token?
      *
      */
-    println!("{:#?}", line);
 
     let mut tokenizer = Lexer::new(line.to_string());
     let mut parser = Parser::new(&mut tokenizer);

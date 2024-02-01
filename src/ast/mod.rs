@@ -14,21 +14,19 @@ mod statement;
 mod util;
 
 #[derive(Debug)]
-pub struct Program {
-    statements: Vec<Stmt>,
+pub struct Block {
+    pub statements: Vec<Stmt>,
 }
 
 /// Grammar: {statement} \n
-impl<'a> Parse<'a> for Program {
-    type Item = Self;
-
-    fn parse(parser: &mut Parser<'a>) -> Self::Item {
+impl<'a> Block {
+    pub fn parse(parser: &mut Parser<'a>, end_delim: Token) -> Self {
         let mut statements = Vec::new();
-        while !parser.current_token(Token::Eof) {
+        while !parser.current_token(&end_delim) {
             statements.push(Stmt::parse(parser));
 
-            parser.step(); // Change to do while
-            while parser.current_token(Token::Newline) {
+            //     parser.step(); // Change to do while
+            while parser.current_token(&Token::Newline) {
                 parser.step();
             }
         }
@@ -51,13 +49,13 @@ pub enum StmtKind {
     // "WHILE" (condition) "REPEAT" \n {statement} "ENDWHILE"
     While(Expr, Vec<Stmt>),
     // "LABEL" (identifier)
-    Label(expression::Ident), // Move out of Expression file
+    Label(Ident),
     // "GOTO" (identifier)
-    Goto(expression::Ident),
+    Goto(Ident),
     // "LET" (identifier) "=" (expression)
-    Let(expression::Ident, Expr),
+    Let(Ident, Expr),
     // "INPUT" (identifier)
-    Input(expression::Ident),
+    Input(Ident),
 }
 
 impl<'a> Parse<'a> for Stmt {
@@ -76,10 +74,6 @@ impl<'a> Parse<'a> for Stmt {
             Token::Input => Input::parse(parser),
             token => unimplemented!("{:#?}", token), // Handle Err
         };
-
-        while parser.current_token(Token::Newline) {
-            parser.step();
-        } // Dont think this should be here
 
         Self { kind }
     }
@@ -102,14 +96,20 @@ impl<'a> Parse<'a> for Expr {
     type Item = Self;
 
     fn parse(parser: &mut Parser<'a>) -> Self {
-        let kind = match &parser.current_token {
-            Token::Int(_) => {
-                if BinOp::token_match(&parser.next_token) {
-                    Binary::parse(parser)
-                } else {
-                    ExprKind::Literal(Literal::parse(parser))
+        // Check which match order is faster. e.g. token first or op first
+        if BinOp::token_match(&parser.next_token) {
+            match &parser.current_token {
+                Token::Int(_) | Token::Ident(_) => {
+                    return Expr {
+                        kind: Binary::parse(parser),
+                    }; // May be cleaner solution
                 }
+                _ => {}
             }
+        }
+
+        let kind = match &parser.current_token {
+            Token::Int(_) => ExprKind::Literal(Literal::parse(parser)),
             Token::Ident(_) => ExprKind::Ident(Ident::parse(parser)),
             Token::String(_) => ExprKind::Literal(Literal::parse(parser)),
             _ => {
@@ -127,28 +127,29 @@ impl<'a> Parse<'a> for Expr {
     }
 }
 
+pub type Ident = String;
+impl<'a> Parse<'a> for Ident {
+    type Item = Self;
+
+    fn parse(parser: &mut Parser<'a>) -> Self {
+        match &parser.current_token {
+            Token::Ident(value) => value.to_owned(),
+            value => unimplemented!("Unexpected token {:?}", value),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::{lexer::Lexer, parser::Parser};
+    use crate::lexer::Lexer;
+
+    use super::*;
 
     #[test]
-    fn tmp_panic_out() {
-        /*let input = r#"WHILE 1 REPEAT
-                IF 1 == 2 THEN
-                    PRINT 1
-                ENDIF
-            ENDWHILE"#;
-        */
-        //let input = r#"PRINT 1 + 2 * -4"#;
-        let input = r#"LET foo =3 + 2"#;
-        let mut lex = Lexer::new(input.to_string());
-        let mut parser = Parser::new(&mut lex);
+    fn identifier() {
+        let mut lexer = Lexer::new("test".to_string());
+        let mut parser = Parser::new(&mut lexer);
 
-        let result = parser.parse();
-        //println!("{}", result);
-
-        println!("{:#?}", result.statements[0]);
-
-        panic!("Debug Panic");
+        assert_eq!(Ident::parse(&mut parser), "test".to_owned());
     }
 }
