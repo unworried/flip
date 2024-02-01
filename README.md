@@ -1,5 +1,5 @@
 #### Todo:
-- [ ] Fix when parse.step is called. impl require new line at end of each line 
+- [x] Fix when parse.step is called. impl require new line at end of each line 
 - [ ] Seperate Ident. Not statement or expr
 - [ ] Span nodes?
 - [ ] Node id?
@@ -7,3 +7,4 @@
 - [ ] Smrt pointers?
 
 
+- [ ] Test breaking rules

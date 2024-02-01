@@ -28,6 +28,30 @@ macro_rules! while_stmt {
 }
 
 #[macro_export]
+macro_rules! label_stmt {
+    ($ident:expr) => {
+        $crate::ast::Stmt::Label($crate::ast::statement::Label { ident: $ident })
+    };
+}
+
+#[macro_export]
+macro_rules! goto_stmt {
+    ($ident:expr) => {
+        $crate::ast::Stmt::Goto($crate::ast::statement::Goto { ident: $ident })
+    };
+}
+
+#[macro_export]
+macro_rules! let_stmt {
+    ($ident:expr, $expression:expr) => {
+        $crate::ast::Stmt::Let($crate::ast::statement::Let {
+            ident: $ident,
+            expression: $expression,
+        })
+    };
+}
+
+#[macro_export]
 macro_rules! literal {
     ($kind:tt => $value:expr) => {
         $crate::ast::Expr::Literal($crate::ast::expression::Literal::$kind($value.to_string()))

@@ -44,13 +44,13 @@ enum Stmt {
     // "WHILE" (condition) "REPEAT" \n {statement} "ENDWHILE"
     While(statement::While),
     // "LABEL" (identifier)
-    //Label(statement::Label),
+    Label(statement::Label),
     // "GOTO" (identifier)
-    //Goto(statement::Goto),
+    Goto(statement::Goto),
     // "LET" (identifier) "=" (expression)
-    //Let(statement::Let),
+    Let(statement::Let),
     // "INPUT" (identifier)
-    //Input(statement::Input),
+    Input(statement::Input),
 }
 
 impl<'a> Parse<'a> for Stmt {
@@ -61,6 +61,10 @@ impl<'a> Parse<'a> for Stmt {
             Token::Print => Self::Print(statement::Print::parse(parser)),
             Token::If => Self::If(statement::If::parse(parser)),
             Token::While => Self::While(statement::While::parse(parser)),
+            Token::Label => Self::Label(statement::Label::parse(parser)),
+            Token::Goto => Self::Goto(statement::Goto::parse(parser)),
+            Token::Let => Self::Let(statement::Let::parse(parser)),
+            Token::Input => Self::Input(statement::Input::parse(parser)),
             token => unimplemented!("{:#?}", token), // Handle Err
         };
 
@@ -107,11 +111,13 @@ mod tests {
 
     #[test]
     fn tmp_panic_out() {
-        let input = r#"WHILE 1 REPEAT
+        /*let input = r#"WHILE 1 REPEAT
                 IF 1 == 2 THEN
                     PRINT 1
                 ENDIF
             ENDWHILE"#;
+        */
+        let input = r#"PRINT 1 + 2 * 4"#;
         let mut lex = Lexer::new(input.to_string());
         let mut parser = Parser::new(&mut lex);
 
