@@ -24,10 +24,7 @@ pub enum Token {
     GreaterThanEqual,
 
     /// Keywords
-    Label,
-    Goto,
     Print,
-    Input,
     Let,
     If,
     Then,
@@ -69,10 +66,7 @@ impl From<String> for Token {
             "<=" => Self::LesserThanEqual,
             ">=" => Self::GreaterThanEqual,
 
-            "LABEL" => Self::Label,
-            "GOTO" => Self::Goto,
             "PRINT" => Self::Print,
-            "INPUT" => Self::Input,
             "LET" => Self::Let,
             "IF" => Self::If,
             "THEN" => Self::Then,

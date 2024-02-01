@@ -3,27 +3,30 @@ use crate::{
     parser::{Parse, Parser, P},
 };
 
-use self::{expression::*, statement::*};
+use self::expression::*;
+
+// Tmp for primitive symbol checking
+pub use expression::Ident;
 
 // For testing/debugging
 mod display;
 mod expression;
 mod statement;
+mod visitor;
 
 #[cfg(test)]
 mod util;
 
 #[derive(Debug)]
-pub struct Block {
-    pub statements: Vec<Stmt>,
+pub struct Ast {
+    pub items: Vec<Item>, // HashMap<ItemIdm, Item>
 }
 
-/// Grammar: {statement} \n
-impl<'a> Block {
-    pub fn parse(parser: &mut Parser<'a>, end_delim: Token) -> Self {
-        let mut statements = Vec::new();
+impl Ast {
+    pub fn parse(parser: &mut Parser, end_delim: Token) -> Self {
+        let mut items = Vec::new();
         while !parser.current_token(&end_delim) {
-            statements.push(Stmt::parse(parser));
+            items.push(Item::parse(parser));
 
             //     parser.step(); // Change to do while
             while parser.current_token(&Token::Newline) {
@@ -31,7 +34,29 @@ impl<'a> Block {
             }
         }
 
-        Self { statements }
+        Self { items }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Item {
+    //pub id: ItemId,
+    pub kind: ItemKind,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum ItemKind {
+    //Function(Function),
+    Statement(Stmt),
+}
+
+/// Grammar: {statement} \n
+impl<'a> Parse<'a> for Item {
+    type Item = Self;
+
+    fn parse(parser: &mut Parser<'a>) -> Self::Item {
+        let kind = ItemKind::Statement(Stmt::parse(parser));
+        Self { kind }
     }
 }
 
@@ -45,17 +70,11 @@ pub enum StmtKind {
     // "PRINT" (expression)
     Print(Expr),
     // "IF" (condition) "THEN" \n {statement} "ENDIF"
-    If(Expr, Vec<Stmt>),
+    If(Expr, Vec<Item>), // WARN: When funcs are added. need to change this to only allow stmts
     // "WHILE" (condition) "REPEAT" \n {statement} "ENDWHILE"
-    While(Expr, Vec<Stmt>),
-    // "LABEL" (identifier)
-    Label(Ident), // Not going to keep this WARN: Tests disabled
-    // "GOTO" (identifier)
-    Goto(Ident),
+    While(Expr, Vec<Item>),
     // "LET" (identifier) "=" (expression)
     Let(Ident, Expr),
-    // "INPUT" (identifier)
-    Input(Ident),
 }
 
 impl<'a> Parse<'a> for Stmt {
@@ -65,13 +84,10 @@ impl<'a> Parse<'a> for Stmt {
         let token = parser.eat();
 
         let kind = match &token {
-            Token::Print => Print::parse(parser),
-            Token::If => If::parse(parser),
-            Token::While => While::parse(parser),
-            Token::Label => Label::parse(parser),
-            Token::Goto => Goto::parse(parser),
-            Token::Let => Let::parse(parser),
-            Token::Input => Input::parse(parser),
+            Token::Print => Self::parse_print(parser),
+            Token::If => Self::parse_if(parser),
+            Token::While => Self::parse_while(parser),
+            Token::Let => Self::parse_let(parser),
             token => unimplemented!("{:#?}", token), // Handle Err
         };
 
@@ -101,7 +117,7 @@ impl<'a> Parse<'a> for Expr {
             match &parser.current_token {
                 Token::Int(_) | Token::Ident(_) => {
                     return Expr {
-                        kind: Binary::parse(parser),
+                        kind: Self::parse_binary(parser),
                     }; // May be cleaner solution
                 }
                 _ => {}
@@ -109,12 +125,11 @@ impl<'a> Parse<'a> for Expr {
         }
 
         let kind = match &parser.current_token {
-            Token::Int(_) => ExprKind::Literal(Literal::parse(parser)),
-            Token::Ident(_) => ExprKind::Ident(Ident::parse(parser)),
-            Token::String(_) => ExprKind::Literal(Literal::parse(parser)),
+            Token::Int(_) | Token::String(_) => Self::parse_literal(parser),
+            Token::Ident(_) => Self::parse_ident(parser),
             _ => {
                 if UnOp::token_match(&parser.current_token) {
-                    expression::Unary::parse(parser)
+                    Self::parse_unary(parser)
                 } else {
                     unimplemented!("{}", &parser.current_token) // Handle Err
                 }
@@ -127,36 +142,5 @@ impl<'a> Parse<'a> for Expr {
     }
 }
 
-pub type Ident = String;
-impl<'a> Parse<'a> for Ident {
-    type Item = Self;
-
-    fn parse(parser: &mut Parser<'a>) -> Self {
-        let symbol = match &parser.current_token {
-            Token::Ident(value) => value.to_owned(),
-            value => unimplemented!("Unexpected token {:?}", value),
-        };
-
-        if !parser.symbols.contains(&symbol) {
-            panic!("symbol: {:?} reference before assignment", symbol);
-        }
-
-        symbol
-    }
-}
-
 #[cfg(test)]
-mod tests {
-    use crate::lexer::Lexer;
-
-    use super::*;
-
-    #[test]
-    fn identifier() {
-        let mut lexer = Lexer::new("test".to_string());
-        let mut parser = Parser::new(&mut lexer);
-
-        parser.symbols.insert("test".to_owned());
-        assert_eq!(Ident::parse(&mut parser), "test".to_owned());
-    }
-}
+mod tests {}

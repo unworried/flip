@@ -2,7 +2,7 @@ pub use self::ptr::*;
 use std::collections::HashSet;
 
 use crate::{
-    ast::{Block, Ident},
+    ast::{Ast, Ident},
     lexer::{Lexer, Token},
 };
 use std::mem;
@@ -39,8 +39,8 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse(&mut self) -> Block {
-        Block::parse(self, Token::Eof)
+    pub fn parse(&mut self) -> Ast {
+        Ast::parse(self, Token::Eof)
     }
 
     pub fn step(&mut self) {

@@ -3,48 +3,18 @@ use crate::{
     parser::{Parse, Parser, P},
 };
 
-use super::{Expr, ExprKind, Ident};
+use super::{Expr, ExprKind};
 
-#[derive(Debug)]
-pub struct Unary;
-impl<'a> Parse<'a> for Unary {
-    type Item = ExprKind;
-
-    fn parse(parser: &mut Parser<'a>) -> Self::Item {
-        let operator = match &parser.current_token {
-            Token::Minus => UnOp::Neg,
-            token => unimplemented!("Unexpected token {:?}", token),
-        };
-        parser.step();
-
-        let expr = P(Expr::parse(parser));
-
-        ExprKind::Unary(operator, expr)
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub enum UnOp {
-    //Not,
-    Neg,
-}
-
-impl UnOp {
-    pub fn token_match(token: &Token) -> bool {
-        matches!(token, Token::Minus)
-    }
-}
-
-// TODO: Add support for P<Expr> for lhs
-#[derive(Debug)]
-pub struct Binary;
-impl<'a> Parse<'a> for Binary {
-    type Item = ExprKind;
-
-    fn parse(parser: &mut Parser<'a>) -> ExprKind {
+impl Expr {
+    /// Grammar: (expression) (operator) (expression)
+    /*
+     * TODO: fix support for P<Expr> for lhs
+     * lhs: atomic, rhs: subatomic/branching
+     */
+    pub fn parse_binary(parser: &mut Parser) -> ExprKind {
         let leftkind = match &parser.current_token {
-            Token::Int(_) => ExprKind::Literal(Literal::parse(parser)), // TODO: change
-            Token::Ident(_) => ExprKind::Ident(Ident::parse(parser)),
+            Token::Int(_) => Self::parse_literal(parser), // TODO: change
+            Token::Ident(_) => Self::parse_ident(parser),
             _ => unimplemented!("Unexpected token {:?}", parser.current_token),
         };
         let left = P(Expr { kind: leftkind });
@@ -71,6 +41,44 @@ impl<'a> Parse<'a> for Binary {
         let right = P(Expr::parse(parser));
 
         ExprKind::Binary(operator, left, right)
+    }
+
+    /// Grammar: (operator) (expression)
+    pub fn parse_unary(parser: &mut Parser) -> ExprKind {
+        let operator = match &parser.current_token {
+            Token::Minus => UnOp::Neg,
+            token => unimplemented!("Unexpected token {:?}", token),
+        };
+        parser.step();
+
+        let expr = P(Expr::parse(parser));
+
+        ExprKind::Unary(operator, expr)
+    }
+
+    /// Grammar: (identifier) => Token::Ident
+    pub fn parse_ident(parser: &mut Parser) -> ExprKind {
+        let symbol = match &parser.current_token {
+            Token::Ident(value) => value.to_owned(),
+            value => unimplemented!("Unexpected token {:?}", value),
+        };
+
+        if !parser.symbols.contains(&symbol) {
+            panic!("symbol: {:?} reference before assignment", symbol);
+        }
+
+        ExprKind::Ident(symbol)
+    }
+
+    /// Grammar: (literal) => Token::Int | Token::String
+    pub fn parse_literal(parser: &mut Parser) -> ExprKind {
+        let litkind = match &parser.current_token {
+            Token::String(value) => Literal::String(value.to_owned()),
+            Token::Int(value) => Literal::Integer(value.parse().unwrap()),
+            value => unimplemented!("Unexpected token {:?}", value),
+        };
+
+        ExprKind::Literal(litkind)
     }
 }
 
@@ -107,22 +115,24 @@ impl BinOp {
 }
 
 #[derive(Debug, PartialEq)]
+pub enum UnOp {
+    //Not,
+    Neg,
+}
+
+impl UnOp {
+    pub fn token_match(token: &Token) -> bool {
+        matches!(token, Token::Minus)
+    }
+}
+
+pub type Ident = String;
+
+#[derive(Debug, PartialEq)]
 pub enum Literal {
     String(String),
     Integer(isize),
     // Add more
-}
-
-impl<'a> Parse<'a> for Literal {
-    type Item = Self;
-
-    fn parse(parser: &mut Parser<'a>) -> Self {
-        match &parser.current_token {
-            Token::String(value) => Self::String(value.to_owned()),
-            Token::Int(value) => Self::Integer(value.parse().unwrap()),
-            value => unimplemented!("Unexpected token {:?}", value),
-        }
-    }
 }
 
 #[cfg(test)]
@@ -131,11 +141,26 @@ mod tests {
     use crate::{int_literal, lexer::Lexer, parser::P};
 
     #[test]
+    fn identifier() {
+        let mut lexer = Lexer::new("test".to_string());
+        let mut parser = Parser::new(&mut lexer);
+
+        parser.symbols.insert("test".to_owned());
+        assert_eq!(
+            Expr::parse_ident(&mut parser),
+            ExprKind::Ident("test".to_owned())
+        );
+    }
+
+    #[test]
     fn literal_int() {
         let mut lexer = Lexer::new("123".to_string());
         let mut parser = Parser::new(&mut lexer);
 
-        assert_eq!(Literal::parse(&mut parser), Literal::Integer(123));
+        assert_eq!(
+            Expr::parse_literal(&mut parser),
+            ExprKind::Literal(Literal::Integer(123))
+        );
     }
 
     #[test]
@@ -144,8 +169,8 @@ mod tests {
         let mut parser = Parser::new(&mut lexer);
 
         assert_eq!(
-            Literal::parse(&mut parser),
-            Literal::String("test".to_owned())
+            Expr::parse_literal(&mut parser),
+            ExprKind::Literal(Literal::String("test".to_owned()))
         );
     }
 
@@ -155,7 +180,7 @@ mod tests {
         let mut parser = Parser::new(&mut lexer);
 
         assert_eq!(
-            Unary::parse(&mut parser),
+            Expr::parse_unary(&mut parser),
             ExprKind::Unary(UnOp::Neg, P(int_literal!(123)))
         );
     }
@@ -166,7 +191,7 @@ mod tests {
         let mut parser = Parser::new(&mut lexer);
 
         assert_eq!(
-            Binary::parse(&mut parser),
+            Expr::parse_binary(&mut parser),
             ExprKind::Binary(BinOp::Mul, P(int_literal!(123)), P(int_literal!(456))),
         );
     }

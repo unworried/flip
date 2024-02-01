@@ -1,27 +1,19 @@
-use super::{Block, Expr, Ident, StmtKind};
+use super::{Ast, Expr, Stmt, StmtKind};
 use crate::{
     lexer::Token,
     parser::{Parse, Parser},
 };
 
-/// Grammar: "PRINT" (expression)
-pub struct Print;
-impl<'a> Parse<'a> for Print {
-    type Item = StmtKind;
-
-    fn parse(parser: &mut Parser<'a>) -> Self::Item {
+impl Stmt {
+    /// Grammar: "PRINT" (expression)
+    pub fn parse_print(parser: &mut Parser) -> StmtKind {
         let expression = Expr::parse(parser);
 
         StmtKind::Print(expression)
     }
-}
 
-/// Grammar: "IF" (condition) "THEN" \n {statement}* "ENDIF"
-pub struct If;
-impl<'a> Parse<'a> for If {
-    type Item = StmtKind;
-
-    fn parse(parser: &mut Parser<'a>) -> StmtKind {
+    /// Grammar: "IF" (condition) "THEN" \n {statement}* "ENDIF"
+    pub fn parse_if(parser: &mut Parser) -> StmtKind {
         let condition = Expr::parse(parser);
 
         if !parser.current_token(&Token::Then) {
@@ -34,7 +26,7 @@ impl<'a> Parse<'a> for If {
         }
         parser.step();
 
-        let resolution = Block::parse(parser, Token::EndIf).statements;
+        let resolution = Ast::parse(parser, Token::EndIf).items;
 
         if !parser.current_token(&Token::EndIf) {
             panic!("expected: ENDIF, actual: {:?}", parser.current_token);
@@ -43,14 +35,9 @@ impl<'a> Parse<'a> for If {
 
         StmtKind::If(condition, resolution)
     }
-}
 
-/// Grammar: "WHILE" (condition) "REPEAT" \n {statement}* "ENDWHILE"
-pub struct While;
-impl<'a> Parse<'a> for While {
-    type Item = StmtKind;
-
-    fn parse(parser: &mut Parser<'a>) -> Self::Item {
+    /// Grammar: "WHILE" (condition) "REPEAT" \n {statement}* "ENDWHILE"
+    pub fn parse_while(parser: &mut Parser) -> StmtKind {
         let condition = Expr::parse(parser);
 
         if !parser.current_token(&Token::Repeat) {
@@ -63,7 +50,7 @@ impl<'a> Parse<'a> for While {
         }
         parser.step();
 
-        let resolution = Block::parse(parser, Token::EndWhile).statements;
+        let resolution = Ast::parse(parser, Token::EndWhile).items;
 
         if !parser.current_token(&Token::EndWhile) {
             panic!("expected: ENDWHILE, actual: {:?}", parser.current_token);
@@ -72,40 +59,9 @@ impl<'a> Parse<'a> for While {
 
         StmtKind::While(condition, resolution)
     }
-}
 
-/// Grammar: "LABEL" (ident)
-pub struct Label;
-impl<'a> Parse<'a> for Label {
-    type Item = StmtKind;
-
-    fn parse(parser: &mut Parser<'a>) -> Self::Item {
-        let ident = Ident::parse(parser);
-        parser.step();
-
-        StmtKind::Label(ident)
-    }
-}
-
-/// Grammar: "GOTO" (ident)
-pub struct Goto;
-impl<'a> Parse<'a> for Goto {
-    type Item = StmtKind;
-
-    fn parse(parser: &mut Parser<'a>) -> Self::Item {
-        let ident = Ident::parse(parser);
-        parser.step();
-
-        StmtKind::Goto(ident)
-    }
-}
-
-/// Grammar: "LET" (ident) "=" (expression)
-pub struct Let;
-impl<'a> Parse<'a> for Let {
-    type Item = StmtKind;
-
-    fn parse(parser: &mut Parser<'a>) -> Self::Item {
+    /// Grammar: "LET" (ident) "=" (expression)
+    pub fn parse_let(parser: &mut Parser) -> StmtKind {
         //let ident = Ident::parse(parser);
         // Temp solution to seperate assignment from refernece. do this properly later...
         let ident = match &parser.current_token {
@@ -131,7 +87,33 @@ impl<'a> Parse<'a> for Let {
     }
 }
 
-/// Grammar: "INPUT" (ident)
+/*/// Grammar: "LABEL" (ident)
+pub struct Label;
+impl<'a> Parse<'a> for Label {
+    type Item = StmtKind;
+
+    fn parse(parser: &mut Parser<'a>) -> Self::Item {
+        let ident = Ident::parse(parser);
+        parser.step();
+
+        StmtKind::Label(ident)
+    }
+}*/
+
+/*/// Grammar: "GOTO" (ident)
+pub struct Goto;
+impl<'a> Parse<'a> for Goto {
+    type Item = StmtKind;
+
+    fn parse(parser: &mut Parser<'a>) -> Self::Item {
+        let ident = Ident::parse(parser);
+        parser.step();
+
+        StmtKind::Goto(ident)
+    }
+}*/
+
+/*/// Grammar: "INPUT" (ident)
 pub struct Input;
 impl<'a> Parse<'a> for Input {
     type Item = StmtKind;
@@ -152,24 +134,24 @@ impl<'a> Parse<'a> for Input {
 
         StmtKind::Input(ident)
     }
-}
+}*/
 
 #[cfg(test)]
 mod tests {
     use crate::{
-        ast::Stmt, if_stmt, int_literal, let_stmt, lexer::Lexer, parser::Parser, print_stmt,
+        ast::Item, if_stmt, int_literal, let_stmt, lexer::Lexer, parser::Parser, print_stmt,
         string_literal, while_stmt,
     };
 
-    fn check_abstract_tree(input: &str, expected: Vec<Stmt>) {
+    fn check_abstract_tree(input: &str, expected: Vec<Item>) {
         let mut lex = Lexer::new(input.to_string());
         let mut parser = Parser::new(&mut lex);
         let result = parser.parse();
 
-        println!("{:#?}", result.statements);
+        println!("{:#?}", result.items);
         println!();
         println!("{:#?}", expected);
-        assert_eq!(result.statements, expected);
+        assert_eq!(result.items, expected);
     }
 
     #[test]
@@ -292,42 +274,6 @@ mod tests {
 
         check_abstract_tree(input, expected)
     }
-
-    /*#[test]
-    fn label_statement() {
-        let input = "LABEL Ident";
-
-        let expected = vec![label_stmt!("Ident".to_string())];
-
-        check_abstract_tree(input, expected)
-    }
-
-    #[test]
-    fn label_statement_newline() {
-        let input = "LABEL Ident\n";
-
-        let expected = vec![label_stmt!("Ident".to_string())];
-
-        check_abstract_tree(input, expected)
-    }
-
-    #[test]
-    fn goto_statement() {
-        let input = "GOTO Ident";
-
-        let expected = vec![goto_stmt!("Ident".to_string())];
-
-        check_abstract_tree(input, expected)
-    }
-
-    #[test]
-    fn goto_statement_newline() {
-        let input = "GOTO Ident\n";
-
-        let expected = vec![goto_stmt!("Ident".to_string())];
-
-        check_abstract_tree(input, expected)
-    } */
 
     #[test]
     fn let_statement() {

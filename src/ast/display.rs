@@ -1,31 +1,50 @@
-use std::fmt::Display;
+use crate::{lexer::Lexer, parser::Parser};
 
-use super::{ExprKind, Block, StmtKind};
+use super::{visitor::Visitor, Stmt, StmtKind};
 
-// TODO: Move out of here and create builder pattern in extern crate. Doesn't need to be apart of
-// lib
+pub struct AstDisplay {
+    ident: usize,
+    result: Vec<Stmt>,
+}
 
-impl Display for Block {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for statement in &self.statements {
-            writeln!(f, "{}", statement.kind)?;
+impl AstDisplay {
+    pub fn new() -> Self {
+        Self {
+            ident: 0,
+            result: Vec::new(),
         }
+    }
 
-        Ok(())
+    pub fn test() {
+        let input = "PRINT \"TEST\"\nIF 1 == 1 THEN\nLET foo = 45\nENDIF\n";
+        let mut lexer = Lexer::new(input.to_string());
+        let mut parser = Parser::new(&mut lexer);
+
+        let ast = parser.parse();
+
+        let mut display = Self::new();
+        display.visit_ast(&ast);
     }
 }
 
-#[allow(unreachable_patterns)] // TODO: Remove eventually
-impl Display for StmtKind {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Statement: ")?;
+impl Visitor for AstDisplay {
+    fn visit_stmt(&mut self, node: &Stmt) {
+        let StmtKind::If(.., ref body) = node.kind else {
+            return;
+        };
 
-        write!(f, "{:?}", self)
+        println!("{:#?}", body);
     }
 }
 
-impl Display for ExprKind {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test() {
+        AstDisplay::test();
+        panic!();
     }
 }
+
