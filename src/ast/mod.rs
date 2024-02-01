@@ -1,9 +1,9 @@
 use crate::{
     lexer::Token,
-    parser::{Parse, Parser},
+    parser::{Parse, Parser, P},
 };
 
-use self::expression::BinOp;
+use self::{expression::*, statement::*};
 
 // For testing/debugging
 mod display;
@@ -20,7 +20,9 @@ pub struct Program {
 
 /// Grammar: {statement} \n
 impl<'a> Parse<'a> for Program {
-    fn parse(parser: &mut Parser<'a>) -> Self {
+    type Item = Self;
+
+    fn parse(parser: &mut Parser<'a>) -> Self::Item {
         let mut statements = Vec::new();
         while !parser.current_token(Token::Eof) {
             statements.push(Stmt::parse(parser));
@@ -36,72 +38,92 @@ impl<'a> Parse<'a> for Program {
 }
 
 #[derive(Debug, PartialEq)]
-enum Stmt {
+pub struct Stmt {
+    pub kind: StmtKind,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum StmtKind {
     // "PRINT" (expression)
-    Print(statement::Print),
+    Print(Expr),
     // "IF" (condition) "THEN" \n {statement} "ENDIF"
-    If(statement::If),
+    If(Expr, Vec<Stmt>),
     // "WHILE" (condition) "REPEAT" \n {statement} "ENDWHILE"
-    While(statement::While),
+    While(Expr, Vec<Stmt>),
     // "LABEL" (identifier)
-    Label(statement::Label),
+    Label(expression::Ident), // Move out of Expression file
     // "GOTO" (identifier)
-    Goto(statement::Goto),
+    Goto(expression::Ident),
     // "LET" (identifier) "=" (expression)
-    Let(statement::Let),
+    Let(expression::Ident, Expr),
     // "INPUT" (identifier)
-    Input(statement::Input),
+    Input(expression::Ident),
 }
 
 impl<'a> Parse<'a> for Stmt {
-    fn parse(parser: &mut Parser<'a>) -> Self {
+    type Item = Self;
+
+    fn parse(parser: &mut Parser<'a>) -> Self::Item {
         let token = parser.eat();
 
-        let statement = match &token {
-            Token::Print => Self::Print(statement::Print::parse(parser)),
-            Token::If => Self::If(statement::If::parse(parser)),
-            Token::While => Self::While(statement::While::parse(parser)),
-            Token::Label => Self::Label(statement::Label::parse(parser)),
-            Token::Goto => Self::Goto(statement::Goto::parse(parser)),
-            Token::Let => Self::Let(statement::Let::parse(parser)),
-            Token::Input => Self::Input(statement::Input::parse(parser)),
+        let kind = match &token {
+            Token::Print => Print::parse(parser),
+            Token::If => If::parse(parser),
+            Token::While => While::parse(parser),
+            Token::Label => Label::parse(parser),
+            Token::Goto => Goto::parse(parser),
+            Token::Let => Let::parse(parser),
+            Token::Input => Input::parse(parser),
             token => unimplemented!("{:#?}", token), // Handle Err
         };
 
         while parser.current_token(Token::Newline) {
             parser.step();
         } // Dont think this should be here
-        statement
+
+        Self { kind }
     }
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Expr {
-    Binary(expression::Binary),
-    // Unary(expression::Unary
-    Ident(expression::Ident), // Might not belong here
-    Primitive(expression::Primitive),
+pub struct Expr {
+    pub kind: ExprKind,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum ExprKind {
+    Binary(BinOp, P<Expr>, P<Expr>),
+    Unary(UnOp, P<Expr>),
+    Ident(String), // Might not belong here
     Literal(expression::Literal),
 }
 
 impl<'a> Parse<'a> for Expr {
+    type Item = Self;
+
     fn parse(parser: &mut Parser<'a>) -> Self {
-        let expr = match &parser.current_token {
+        let kind = match &parser.current_token {
             Token::Int(_) => {
                 if BinOp::token_match(&parser.next_token) {
-                    Self::Binary(expression::Binary::parse(parser))
+                    Binary::parse(parser)
                 } else {
-                    Self::Primitive(expression::Primitive::parse(parser))
+                    ExprKind::Literal(Literal::parse(parser))
                 }
             }
-            Token::Ident(_) => Self::Ident(expression::Ident::parse(parser)),
-            Token::String(_) => Self::Literal(expression::Literal::parse(parser)),
-            _ => unimplemented!("{}", &parser.current_token), // Handle Err
+            Token::Ident(_) => ExprKind::Ident(Ident::parse(parser)),
+            Token::String(_) => ExprKind::Literal(Literal::parse(parser)),
+            _ => {
+                if UnOp::token_match(&parser.current_token) {
+                    expression::Unary::parse(parser)
+                } else {
+                    unimplemented!("{}", &parser.current_token) // Handle Err
+                }
+            }
         };
 
         parser.step();
 
-        expr
+        Expr { kind }
     }
 }
 
@@ -117,12 +139,15 @@ mod tests {
                 ENDIF
             ENDWHILE"#;
         */
-        let input = r#"PRINT 1 + 2 * 4"#;
+        //let input = r#"PRINT 1 + 2 * -4"#;
+        let input = r#"LET foo =3 + 2"#;
         let mut lex = Lexer::new(input.to_string());
         let mut parser = Parser::new(&mut lex);
 
         let result = parser.parse();
-        println!("{}", result);
+        //println!("{}", result);
+
+        println!("{:#?}", result.statements[0]);
 
         panic!("Debug Panic");
     }

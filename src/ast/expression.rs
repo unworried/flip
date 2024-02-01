@@ -1,27 +1,25 @@
 use crate::{
     lexer::Token,
-    parser::{Parse, Parser},
+    parser::{Parse, Parser, P},
 };
 
-use super::Expr;
+use super::{Expr, ExprKind};
 
-#[derive(Debug, PartialEq)]
-pub struct Unary {
-    pub operator: UnOp,
-    pub expr: Box<Expr>, //Check out rust_ast::ptr smart pointer
-}
-
+#[derive(Debug)]
+pub struct Unary;
 impl<'a> Parse<'a> for Unary {
-    fn parse(parser: &mut Parser<'a>) -> Self {
+    type Item = ExprKind;
+
+    fn parse(parser: &mut Parser<'a>) -> Self::Item {
         let operator = match &parser.current_token {
             Token::Minus => UnOp::Neg,
             token => unimplemented!("Unexpected token {:?}", token),
         };
         parser.step();
 
-        let expr = Box::new(Expr::parse(parser));
+        let expr = P(Expr::parse(parser));
 
-        Self { operator, expr }
+        ExprKind::Unary(operator, expr)
     }
 }
 
@@ -31,20 +29,25 @@ pub enum UnOp {
     Neg,
 }
 
-#[derive(Debug, PartialEq)]
-pub struct Binary {
-    pub operator: BinOp,
-    pub left: Box<Expr>,
-    pub right: Box<Expr>,
+impl UnOp {
+    pub fn token_match(token: &Token) -> bool {
+        matches!(token, Token::Minus)
+    }
 }
 
-// TODO: Add support for Box<Expr> instead of Box<Primitive>
+// TODO: Add support for P<Expr> for lhs
+#[derive(Debug)]
+pub struct Binary;
 impl<'a> Parse<'a> for Binary {
-    fn parse(parser: &mut Parser<'a>) -> Self {
-        let left = match &parser.current_token {
-            Token::Int(_) => Box::new(Expr::Primitive(Primitive::parse(parser))), // TODO: change
+    type Item = ExprKind;
+
+    fn parse(parser: &mut Parser<'a>) -> ExprKind {
+        let leftkind = match &parser.current_token {
+            Token::Int(_) => ExprKind::Literal(Literal::parse(parser)), // TODO: change
+            Token::Ident(_) => ExprKind::Ident(Ident::parse(parser)),
             _ => unimplemented!("Unexpected token {:?}", parser.current_token),
         };
+        let left = P(Expr { kind: leftkind });
 
         parser.step();
 
@@ -65,15 +68,9 @@ impl<'a> Parse<'a> for Binary {
 
         parser.step();
 
-        println!("{:?}", parser.current_token);
-        println!("{:?}", parser.next_token);
-        let right = Box::new(Expr::parse(parser));
+        let right = P(Expr::parse(parser));
 
-        Self {
-            operator,
-            left,
-            right,
-        }
+        ExprKind::Binary(operator, left, right)
     }
 }
 
@@ -112,6 +109,8 @@ impl BinOp {
 pub type Ident = String;
 
 impl<'a> Parse<'a> for Ident {
+    type Item = Self;
+
     fn parse(parser: &mut Parser<'a>) -> Self {
         match &parser.current_token {
             Token::Ident(value) => value.to_owned(),
@@ -121,32 +120,19 @@ impl<'a> Parse<'a> for Ident {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Primitive {
-    Int(i64),
-    // Add more
-}
-
-// TODO: Add error handling
-
-impl<'a> Parse<'a> for Primitive {
-    fn parse(parser: &mut Parser<'a>) -> Self {
-        match &parser.current_token {
-            Token::Int(value) => Self::Int(value.parse().unwrap()),
-            value => unimplemented!("Unexpected token {:?}", value),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq)]
 pub enum Literal {
     String(String),
+    Integer(isize),
     // Add more
 }
 
 impl<'a> Parse<'a> for Literal {
+    type Item = Self;
+
     fn parse(parser: &mut Parser<'a>) -> Self {
         match &parser.current_token {
             Token::String(value) => Self::String(value.to_owned()),
+            Token::Int(value) => Self::Integer(value.parse().unwrap()),
             value => unimplemented!("Unexpected token {:?}", value),
         }
     }
@@ -155,7 +141,7 @@ impl<'a> Parse<'a> for Literal {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{int_primitive, lexer::Lexer};
+    use crate::{int_literal, lexer::Lexer, parser::P};
 
     #[test]
     fn identifier() {
@@ -167,11 +153,11 @@ mod tests {
     }
 
     #[test]
-    fn primitive_int() {
+    fn literal_int() {
         let mut lexer = Lexer::new("123".to_string());
         let mut parser = Parser::new(&mut lexer);
 
-        assert_eq!(Primitive::parse(&mut parser), Primitive::Int(123));
+        assert_eq!(Literal::parse(&mut parser), Literal::Integer(123));
     }
 
     #[test]
@@ -192,10 +178,7 @@ mod tests {
 
         assert_eq!(
             Unary::parse(&mut parser),
-            Unary {
-                operator: UnOp::Neg,
-                expr: Box::new(int_primitive!(123))
-            }
+            ExprKind::Unary(UnOp::Neg, P(int_literal!(123)))
         );
     }
 
@@ -206,11 +189,7 @@ mod tests {
 
         assert_eq!(
             Binary::parse(&mut parser),
-            Binary {
-                operator: BinOp::Mul,
-                left: Box::new(int_primitive!(456)),
-                right: Box::new(int_primitive!(456))
-            }
+            ExprKind::Binary(BinOp::Mul, P(int_literal!(123)), P(int_literal!(456))),
         );
     }
 }

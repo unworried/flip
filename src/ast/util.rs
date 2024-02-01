@@ -1,80 +1,85 @@
 #[macro_export]
 macro_rules! print_stmt {
     ($expression:expr) => {
-        $crate::ast::Stmt::Print($crate::ast::statement::Print {
-            expression: $expression,
-        })
+        $crate::ast::Stmt {
+            kind: $crate::ast::StmtKind::Print($expression),
+        }
     };
 }
 
 #[macro_export]
 macro_rules! if_stmt {
     ($condition:expr, $resolution:expr) => {
-        $crate::ast::Stmt::If($crate::ast::statement::If {
-            condition: $condition,
-            resolution: $resolution,
-        })
+        $crate::ast::Stmt {
+            kind: $crate::ast::StmtKind::If($condition, $resolution),
+        }
     };
 }
 
 #[macro_export]
 macro_rules! while_stmt {
     ($condition:expr, $resolution:expr) => {
-        $crate::ast::Stmt::While($crate::ast::statement::While {
-            condition: $condition,
-            resolution: $resolution,
-        })
+        $crate::ast::Stmt {
+            kind: $crate::ast::StmtKind::While($condition, $resolution),
+        }
     };
 }
 
 #[macro_export]
 macro_rules! label_stmt {
-    ($ident:expr) => {
-        $crate::ast::Stmt::Label($crate::ast::statement::Label { ident: $ident })
+    ($label:expr) => {
+        $crate::ast::Stmt {
+            kind: $crate::ast::StmtKind::Label($label),
+        }
     };
 }
 
 #[macro_export]
 macro_rules! goto_stmt {
-    ($ident:expr) => {
-        $crate::ast::Stmt::Goto($crate::ast::statement::Goto { ident: $ident })
+    ($label:expr) => {
+        $crate::ast::Stmt {
+            kind: $crate::ast::StmtKind::Goto($label),
+        }
     };
 }
 
 #[macro_export]
 macro_rules! let_stmt {
     ($ident:expr, $expression:expr) => {
-        $crate::ast::Stmt::Let($crate::ast::statement::Let {
-            ident: $ident,
-            expression: $expression,
-        })
+        $crate::ast::Stmt {
+            kind: $crate::ast::StmtKind::Let($ident, $expression),
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! input_stmt {
+    ($ident:expr) => {
+        $crate::ast::Stmt {
+            kind: $crate::ast::StmtKind::Input($ident),
+        }
     };
 }
 
 #[macro_export]
 macro_rules! literal {
     ($kind:tt => $value:expr) => {
-        $crate::ast::Expr::Literal($crate::ast::expression::Literal::$kind($value.to_string()))
+        $crate::ast::Expr {
+            kind: $crate::ast::ExprKind::Literal($crate::ast::expression::Literal::$kind($value)),
+        }
     };
 }
 
 #[macro_export]
 macro_rules! string_literal {
     ($value:expr) => {
-        $crate::literal!(String => $value)
+        $crate::literal!(String => $value.to_string())
     };
 }
 
 #[macro_export]
-macro_rules! primitive {
-    ($kind:tt => $value:expr) => {
-        $crate::ast::Expr::Primitive($crate::ast::expression::Primitive::$kind($value))
-    };
-}
-
-#[macro_export]
-macro_rules! int_primitive {
+macro_rules! int_literal {
     ($value:expr) => {
-        $crate::primitive!(Int => $value)
+        $crate::literal!(Integer => $value)
     };
 }

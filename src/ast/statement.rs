@@ -1,32 +1,27 @@
-use super::{expression, Expr, Stmt};
+use super::{expression, Expr, Stmt, StmtKind};
 use crate::{
     lexer::Token,
     parser::{Parse, Parser},
 };
 
-#[derive(Debug, PartialEq)]
-pub struct Print {
-    pub expression: Expr,
-}
-
 /// Grammar: "PRINT" (expression)
+pub struct Print;
 impl<'a> Parse<'a> for Print {
-    fn parse(parser: &mut Parser<'a>) -> Self {
+    type Item = StmtKind;
+
+    fn parse(parser: &mut Parser<'a>) -> Self::Item {
         let expression = Expr::parse(parser);
 
-        Self { expression }
+        StmtKind::Print(expression)
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub struct If {
-    pub condition: Expr, // TODO: Implement conditions
-    pub resolution: Vec<Stmt>,
-}
-
 /// Grammar: "IF" (condition) "THEN" \n {statement}* "ENDIF"
+pub struct If;
 impl<'a> Parse<'a> for If {
-    fn parse(parser: &mut Parser<'a>) -> Self {
+    type Item = StmtKind;
+
+    fn parse(parser: &mut Parser<'a>) -> StmtKind {
         let condition = Expr::parse(parser);
 
         if !parser.current_token(Token::Then) {
@@ -49,22 +44,16 @@ impl<'a> Parse<'a> for If {
         }
         parser.step();
 
-        Self {
-            condition,
-            resolution,
-        }
+        StmtKind::If(condition, resolution)
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub struct While {
-    pub condition: Expr, // TODO: Impl Condtions
-    pub resolution: Vec<Stmt>,
-}
-
 /// Grammar: "WHILE" (condition) "REPEAT" \n {statement}* "ENDWHILE"
+pub struct While;
 impl<'a> Parse<'a> for While {
-    fn parse(parser: &mut Parser<'a>) -> Self {
+    type Item = StmtKind;
+
+    fn parse(parser: &mut Parser<'a>) -> Self::Item {
         let condition = Expr::parse(parser);
 
         if !parser.current_token(Token::Repeat) {
@@ -87,50 +76,40 @@ impl<'a> Parse<'a> for While {
         }
         parser.step();
 
-        Self {
-            condition,
-            resolution,
-        }
+        StmtKind::While(condition, resolution)
     }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct Label {
-    pub ident: expression::Ident,
 }
 
 /// Grammar: "LABEL" (ident)
+pub struct Label;
 impl<'a> Parse<'a> for Label {
-    fn parse(parser: &mut Parser<'a>) -> Self {
+    type Item = StmtKind;
+
+    fn parse(parser: &mut Parser<'a>) -> Self::Item {
         let ident = expression::Ident::parse(parser);
 
-        Self { ident }
+        StmtKind::Label(ident)
     }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct Goto {
-    pub ident: expression::Ident,
 }
 
 /// Grammar: "GOTO" (ident)
+pub struct Goto;
 impl<'a> Parse<'a> for Goto {
-    fn parse(parser: &mut Parser<'a>) -> Self {
+    type Item = StmtKind;
+
+    fn parse(parser: &mut Parser<'a>) -> Self::Item {
         let ident = expression::Ident::parse(parser);
 
-        Self { ident }
+        StmtKind::Goto(ident)
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub struct Let {
-    pub ident: expression::Ident,
-    pub expression: Expr,
-}
-
 /// Grammar: "LET" (ident) "=" (expression)
+pub struct Let;
 impl<'a> Parse<'a> for Let {
-    fn parse(parser: &mut Parser<'a>) -> Self {
+    type Item = StmtKind;
+
+    fn parse(parser: &mut Parser<'a>) -> Self::Item {
         let ident = expression::Ident::parse(parser);
         // TODO: May be able to move this to expr so wont need parser step here or into ident parse
         parser.step();
@@ -142,28 +121,26 @@ impl<'a> Parse<'a> for Let {
 
         let expression = Expr::parse(parser);
 
-        Self { ident, expression }
+        StmtKind::Let(ident, expression)
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub struct Input {
-    pub ident: expression::Ident,
-}
-
 /// Grammar: "INPUT" (ident)
+pub struct Input;
 impl<'a> Parse<'a> for Input {
-    fn parse(parser: &mut Parser<'a>) -> Self {
+    type Item = StmtKind;
+
+    fn parse(parser: &mut Parser<'a>) -> Self::Item {
         let ident = expression::Ident::parse(parser);
 
-        Self { ident }
+        StmtKind::Input(ident)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::{
-        ast::Stmt, goto_stmt, if_stmt, int_primitive, label_stmt, let_stmt, lexer::Lexer,
+        ast::Stmt, goto_stmt, if_stmt, int_literal, label_stmt, let_stmt, lexer::Lexer,
         parser::Parser, print_stmt, string_literal, while_stmt,
     };
 
@@ -200,7 +177,7 @@ mod tests {
     fn print_int_statement() {
         let input = "PRINT 123";
 
-        let expected = vec![print_stmt!(int_primitive!(123))];
+        let expected = vec![print_stmt!(int_literal!(123))];
 
         check_abstract_tree(input, expected)
     }
@@ -209,7 +186,7 @@ mod tests {
     fn print_int_statement_newline() {
         let input = "PRINT 123\n";
 
-        let expected = vec![print_stmt!(int_primitive!(123))];
+        let expected = vec![print_stmt!(int_literal!(123))];
 
         check_abstract_tree(input, expected)
     }
@@ -339,7 +316,7 @@ mod tests {
     fn let_statement() {
         let input = "LET Ident = 123";
 
-        let expected = vec![let_stmt!("Ident".to_string(), int_primitive!(123))];
+        let expected = vec![let_stmt!("Ident".to_string(), int_literal!(123))];
 
         check_abstract_tree(input, expected)
     }
