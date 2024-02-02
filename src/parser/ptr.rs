@@ -1,7 +1,7 @@
 use std::fmt::{self, Debug};
 
 /// Owned Smart Pointer::: may not need this, inspired by rustc
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub struct P<T: ?Sized> {
     pub ptr: Box<T>,
 }

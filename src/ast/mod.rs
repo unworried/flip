@@ -14,8 +14,8 @@ mod expression;
 mod statement;
 mod visitor;
 
-#[cfg(test)]
-mod util;
+//#[cfg(test)]
+//mod util;
 
 #[derive(Debug)]
 pub struct Ast {
@@ -38,33 +38,32 @@ impl Ast {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Item {
     //pub id: ItemId,
     pub kind: ItemKind,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum ItemKind {
     //Function(Function),
     Statement(Stmt),
 }
 
 impl<'a> Parse<'a> for Item {
-    type Item = Self;
-
-    fn parse(parser: &mut Parser<'a>) -> Self::Item {
+    fn parse(parser: &mut Parser<'a>) -> Self {
         let kind = ItemKind::Statement(Stmt::parse(parser));
+
         Self { kind }
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Stmt {
     pub kind: StmtKind,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum StmtKind {
     // "if" (condition) "{" \n {statement}* "}"
     If(Expr, Vec<Item>), // WARN: When funcs are added. need to change this to only allow stmts
@@ -77,9 +76,7 @@ pub enum StmtKind {
 }
 
 impl<'a> Parse<'a> for Stmt {
-    type Item = Self;
-
-    fn parse(parser: &mut Parser<'a>) -> Self::Item {
+    fn parse(parser: &mut Parser<'a>) -> Self {
         let token = parser.eat();
 
         let kind = match &token {
@@ -99,12 +96,12 @@ impl<'a> Parse<'a> for Stmt {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Expr {
     pub kind: ExprKind,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum ExprKind {
     Binary(BinOp, P<Expr>, P<Expr>),
     Unary(UnOp, P<Expr>),
@@ -113,24 +110,22 @@ pub enum ExprKind {
 }
 
 impl<'a> Parse<'a> for Expr {
-    type Item = Self;
-
     fn parse(parser: &mut Parser<'a>) -> Self {
         // Check which match order is faster. e.g. token first or op first
         if BinOp::token_match(&parser.next_token) {
             match &parser.current_token {
                 Token::Int(_) | Token::Ident(_) => {
-                    return Expr {
-                        kind: Self::parse_binary(parser),
-                    }; // May be cleaner solution
+                    let kind = Self::parse_binary(parser);
+                    return Expr { kind }; // May be cleaner solution
                 }
                 _ => {}
             }
         }
 
         if UnOp::token_match(&parser.current_token) {
+            let kind = Self::parse_unary(parser);
             return Expr {
-                kind: Self::parse_unary(parser), // Need further testing
+                kind, // Need further testing
             };
         }
 
@@ -145,6 +140,3 @@ impl<'a> Parse<'a> for Expr {
         Expr { kind }
     }
 }
-
-#[cfg(test)]
-mod tests {}

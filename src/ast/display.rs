@@ -29,7 +29,7 @@ impl AstDisplay {
 
 impl Visitor for AstDisplay {
     fn visit_stmt(&mut self, node: &Stmt) {
-        let StmtKind::If(.., ref body) = &node.kind else {
+        let StmtKind::While(.., ref body) = &node.kind else {
             node.walk(self);
             return;
         };
@@ -45,6 +45,6 @@ mod tests {
     #[test]
     fn test() {
         AstDisplay::test();
-        //        panic!();
+        panic!();
     }
 }

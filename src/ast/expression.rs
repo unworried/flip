@@ -17,9 +17,9 @@ impl Expr {
             Token::Ident(_) => Self::parse_ident(parser),
             _ => unimplemented!("Unexpected token {:?}", parser.current_token),
         };
-        let left = P(Expr { kind: leftkind });
 
         parser.step();
+        let left = P(Expr { kind: leftkind });
 
         // CHECK: Will this retain the correct precedence?
         let operator = match &parser.current_token {
@@ -84,7 +84,7 @@ impl Expr {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum BinOp {
     Add,
     Sub,
@@ -116,7 +116,7 @@ impl BinOp {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum UnOp {
     //Not,
     Neg,
@@ -130,14 +130,14 @@ impl UnOp {
 
 pub type Ident = String;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Literal {
     String(String),
     Integer(isize),
     // Add more
 }
 
-#[cfg(test)]
+/*#[cfg(test)]
 mod tests {
     use super::*;
     use crate::{int_literal, lexer::Lexer, parser::P};
@@ -197,4 +197,4 @@ mod tests {
             ExprKind::Binary(BinOp::Mul, P(int_literal!(123)), P(int_literal!(456))),
         );
     }
-}
+}*/

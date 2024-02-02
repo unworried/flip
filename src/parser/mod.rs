@@ -22,8 +22,7 @@ pub trait Parse<'a>
 where
     Self: Sized,
 {
-    type Item;
-    fn parse(parser: &mut Parser<'a>) -> Self::Item;
+    fn parse(parser: &mut Parser<'a>) -> Self;
 }
 
 impl<'a> Parser<'a> {
@@ -63,6 +62,10 @@ impl<'a> Parser<'a> {
 
     pub fn next_token(&self, token: Token) -> bool {
         self.next_token == token
+    }
+
+    pub fn current_position(&self) -> usize {
+        self.lexer.position()
     }
 }
 

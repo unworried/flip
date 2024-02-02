@@ -71,6 +71,10 @@ impl Lexer {
         self.position += 1;
     }
 
+    pub fn position(&self) -> usize {
+        self.position
+    }
+
     fn read_string(&mut self) -> String {
         let mut string = String::new();
         self.read_char();
