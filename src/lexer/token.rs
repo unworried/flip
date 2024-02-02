@@ -66,14 +66,14 @@ impl From<String> for Token {
             "<=" => Self::LesserThanEqual,
             ">=" => Self::GreaterThanEqual,
 
-            "PRINT" => Self::Print,
-            "LET" => Self::Let,
-            "IF" => Self::If,
-            "THEN" => Self::Then,
-            "ENDIF" => Self::EndIf,
-            "WHILE" => Self::While,
-            "REPEAT" => Self::Repeat,
-            "ENDWHILE" => Self::EndWhile,
+            "print" => Self::Print,
+            "let" => Self::Let,
+            "if" => Self::If,
+            "then" => Self::Then,
+            "endif" => Self::EndIf,
+            "while" => Self::While,
+            "repeat" => Self::Repeat,
+            "endwhile" => Self::EndWhile,
 
             _ => Self::Ident(value),
         }

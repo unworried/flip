@@ -5,19 +5,19 @@ use crate::{
 };
 
 impl Stmt {
-    /// Grammar: "PRINT" (expression)
+    /// Grammar: "print" (expression)
     pub fn parse_print(parser: &mut Parser) -> StmtKind {
         let expression = Expr::parse(parser);
 
         StmtKind::Print(expression)
     }
 
-    /// Grammar: "IF" (condition) "THEN" \n {statement}* "ENDIF"
+    /// Grammar: "if" (condition) "then" \n {statement}* "endif"
     pub fn parse_if(parser: &mut Parser) -> StmtKind {
         let condition = Expr::parse(parser);
 
         if !parser.current_token(&Token::Then) {
-            panic!("expected: THEN, actual: {:?}", parser.current_token);
+            panic!("expected: then, actual: {:?}", parser.current_token);
         }
         parser.step();
 
@@ -29,19 +29,19 @@ impl Stmt {
         let resolution = Ast::parse(parser, Token::EndIf).items;
 
         if !parser.current_token(&Token::EndIf) {
-            panic!("expected: ENDIF, actual: {:?}", parser.current_token);
+            panic!("expected: endif, actual: {:?}", parser.current_token);
         }
         parser.step();
 
         StmtKind::If(condition, resolution)
     }
 
-    /// Grammar: "WHILE" (condition) "REPEAT" \n {statement}* "ENDWHILE"
+    /// Grammar: "while" (condition) "repeat" \n {statement}* "endwhile"
     pub fn parse_while(parser: &mut Parser) -> StmtKind {
         let condition = Expr::parse(parser);
 
         if !parser.current_token(&Token::Repeat) {
-            panic!("expected: REPEAT, actual: {:?}", parser.current_token);
+            panic!("expected: repeat, actual: {:?}", parser.current_token);
         }
         parser.step();
 
@@ -53,14 +53,14 @@ impl Stmt {
         let resolution = Ast::parse(parser, Token::EndWhile).items;
 
         if !parser.current_token(&Token::EndWhile) {
-            panic!("expected: ENDWHILE, actual: {:?}", parser.current_token);
+            panic!("expected: endwhile, actual: {:?}", parser.current_token);
         }
         parser.step();
 
         StmtKind::While(condition, resolution)
     }
 
-    /// Grammar: "LET" (ident) "=" (expression)
+    /// Grammar: "let" (ident) "=" (expression)
     pub fn parse_let(parser: &mut Parser) -> StmtKind {
         //let ident = Ident::parse(parser);
         // Temp solution to seperate assignment from refernece. do this properly later...
@@ -87,55 +87,6 @@ impl Stmt {
     }
 }
 
-/*/// Grammar: "LABEL" (ident)
-pub struct Label;
-impl<'a> Parse<'a> for Label {
-    type Item = StmtKind;
-
-    fn parse(parser: &mut Parser<'a>) -> Self::Item {
-        let ident = Ident::parse(parser);
-        parser.step();
-
-        StmtKind::Label(ident)
-    }
-}*/
-
-/*/// Grammar: "GOTO" (ident)
-pub struct Goto;
-impl<'a> Parse<'a> for Goto {
-    type Item = StmtKind;
-
-    fn parse(parser: &mut Parser<'a>) -> Self::Item {
-        let ident = Ident::parse(parser);
-        parser.step();
-
-        StmtKind::Goto(ident)
-    }
-}*/
-
-/*/// Grammar: "INPUT" (ident)
-pub struct Input;
-impl<'a> Parse<'a> for Input {
-    type Item = StmtKind;
-
-    fn parse(parser: &mut Parser<'a>) -> Self::Item {
-        // Temp solution to seperate assignment from refernece. do this properly later...
-        let ident = match &parser.current_token {
-            Token::Ident(value) => value.to_owned(),
-            value => unimplemented!("Unexpected token {:?}", value),
-        };
-
-        if !parser.symbols.insert(ident.to_owned()) {
-            // Should this be to_owned??
-            panic!("symbol: {:?} already defined", ident);
-        }
-
-        parser.step();
-
-        StmtKind::Input(ident)
-    }
-}*/
-
 #[cfg(test)]
 mod tests {
     use crate::{
@@ -156,7 +107,7 @@ mod tests {
 
     #[test]
     fn print_string_statement() {
-        let input = "PRINT \"hello, world!\"";
+        let input = "print \"hello, world!\"";
 
         let expected = vec![print_stmt!(string_literal!("hello, world!"))];
 
@@ -165,7 +116,7 @@ mod tests {
 
     #[test]
     fn print_string_statement_newline() {
-        let input = "PRINT \"hello, world!\"\n";
+        let input = "print \"hello, world!\"\n";
 
         let expected = vec![print_stmt!(string_literal!("hello, world!"))];
 
@@ -174,7 +125,7 @@ mod tests {
 
     #[test]
     fn print_int_statement() {
-        let input = "PRINT 123";
+        let input = "print 123";
 
         let expected = vec![print_stmt!(int_literal!(123))];
 
@@ -183,7 +134,7 @@ mod tests {
 
     #[test]
     fn print_int_statement_newline() {
-        let input = "PRINT 123\n";
+        let input = "print 123\n";
 
         let expected = vec![print_stmt!(int_literal!(123))];
 
@@ -192,7 +143,7 @@ mod tests {
 
     #[test]
     fn if_statement() {
-        let input = "IF \"TMP\" THEN\nPRINT \"hello, world!\" ENDIF";
+        let input = "if \"TMP\" then\nprint \"hello, world!\" endif";
 
         let expected = vec![if_stmt!(
             string_literal!("TMP"),
@@ -204,7 +155,7 @@ mod tests {
 
     #[test]
     fn if_statement_newline() {
-        let input = "IF \"TMP\" THEN\nPRINT \"hello, world!\" ENDIF\n";
+        let input = "if \"TMP\" then\nprint \"hello, world!\" endif\n";
 
         let expected = vec![if_stmt!(
             string_literal!("TMP"),
@@ -216,7 +167,7 @@ mod tests {
 
     #[test]
     fn while_statement() {
-        let input = "WHILE \"TMP\" REPEAT\nPRINT \"hello, world!\" ENDWHILE";
+        let input = "while \"TMP\" repeat\nprint \"hello, world!\" endwhile";
 
         let expected = vec![while_stmt!(
             string_literal!("TMP"),
@@ -228,7 +179,7 @@ mod tests {
 
     #[test]
     fn while_statement_newline() {
-        let input = "WHILE \"TMP\" REPEAT\nPRINT \"hello, world!\" ENDWHILE\n";
+        let input = "while \"TMP\" repeat\nprint \"hello, world!\" endwhile\n";
 
         let expected = vec![while_stmt!(
             string_literal!("TMP"),
@@ -240,7 +191,7 @@ mod tests {
 
     #[test]
     fn while_statement_nested_statements() {
-        let input = "WHILE \"TMP\" REPEAT\nPRINT \"hello, world!\"\nPRINT \"hello, world 2!\"\nPRINT \"hello, world 3!\"\nENDWHILE";
+        let input = "while \"TMP\" repeat\nprint \"hello, world!\"\nprint \"hello, world 2!\"\nprint \"hello, world 3!\"\nendwhile";
 
         let expected = vec![while_stmt!(
             string_literal!("TMP"),
@@ -256,7 +207,7 @@ mod tests {
 
     #[test]
     fn while_statement_nested_block_statements() {
-        let input = "WHILE \"TMP\" REPEAT\nPRINT \"hello, world!\"\nIF \"TMP\" THEN\nWHILE \"TMP\" REPEAT\nPRINT \"hello, world 3!\"\nENDWHILE\nENDIF\nENDWHILE";
+        let input = "while \"TMP\" repeat\nprint \"hello, world!\"\nif \"TMP\" then\nwhile \"TMP\" repeat\nprint \"hello, world 3!\"\nendwhile\nendif\nendwhile";
 
         let expected = vec![while_stmt!(
             string_literal!("TMP"),
@@ -277,7 +228,7 @@ mod tests {
 
     #[test]
     fn let_statement() {
-        let input = "LET Ident = 123";
+        let input = "let Ident = 123";
 
         let expected = vec![let_stmt!("Ident".to_string(), int_literal!(123))];
 

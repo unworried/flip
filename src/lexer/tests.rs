@@ -23,7 +23,7 @@ fn read_char() {
 
 #[test]
 fn read_multiple_chars() {
-    let input = "LET foo = 1";
+    let input = "let foo = 1";
     let mut lex = Lexer::new(input.to_string());
 
     for ch in input.chars() {
@@ -60,7 +60,7 @@ fn peek_char_test_pure() {
 
 #[test]
 fn peek_multiple_chars() {
-    let input = "LET bar = 55";
+    let input = "let bar = 55";
     let mut lex = Lexer::new(input.to_string());
 
     while lex.peek() != 0 {
@@ -206,7 +206,7 @@ fn tokenize_int() {
 
 #[test]
 fn tokenize_complete() {
-    let input = "IF+-123 foo*THEN \n/98654#comment\n*/";
+    let input = "if+-123 foo*then \n/98654#comment\n*/";
 
     let expected = vec![
         Token::If,

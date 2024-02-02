@@ -1,4 +1,4 @@
-use basic_compiler::{lexer::Lexer, parser::Parser};
+use flipc::{lexer::Lexer, parser::Parser};
 
 fn main() {
     std::io::stdin().lines().for_each(|line| {

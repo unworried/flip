@@ -1,0 +1,15 @@
+while 1 >= 1 repeat 
+    let foo = 400
+    if foo < 401 then
+        while 1 == 1 repeat
+            print foo
+        endwhile
+    endif
+endwhile
+
+let baz = 0
+let bar = baz * 3 + 2
+if foo > 0 then
+    print "foo is positive!"
+endif
+

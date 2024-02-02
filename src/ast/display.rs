@@ -1,4 +1,4 @@
-use crate::{lexer::Lexer, parser::Parser};
+use crate::{ast::visitor::Walkable, lexer::Lexer, parser::Parser};
 
 use super::{visitor::Visitor, Stmt, StmtKind};
 
@@ -16,8 +16,9 @@ impl AstDisplay {
     }
 
     pub fn test() {
+
         let input =
-            "WHILE 1 REPEAT\nPRINT \"TEST\"\nIF 1 == 1 THEN\nLET foo = 45\nENDIF\nENDWHILE\n";
+            "while 1 repeat\nprint \"TEST\"\nif 1 == 1 then\nlet foo = 45\nendif\nendwhile\n";
         let mut lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(&mut lexer);
 
@@ -30,7 +31,8 @@ impl AstDisplay {
 
 impl Visitor for AstDisplay {
     fn visit_stmt(&mut self, node: &Stmt) {
-        let StmtKind::If(.., ref body) = node.kind else {
+        let StmtKind::If(.., ref body) = &node.kind else {
+            node.walk(self);
             return;
         };
 
