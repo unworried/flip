@@ -2,14 +2,17 @@ use std::fmt::Display;
 
 #[derive(Debug, PartialEq)] // TODO: try to remove clone
 pub enum Token {
+    // Special
+    Assign,
+    Ident(String),
     Illegal,
     Eof,
     Newline,
 
-    Assign,
-    Ident(String),
-    Int(String), // Seperate into litterals. keep as int(string)??
+    // Literals
+    Int(isize),
     String(String),
+
 
     /// Operators
     Equal,
@@ -18,20 +21,24 @@ pub enum Token {
     Minus,
     Asterisk,
     ForwardSlash,
-    LesserThan,
-    LesserThanEqual,
+    LessThan,
+    LessThanEqual,
     GreaterThan,
     GreaterThanEqual,
 
     /// Keywords
-    Print,
     Let,
     If,
-    Then,
-    EndIf,
+    Else,
     While,
-    Repeat,
-    EndWhile,
+    Print,
+
+    // Separators
+    LParen,
+    RParen,
+    LBrace,
+    RBrace,
+    SemiColon,
 }
 
 impl Display for Token {
@@ -48,10 +55,15 @@ impl From<u8> for Token {
             b'-' => Self::Minus,
             b'*' => Self::Asterisk,
             b'/' => Self::ForwardSlash,
-            b'<' => Self::LesserThan,
+            b'<' => Self::LessThan,
             b'>' => Self::GreaterThan,
             b'\n' => Self::Newline,
             b'\0' => Self::Eof,
+            b'(' => Self::LParen,
+            b')' => Self::RParen,
+            b'{' => Self::LBrace,
+            b'}' => Self::RBrace,
+            b';' => Self::SemiColon,
 
             _ => Self::Illegal,
         }
@@ -63,17 +75,14 @@ impl From<String> for Token {
         match value.as_str() {
             "==" => Self::Equal,
             "!=" => Self::NotEqual,
-            "<=" => Self::LesserThanEqual,
+            "<=" => Self::LessThanEqual,
             ">=" => Self::GreaterThanEqual,
 
-            "print" => Self::Print,
             "let" => Self::Let,
             "if" => Self::If,
-            "then" => Self::Then,
-            "endif" => Self::EndIf,
+            "else" => Self::Else,
             "while" => Self::While,
-            "repeat" => Self::Repeat,
-            "endwhile" => Self::EndWhile,
+            "print" => Self::Print,
 
             _ => Self::Ident(value),
         }
@@ -131,12 +140,12 @@ mod tests {
 
     #[test]
     fn lesser_than() {
-        assert_eq!(Token::from(b'<'), Token::LesserThan);
+        assert_eq!(Token::from(b'<'), Token::LessThan);
     }
 
     #[test]
     fn lesser_than_equal() {
-        assert_eq!(Token::from(String::from("<=")), Token::LesserThanEqual);
+        assert_eq!(Token::from(String::from("<=")), Token::LessThanEqual);
     }
 
     #[test]

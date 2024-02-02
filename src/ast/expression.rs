@@ -29,8 +29,8 @@ impl Expr {
             Token::Asterisk => BinOp::Mul,
             Token::GreaterThan => BinOp::GreaterThan,
             Token::GreaterThanEqual => BinOp::GreaterThanEq,
-            Token::LesserThan => BinOp::LessThan,
-            Token::LesserThanEqual => BinOp::LessThanEq,
+            Token::LessThan => BinOp::LessThan,
+            Token::LessThanEqual => BinOp::LessThanEq,
             Token::Equal => BinOp::Eq,
             Token::NotEqual => BinOp::NotEq,
             token => unimplemented!("Unexpected token {:?}", token),
@@ -50,6 +50,8 @@ impl Expr {
             token => unimplemented!("Unexpected token {:?}", token),
         };
         parser.step();
+
+        println!("{:?}", parser.current_token);
 
         let expr = P(Expr::parse(parser));
 
@@ -74,7 +76,7 @@ impl Expr {
     pub fn parse_literal(parser: &mut Parser) -> ExprKind {
         let litkind = match &parser.current_token {
             Token::String(value) => Literal::String(value.to_owned()),
-            Token::Int(value) => Literal::Integer(value.parse().unwrap()),
+            Token::Int(value) => Literal::Integer(value.to_owned()),
             value => unimplemented!("Unexpected token {:?}", value),
         };
 
@@ -106,8 +108,8 @@ impl BinOp {
                 | Token::ForwardSlash
                 | Token::Equal
                 | Token::NotEqual
-                | Token::LesserThan
-                | Token::LesserThanEqual
+                | Token::LessThan
+                | Token::LessThanEqual
                 | Token::GreaterThan
                 | Token::GreaterThanEqual
         )

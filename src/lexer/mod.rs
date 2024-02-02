@@ -88,7 +88,7 @@ impl Lexer {
         string
     }
 
-    fn read_integer(&mut self) -> String {
+    fn read_integer(&mut self) -> isize {
         let mut integer = String::new();
 
         loop {
@@ -102,7 +102,7 @@ impl Lexer {
             self.read_char();
         }
 
-        integer
+        integer.parse().unwrap() // TODO HANDLE ERRR
     }
 
     fn read_identifier(&mut self) -> String {

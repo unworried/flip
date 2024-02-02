@@ -12,36 +12,36 @@ impl Stmt {
         StmtKind::Print(expression)
     }
 
-    /// Grammar: "if" (condition) "then" \n {statement}* "endif"
+    /// Grammar: "if" (condition) "{" \n {statement}* "}"
     pub fn parse_if(parser: &mut Parser) -> StmtKind {
         let condition = Expr::parse(parser);
 
-        if !parser.current_token(&Token::Then) {
-            panic!("expected: then, actual: {:?}", parser.current_token);
+        if !parser.current_token(&Token::LBrace) {
+            panic!("expected: '{{', actual: '{:?}'", parser.current_token);
         }
         parser.step();
 
         if !parser.current_token(&Token::Newline) {
-            panic!("expected: newline, actual: {:?}", parser.current_token);
+            panic!("expected: newline, actual: '{:?}'", parser.current_token);
         }
         parser.step();
 
-        let resolution = Ast::parse(parser, Token::EndIf).items;
+        let resolution = Ast::parse(parser, Token::RBrace).items;
 
-        if !parser.current_token(&Token::EndIf) {
-            panic!("expected: endif, actual: {:?}", parser.current_token);
+        if !parser.current_token(&Token::RBrace) {
+            panic!("expected: '}}', actual: '{:?}'", parser.current_token);
         }
         parser.step();
 
         StmtKind::If(condition, resolution)
     }
 
-    /// Grammar: "while" (condition) "repeat" \n {statement}* "endwhile"
+    /// Grammar: "while" (condition) "{" \n {statement}* "}"
     pub fn parse_while(parser: &mut Parser) -> StmtKind {
         let condition = Expr::parse(parser);
 
-        if !parser.current_token(&Token::Repeat) {
-            panic!("expected: repeat, actual: {:?}", parser.current_token);
+        if !parser.current_token(&Token::LBrace) {
+            panic!("expected: '{{', actual: '{:?}'", parser.current_token);
         }
         parser.step();
 
@@ -50,10 +50,10 @@ impl Stmt {
         }
         parser.step();
 
-        let resolution = Ast::parse(parser, Token::EndWhile).items;
+        let resolution = Ast::parse(parser, Token::RBrace).items;
 
-        if !parser.current_token(&Token::EndWhile) {
-            panic!("expected: endwhile, actual: {:?}", parser.current_token);
+        if !parser.current_token(&Token::RBrace) {
+            panic!("expected: '}}', actual: '{:?}'", parser.current_token);
         }
         parser.step();
 
@@ -107,7 +107,7 @@ mod tests {
 
     #[test]
     fn print_string_statement() {
-        let input = "print \"hello, world!\"";
+        let input = "print \"hello, world!\";";
 
         let expected = vec![print_stmt!(string_literal!("hello, world!"))];
 
@@ -116,7 +116,7 @@ mod tests {
 
     #[test]
     fn print_string_statement_newline() {
-        let input = "print \"hello, world!\"\n";
+        let input = "print \"hello, world!\";\n";
 
         let expected = vec![print_stmt!(string_literal!("hello, world!"))];
 
@@ -125,7 +125,7 @@ mod tests {
 
     #[test]
     fn print_int_statement() {
-        let input = "print 123";
+        let input = "print 123;";
 
         let expected = vec![print_stmt!(int_literal!(123))];
 
@@ -134,7 +134,7 @@ mod tests {
 
     #[test]
     fn print_int_statement_newline() {
-        let input = "print 123\n";
+        let input = "print 123;\n";
 
         let expected = vec![print_stmt!(int_literal!(123))];
 
@@ -143,7 +143,7 @@ mod tests {
 
     #[test]
     fn if_statement() {
-        let input = "if \"TMP\" then\nprint \"hello, world!\" endif";
+        let input = "if \"TMP\" { \nprint \"hello, world!\"; };";
 
         let expected = vec![if_stmt!(
             string_literal!("TMP"),
@@ -155,7 +155,7 @@ mod tests {
 
     #[test]
     fn if_statement_newline() {
-        let input = "if \"TMP\" then\nprint \"hello, world!\" endif\n";
+        let input = "if \"TMP\" { \nprint \"hello, world!\"; }; \n";
 
         let expected = vec![if_stmt!(
             string_literal!("TMP"),
@@ -167,7 +167,7 @@ mod tests {
 
     #[test]
     fn while_statement() {
-        let input = "while \"TMP\" repeat\nprint \"hello, world!\" endwhile";
+        let input = "while \"TMP\" { \nprint \"hello, world!\"; };";
 
         let expected = vec![while_stmt!(
             string_literal!("TMP"),
@@ -179,7 +179,7 @@ mod tests {
 
     #[test]
     fn while_statement_newline() {
-        let input = "while \"TMP\" repeat\nprint \"hello, world!\" endwhile\n";
+        let input = "while \"TMP\" { \nprint \"hello, world!\"; }; \n";
 
         let expected = vec![while_stmt!(
             string_literal!("TMP"),
@@ -191,7 +191,7 @@ mod tests {
 
     #[test]
     fn while_statement_nested_statements() {
-        let input = "while \"TMP\" repeat\nprint \"hello, world!\"\nprint \"hello, world 2!\"\nprint \"hello, world 3!\"\nendwhile";
+        let input = "while \"TMP\" { \nprint \"hello, world!\"; \nprint \"hello, world 2!\"; \nprint \"hello, world 3!\"; \n };";
 
         let expected = vec![while_stmt!(
             string_literal!("TMP"),
@@ -207,7 +207,7 @@ mod tests {
 
     #[test]
     fn while_statement_nested_block_statements() {
-        let input = "while \"TMP\" repeat\nprint \"hello, world!\"\nif \"TMP\" then\nwhile \"TMP\" repeat\nprint \"hello, world 3!\"\nendwhile\nendif\nendwhile";
+        let input = "while \"TMP\" { \nprint \"hello, world!\";\nif \"TMP\" { \nwhile \"TMP\" { \nprint \"hello, world 3!\";\n }; \n }; \n };";
 
         let expected = vec![while_stmt!(
             string_literal!("TMP"),
@@ -228,7 +228,7 @@ mod tests {
 
     #[test]
     fn let_statement() {
-        let input = "let Ident = 123";
+        let input = "let Ident = 123;";
 
         let expected = vec![let_stmt!("Ident".to_string(), int_literal!(123))];
 

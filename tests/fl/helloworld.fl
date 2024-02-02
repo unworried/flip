@@ -1,6 +1,6 @@
-print "Hello, world 1!"
+print "Hello, world 1!";
 # print will not be included in final core 
-print "Hello, world 2!"
-print "Hello, world 3!"
-print -45 + 62 * -100
+print "Hello, world 2!";
+print "Hello, world 3!";
+print -45 + 62 * -100;
 

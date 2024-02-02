@@ -22,13 +22,13 @@ pub struct Ast {
     pub items: Vec<Item>, // HashMap<ItemIdm, Item>
 }
 
+/// Grammar: {(statement);}*
 impl Ast {
     pub fn parse(parser: &mut Parser, end_delim: Token) -> Self {
         let mut items = Vec::new();
         while !parser.current_token(&end_delim) {
             items.push(Item::parse(parser));
 
-            //     parser.step(); // Change to do while
             while parser.current_token(&Token::Newline) {
                 parser.step();
             }
@@ -50,7 +50,6 @@ pub enum ItemKind {
     Statement(Stmt),
 }
 
-/// Grammar: {statement} \n
 impl<'a> Parse<'a> for Item {
     type Item = Self;
 
@@ -67,14 +66,14 @@ pub struct Stmt {
 
 #[derive(Debug, PartialEq)]
 pub enum StmtKind {
-    // "PRINT" (expression)
-    Print(Expr),
-    // "IF" (condition) "THEN" \n {statement} "ENDIF"
+    // "if" (condition) "{" \n {statement}* "}"
     If(Expr, Vec<Item>), // WARN: When funcs are added. need to change this to only allow stmts
-    // "WHILE" (condition) "REPEAT" \n {statement} "ENDWHILE"
+    // "while" (condition) "{" \n {statement}* "}"
     While(Expr, Vec<Item>),
-    // "LET" (identifier) "=" (expression)
+    // "let" (identifier) "=" (expression)
     Let(Ident, Expr),
+    // "print" (expression)
+    Print(Expr),
 }
 
 impl<'a> Parse<'a> for Stmt {
@@ -84,12 +83,17 @@ impl<'a> Parse<'a> for Stmt {
         let token = parser.eat();
 
         let kind = match &token {
-            Token::Print => Self::parse_print(parser),
             Token::If => Self::parse_if(parser),
             Token::While => Self::parse_while(parser),
             Token::Let => Self::parse_let(parser),
+            Token::Print => Self::parse_print(parser),
             token => unimplemented!("{:#?}", token), // Handle Err
         };
+
+        if !parser.current_token(&Token::SemiColon) {
+            panic!("expected ';', actual: '{:?}'", parser.current_token);
+        } // Seems to be working. needs more testing
+        parser.step();
 
         Self { kind }
     }
@@ -124,16 +128,16 @@ impl<'a> Parse<'a> for Expr {
             }
         }
 
+        if UnOp::token_match(&parser.current_token) {
+            return Expr {
+                kind: Self::parse_unary(parser), // Need further testing
+            };
+        }
+
         let kind = match &parser.current_token {
             Token::Int(_) | Token::String(_) => Self::parse_literal(parser),
             Token::Ident(_) => Self::parse_ident(parser),
-            _ => {
-                if UnOp::token_match(&parser.current_token) {
-                    Self::parse_unary(parser)
-                } else {
-                    unimplemented!("{}", &parser.current_token) // Handle Err
-                }
-            }
+            _ => unimplemented!("{}", &parser.current_token), // Handle Err
         };
 
         parser.step();

@@ -194,8 +194,8 @@ fn tokenize_int() {
     let expected = vec![
         Token::Plus,
         Token::Minus,
-        Token::Int(String::from("123")),
-        Token::Int(String::from("98654")),
+        Token::Int(123),
+        Token::Int(98654),
         Token::Newline,
         Token::Asterisk,
         Token::ForwardSlash,
@@ -206,22 +206,24 @@ fn tokenize_int() {
 
 #[test]
 fn tokenize_complete() {
-    let input = "if+-123 foo*then \n/98654#comment\n*/";
+    let input = "if+-123 foo* { \n/98654#comment\n*/ };";
 
     let expected = vec![
         Token::If,
         Token::Plus,
         Token::Minus,
-        Token::Int(String::from("123")),
+        Token::Int(123),
         Token::Ident(String::from("foo")),
         Token::Asterisk,
-        Token::Then,
+        Token::LBrace,
         Token::Newline,
         Token::ForwardSlash,
-        Token::Int(String::from("98654")),
+        Token::Int(98654),
         Token::Newline,
         Token::Asterisk,
         Token::ForwardSlash,
+        Token::RBrace,
+        Token::SemiColon,
     ];
 
     check_tokens(input, expected)

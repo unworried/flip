@@ -5,7 +5,7 @@ use self::common::read_source_file;
 mod common;
 
 #[test]
-fn hello_world_bas() {
+fn hello_world() {
     let src = read_source_file("helloworld.fl");
     let mut lex = Lexer::new(src);
     let mut parser = Parser::new(&mut lex);
