@@ -16,7 +16,8 @@ impl AstDisplay {
     }
 
     pub fn test() {
-        let input = "PRINT \"TEST\"\nIF 1 == 1 THEN\nLET foo = 45\nENDIF\n";
+        let input =
+            "WHILE 1 REPEAT\nPRINT \"TEST\"\nIF 1 == 1 THEN\nLET foo = 45\nENDIF\nENDWHILE\n";
         let mut lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(&mut lexer);
 
@@ -47,4 +48,3 @@ mod tests {
         panic!();
     }
 }
-
