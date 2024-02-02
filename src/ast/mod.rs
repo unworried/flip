@@ -108,7 +108,7 @@ pub enum ExprKind {
     Ident(String), // Might not belong here
     Literal(expression::Literal),
 }
-
+// PAREN ONLY WORKS WHEN Atomic val is on left. e.g. 1 + (2 + 3)
 impl<'a> Parse<'a> for Expr {
     fn parse(parser: &mut Parser<'a>) -> Self {
         if BinOp::token_match(&parser.next_token) | parser.current_token(&Token::LParen) {
