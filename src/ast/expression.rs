@@ -12,6 +12,7 @@ impl Expr {
         let leftkind = match &parser.current_token {
             Token::Int(_) => Self::parse_literal(parser), // TODO: change
             Token::Ident(_) => Self::parse_ident(parser),
+            Token::LParen => Self::parse_group(parser),
             _ => {
                 if UnOp::token_match(&parser.current_token) {
                     return Self::parse_unary(parser);
@@ -21,10 +22,11 @@ impl Expr {
             }
         };
 
+
         let mut left = P(Expr { kind: leftkind });
+
         parser.step();
         println!("{:?}", parser.current_token);
-
         // May need parse step here
         while let Some(operator) = Self::parse_binary_operator(parser) {
             if operator.precedence() <= precedence {
@@ -75,6 +77,17 @@ impl Expr {
         ExprKind::Unary(operator, expr)
     }
 
+    /// Grammar: "("(expression)")"
+    pub fn parse_group(parser: &mut Parser) -> ExprKind {
+        parser.step();
+        let expr = Expr::parse(parser);
+        if !parser.current_token(&Token::RParen) {
+            panic!("expected: ')', actual: '{:?}'", parser.current_token);
+        }
+
+        expr.kind
+    }
+
     /// Grammar: (identifier) => Token::Ident
     pub fn parse_ident(parser: &mut Parser) -> ExprKind {
         let symbol = match &parser.current_token {
@@ -83,7 +96,7 @@ impl Expr {
         };
 
         if !parser.symbols.contains(&symbol) {
-            panic!("symbol: {:?} reference before assignment", symbol);
+            panic!("symbol: {:?} referenced before assignment", symbol);
         }
 
         ExprKind::Ident(symbol)

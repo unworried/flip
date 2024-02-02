@@ -111,8 +111,7 @@ pub enum ExprKind {
 
 impl<'a> Parse<'a> for Expr {
     fn parse(parser: &mut Parser<'a>) -> Self {
-        // Check which match order is faster. e.g. token first or op first
-        if BinOp::token_match(&parser.next_token) {
+        if BinOp::token_match(&parser.next_token) | parser.current_token(&Token::LParen) {
             match &parser.current_token {
                 Token::Int(_) | Token::Ident(_) => {
                     let kind = Self::parse_binary(parser, 0);
@@ -128,6 +127,9 @@ impl<'a> Parse<'a> for Expr {
                 kind, // Need further testing
             };
         }
+
+        // Check which match order is faster. e.g. token first or op first
+
 
         let kind = match &parser.current_token {
             Token::Int(_) | Token::String(_) => Self::parse_literal(parser),
