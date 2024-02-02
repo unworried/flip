@@ -46,7 +46,6 @@ impl AstValidator {
 
     fn flatten_ast(&mut self, ast: &Ast) {
         self.actual.clear();
-        println!("{:#?}", ast);
         self.visit_ast(ast);
     }
 
@@ -118,7 +117,7 @@ impl Visitor for AstValidator {
         self.actual.push(ASTNode::Integer(node.to_owned()));
     }
 
-    fn visit_string_literal(&mut self, node: &String) {
+    fn visit_string_literal(&mut self, node: &str) {
         self.actual.push(ASTNode::String(node.to_owned()));
     }
 }

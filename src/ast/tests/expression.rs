@@ -87,6 +87,5 @@ fn binary_precedence() {
     ];
 
     assert_ast(input, expected);
-    panic!();
 }
 

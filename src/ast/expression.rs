@@ -101,7 +101,7 @@ impl Expr {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug)]
 pub enum BinOp {
     Add,
     Sub,
@@ -142,7 +142,7 @@ impl BinOp {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug)]
 pub enum UnOp {
     //Not,
     Neg,
@@ -156,7 +156,7 @@ impl UnOp {
 
 pub type Ident = String;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug)]
 pub enum Literal {
     String(String),
     Integer(isize),

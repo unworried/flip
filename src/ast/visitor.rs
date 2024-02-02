@@ -39,7 +39,7 @@ pub trait Visitor: Sized {
         lit.walk(self);
     }
 
-    fn visit_string_literal(&mut self, string: &String);
+    fn visit_string_literal(&mut self, string: &str);
     fn visit_integer_literal(&mut self, lit: &isize);
 }
 

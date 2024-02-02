@@ -38,13 +38,13 @@ impl Ast {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug)]
 pub struct Item {
     //pub id: ItemId,
     pub kind: ItemKind,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug)]
 pub enum ItemKind {
     //Function(Function),
     Statement(Stmt),
@@ -58,12 +58,12 @@ impl<'a> Parse<'a> for Item {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug)]
 pub struct Stmt {
     pub kind: StmtKind,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug)]
 pub enum StmtKind {
     // "if" (condition) "{" \n {statement}* "}"
     If(Expr, Vec<Item>), // WARN: When funcs are added. need to change this to only allow stmts
@@ -96,12 +96,12 @@ impl<'a> Parse<'a> for Stmt {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug)]
 pub struct Expr {
     pub kind: ExprKind,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug)]
 pub enum ExprKind {
     Binary(BinOp, P<Expr>, P<Expr>),
     Unary(UnOp, P<Expr>),
