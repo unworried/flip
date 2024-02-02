@@ -46,12 +46,11 @@ impl AstValidator {
 
     fn flatten_ast(&mut self, ast: &Ast) {
         self.actual.clear();
+        println!("{:#?}", ast);
         self.visit_ast(ast);
     }
 
     pub fn validate(&self) {
-        println!("{:?}", self.expected);
-        println!("{:?}", self.actual);
         assert_eq!(
             self.expected.len(),
             self.actual.len(),

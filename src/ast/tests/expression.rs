@@ -71,3 +71,22 @@ fn binary() {
 
     assert_ast(input, expected);
 }
+
+#[test]
+fn binary_precedence() {
+    let input = "let foo = 123 + 456 * 789;";
+
+    let expected = vec![
+        ASTNode::Let,
+        ASTNode::Ident("foo".to_string()),
+        ASTNode::Binary,
+        ASTNode::Integer(123),
+        ASTNode::Binary,
+        ASTNode::Integer(456),
+        ASTNode::Integer(789),
+    ];
+
+    assert_ast(input, expected);
+    panic!();
+}
+
