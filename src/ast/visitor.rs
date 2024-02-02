@@ -1,4 +1,4 @@
-use super::{Ast, Expr, ExprKind, Item, ItemKind, Stmt, StmtKind};
+use super::{Ast, Expr, ExprKind, Item, ItemKind, Literal, Stmt, StmtKind};
 
 pub trait Walkable {
     fn walk<V: Visitor>(&self, visitor: &mut V);
@@ -34,6 +34,13 @@ pub trait Visitor: Sized {
     fn visit_expr_kind(&mut self, expr: &ExprKind) {
         expr.walk(self);
     }
+
+    fn visit_literal(&mut self, lit: &Literal) {
+        lit.walk(self);
+    }
+
+    fn visit_string_literal(&mut self, string: &String);
+    fn visit_integer_literal(&mut self, lit: &isize);
 }
 
 impl Walkable for Item {
@@ -72,7 +79,10 @@ impl Walkable for StmtKind {
                     visitor.visit_item(item);
                 }
             }
-            StmtKind::Let(_, expr) => visitor.visit_expr(expr),
+            StmtKind::Let(.., expr) => {
+                //visitor.visit_expr_kind(ident); // TODO: FIX Ident DEclaration
+                visitor.visit_expr(expr)
+            },
         }
     }
 }
@@ -86,13 +96,22 @@ impl Walkable for Expr {
 impl Walkable for ExprKind {
     fn walk<V: Visitor>(&self, visitor: &mut V) {
         match &self {
-            ExprKind::Literal(_) => {}
+            ExprKind::Literal(value) => visitor.visit_literal(value),
             ExprKind::Binary(_, lhs, rhs) => {
                 visitor.visit_expr(&lhs.ptr);
                 visitor.visit_expr(&rhs.ptr);
             }
             ExprKind::Unary(_, expr) => visitor.visit_expr(&expr.ptr),
             ExprKind::Ident(_) => {}
+        }
+    }
+}
+
+impl Walkable for Literal {
+    fn walk<V: Visitor>(&self, visitor: &mut V) {
+        match &self {
+            Literal::String(string) => visitor.visit_string_literal(string),
+            Literal::Integer(int) => visitor.visit_integer_literal(int),    
         }
     }
 }

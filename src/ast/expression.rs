@@ -7,40 +7,57 @@ use super::{Expr, ExprKind};
 
 impl Expr {
     /// Grammar: (expression) (operator) (expression)
-    /*
-     * TODO: fix support for P<Expr> for lhs
-     * lhs: atomic, rhs: subatomic/branching
-     */
-    pub fn parse_binary(parser: &mut Parser) -> ExprKind {
+    pub fn parse_binary(parser: &mut Parser, precedence: u8) -> ExprKind {
+        // Move this to a parse_primary section to avoid code duplication
         let leftkind = match &parser.current_token {
             Token::Int(_) => Self::parse_literal(parser), // TODO: change
             Token::Ident(_) => Self::parse_ident(parser),
-            _ => unimplemented!("Unexpected token {:?}", parser.current_token),
+            _ => {
+                if UnOp::token_match(&parser.current_token) {
+                    return Self::parse_unary(parser);
+                }
+
+                unimplemented!("Unexpected token {:?}", parser.current_token);
+            }
         };
 
+        let mut left = P(Expr { kind: leftkind });
         parser.step();
-        let left = P(Expr { kind: leftkind });
+        println!("{:?}", parser.current_token);
 
-        // CHECK: Will this retain the correct precedence?
-        let operator = match &parser.current_token {
-            Token::Plus => BinOp::Add,
-            Token::Minus => BinOp::Sub,
-            Token::ForwardSlash => BinOp::Div,
-            Token::Asterisk => BinOp::Mul,
-            Token::GreaterThan => BinOp::GreaterThan,
-            Token::GreaterThanEqual => BinOp::GreaterThanEq,
-            Token::LessThan => BinOp::LessThan,
-            Token::LessThanEqual => BinOp::LessThanEq,
-            Token::Equal => BinOp::Eq,
-            Token::NotEqual => BinOp::NotEq,
-            token => unimplemented!("Unexpected token {:?}", token),
-        };
+        // May need parse step here
+        while let Some(operator) = Self::parse_binary_operator(parser) {
+            if operator.precedence() <= precedence {
+                break;
+            }
 
-        parser.step();
+            parser.step();
+            let right = P(Expr {
+                kind: Self::parse_binary(parser, operator.precedence()),
+            });
 
-        let right = P(Expr::parse(parser));
+            left = P(Expr {
+                kind: ExprKind::Binary(operator, left, right),
+            });
+        }
 
-        ExprKind::Binary(operator, left, right)
+        left.ptr.kind // Change to return box maybe
+    }
+
+    fn parse_binary_operator(parser: &mut Parser) -> Option<BinOp> {
+        match &parser.current_token {
+            Token::Plus => Some(BinOp::Add),
+            Token::Minus => Some(BinOp::Sub),
+            Token::ForwardSlash => Some(BinOp::Div),
+            Token::Asterisk => Some(BinOp::Mul),
+            Token::GreaterThan => Some(BinOp::GreaterThan),
+            Token::GreaterThanEqual => Some(BinOp::GreaterThanEq),
+            Token::LessThan => Some(BinOp::LessThan),
+            Token::LessThanEqual => Some(BinOp::LessThanEq),
+            Token::Equal => Some(BinOp::Eq),
+            Token::NotEqual => Some(BinOp::NotEq),
+            _ => None,
+        }
     }
 
     /// Grammar: (operator) (expression)
@@ -114,6 +131,15 @@ impl BinOp {
                 | Token::GreaterThanEqual
         )
     }
+
+    pub fn precedence(&self) -> u8 {
+        match self {
+            BinOp::Add | BinOp::Sub => 1,
+            BinOp::Mul | BinOp::Div => 2,
+            BinOp::Eq | BinOp::NotEq => 3,
+            BinOp::LessThan | BinOp::LessThanEq | BinOp::GreaterThan | BinOp::GreaterThanEq => 4,
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -136,65 +162,3 @@ pub enum Literal {
     Integer(isize),
     // Add more
 }
-
-/*#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::{int_literal, lexer::Lexer, parser::P};
-
-    #[test]
-    fn identifier() {
-        let mut lexer = Lexer::new("test".to_string());
-        let mut parser = Parser::new(&mut lexer);
-
-        parser.symbols.insert("test".to_owned());
-        assert_eq!(
-            Expr::parse_ident(&mut parser),
-            ExprKind::Ident("test".to_owned())
-        );
-    }
-
-    #[test]
-    fn literal_int() {
-        let mut lexer = Lexer::new("123".to_string());
-        let mut parser = Parser::new(&mut lexer);
-
-        assert_eq!(
-            Expr::parse_literal(&mut parser),
-            ExprKind::Literal(Literal::Integer(123))
-        );
-    }
-
-    #[test]
-    fn literal_string() {
-        let mut lexer = Lexer::new("\"test\"".to_string());
-        let mut parser = Parser::new(&mut lexer);
-
-        assert_eq!(
-            Expr::parse_literal(&mut parser),
-            ExprKind::Literal(Literal::String("test".to_owned()))
-        );
-    }
-
-    #[test]
-    fn unary() {
-        let mut lexer = Lexer::new("-123".to_string());
-        let mut parser = Parser::new(&mut lexer);
-
-        assert_eq!(
-            Expr::parse_unary(&mut parser),
-            ExprKind::Unary(UnOp::Neg, P(int_literal!(123)))
-        );
-    }
-
-    #[test]
-    fn binary() {
-        let mut lexer = Lexer::new("123 * 456".to_string());
-        let mut parser = Parser::new(&mut lexer);
-
-        assert_eq!(
-            Expr::parse_binary(&mut parser),
-            ExprKind::Binary(BinOp::Mul, P(int_literal!(123)), P(int_literal!(456))),
-        );
-    }
-}*/

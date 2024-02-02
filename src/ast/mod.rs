@@ -14,8 +14,8 @@ mod expression;
 mod statement;
 mod visitor;
 
-//#[cfg(test)]
-//mod util;
+#[cfg(test)]
+mod tests;
 
 #[derive(Debug)]
 pub struct Ast {
@@ -115,7 +115,7 @@ impl<'a> Parse<'a> for Expr {
         if BinOp::token_match(&parser.next_token) {
             match &parser.current_token {
                 Token::Int(_) | Token::Ident(_) => {
-                    let kind = Self::parse_binary(parser);
+                    let kind = Self::parse_binary(parser, 0);
                     return Expr { kind }; // May be cleaner solution
                 }
                 _ => {}
