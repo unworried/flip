@@ -13,7 +13,6 @@ pub enum Token {
     Int(isize),
     String(String),
 
-
     /// Operators
     Equal,
     NotEqual,
@@ -43,7 +42,37 @@ pub enum Token {
 
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?} ", self)
+        let display = match self {
+            Token::Assign => "=",
+            Token::Ident(_) => "Identifer",
+            Token::Illegal => "Illegal Token",
+            Token::Eof => "EoF",
+            Token::Newline => r#"\n"#,
+            Token::Int(_) => "Integer",
+            Token::String(_) => "String",
+            Token::Equal => "==",
+            Token::NotEqual => "!=",
+            Token::Plus => "+",
+            Token::Minus => "-",
+            Token::Asterisk => "*",
+            Token::ForwardSlash => "/",
+            Token::LessThan => "<",
+            Token::LessThanEqual => "<=",
+            Token::GreaterThan => ">",
+            Token::GreaterThanEqual => ">=",
+            Token::Let => "Let",
+            Token::If => "If",
+            Token::Else => "Else",
+            Token::While => "While",
+            Token::Print => "Print",
+            Token::LParen => "(",
+            Token::RParen => ")",
+            Token::LBrace => "{",
+            Token::RBrace => "}",
+            Token::SemiColon => ";",
+        };
+
+        write!(f, "{}", display)
     }
 }
 
