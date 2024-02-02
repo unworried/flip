@@ -157,7 +157,11 @@ fn while_statement_nested_block_statements() {
 fn let_statement() {
     let input = "let Ident = 123;";
 
-    let expected = vec![ASTNode::Let, ASTNode::Ident("Ident".to_string()), ASTNode::Integer(123)];
+    let expected = vec![
+        ASTNode::Let,
+        ASTNode::Ident("Ident".to_string()),
+        ASTNode::Integer(123),
+    ];
 
     assert_ast(input, expected)
 }
