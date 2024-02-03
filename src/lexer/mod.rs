@@ -142,7 +142,6 @@ impl Lexer {
 
     fn whitespace(&mut self) -> Token {
         while Self::is_whitespace(self.ch) {
-            println!("Skipping whitespace: {:?}", self.ch as char);
             self.read_char();
         }
         Token::Whitespace

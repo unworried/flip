@@ -42,6 +42,7 @@ impl AstDisplay {
 
 impl Visitor for AstDisplay {
     fn visit_stmt(&mut self, stmt: &Stmt) {
+        self.add_newline();
         self.add_padding();
         self.result.push_str("Statement: ");
         stmt.walk(self);
@@ -57,7 +58,6 @@ impl Visitor for AstDisplay {
         }
 
         stmt.walk(self);
-        self.add_newline();
     }
 
     fn visit_expr(&mut self, expr: &super::Expr) {

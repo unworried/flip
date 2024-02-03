@@ -1,3 +1,5 @@
+mod debug;
+
 use flipc::{
     diagnostics::{display::DiagnosticsDisplay, DiagnosticBag},
     lexer::Lexer,

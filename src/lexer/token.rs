@@ -48,7 +48,7 @@ impl Display for Token {
             Token::Ident(_) => "Identifer",
             Token::Illegal => "Illegal Token",
             Token::Eof => "EoF",
-            Token::Newline => r#"'\n'"#,
+            Token::Newline => r#"\n"#,
             Token::Int(_) => "Integer",
             Token::String(_) => "String",
             Token::Equal => "==",
