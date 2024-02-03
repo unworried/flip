@@ -58,7 +58,7 @@ impl Lexer {
             _ => Token::from(self.ch),
         };
 
-        let span = Span::new(start_position, self.position -1);
+        let span = Span::new(start_position, self.position - 1);
         self.read_char();
         (token, span)
     }

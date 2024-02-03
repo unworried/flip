@@ -87,7 +87,7 @@ impl Walkable for StmtKind {
             StmtKind::Let(.., expr) => {
                 //visitor.visit_expr_kind(ident); // TODO: FIX Ident DEclaration
                 visitor.visit_expr(expr)
-            },
+            }
             StmtKind::Error => {}
         }
     }
@@ -114,8 +114,8 @@ impl Walkable for ExprKind {
 impl Walkable for Literal {
     fn walk<V: Visitor>(&self, _visitor: &mut V) {
         match &self {
-            Literal::String(_string) => {},
-            Literal::Integer(_int) => {},    
+            Literal::String(_string) => {}
+            Literal::Integer(_int) => {}
         }
     }
 }

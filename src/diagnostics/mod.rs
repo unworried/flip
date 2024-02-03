@@ -35,8 +35,7 @@ impl DiagnosticBag {
 
     pub fn display(&self, src: &Source) {
         if !self.diagnostics.is_empty() {
-            let diagnostics_display =
-                DiagnosticsDisplay::new(src, &self.diagnostics);
+            let diagnostics_display = DiagnosticsDisplay::new(src, &self.diagnostics);
             diagnostics_display.print();
         }
     }
@@ -76,23 +75,14 @@ impl DiagnosticBag {
     }
 
     pub fn unexpected_statement(&mut self, token: &Token, span: &Span) {
-        self.error(
-            format!("unexpected statement '{}'", token),
-            span.clone(),
-        );
+        self.error(format!("unexpected statement '{}'", token), span.clone());
     }
 
     pub fn invalid_operator(&mut self, token: &Token, span: &Span) {
-        self.error(
-            format!("invalid operator '{}'", token),
-            span.clone(),
-        );
+        self.error(format!("invalid operator '{}'", token), span.clone());
     }
 
     pub fn unknown_expression(&mut self, token: &Token, span: &Span) {
-        self.error(
-            format!("unknown expression '{}'", token),
-            span.clone(),
-        );
+        self.error(format!("unknown expression '{}'", token), span.clone());
     }
 }

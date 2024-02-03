@@ -1,8 +1,8 @@
 use self::validator::{assert_ast, ASTNode};
 
+mod controller;
 mod expression;
 mod validator;
-mod controller;
 
 #[test]
 fn validation_scheme() {

@@ -11,8 +11,7 @@ fn nested_blocks() {
     let mut lex = Lexer::new(src);
     let diagnostics = DiagnosticBag::new();
     let mut parser = Parser::new(&mut lex, diagnostics);
-    
+
     let actual = parser.parse();
     println!("{:#?}", actual);
 }
-

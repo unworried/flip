@@ -146,6 +146,4 @@ fn nested_parenthesis_binary_expression() {
 }
 
 #[test]
-fn operator_precedence() {
-
-}
+fn operator_precedence() {}

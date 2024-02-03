@@ -8,7 +8,7 @@ impl Source {
     }
 
     pub fn line_index(&self, index: usize) -> usize {
-        self.text[..index].lines().count() - 1 
+        self.text[..index].lines().count() - 1
     }
 
     pub fn line(&self, index: usize) -> &str {
