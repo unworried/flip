@@ -5,11 +5,12 @@ mod validator;
 
 #[test]
 fn validation_scheme() {
-    let input = "while 1 { \nprint \"TEST\"; \nif 1 == 1 { \nlet foo = 45; \n}; \n};\n";
+    let input = "while 1 { \nlet bar = \"TEST\"; \nif 1 == 1 { \nlet foo = 45; \n}; \n};\n";
     let expected = vec![
         ASTNode::While,
         ASTNode::Integer(1),
-        ASTNode::Print,
+        ASTNode::Let,
+        ASTNode::Ident("bar".to_string()),
         ASTNode::String("TEST".to_string()),
         ASTNode::If,
         ASTNode::Binary,
@@ -24,49 +25,14 @@ fn validation_scheme() {
 }
 
 #[test]
-fn print_string_statement() {
-    let input = "print \"hello, world!\";";
-
-    let expected = vec![ASTNode::Print, ASTNode::String("hello, world!".to_string())];
-
-    assert_ast(input, expected)
-}
-
-#[test]
-fn print_string_statement_newline() {
-    let input = "print \"hello, world!\";\n";
-
-    let expected = vec![ASTNode::Print, ASTNode::String("hello, world!".to_string())];
-
-    assert_ast(input, expected)
-}
-
-#[test]
-fn print_int_statement() {
-    let input = "print 123;";
-
-    let expected = vec![ASTNode::Print, ASTNode::Integer(123)];
-
-    assert_ast(input, expected)
-}
-
-#[test]
-fn print_int_statement_newline() {
-    let input = "print 123;\n";
-
-    let expected = vec![ASTNode::Print, ASTNode::Integer(123)];
-
-    assert_ast(input, expected)
-}
-
-#[test]
 fn if_statement() {
-    let input = "if \"TMP\" { \nprint \"hello, world!\"; };";
+    let input = "if \"TMP\" { \nlet foo = \"hello, world!\"; };";
 
     let expected = vec![
         ASTNode::If,
         ASTNode::String("TMP".to_string()),
-        ASTNode::Print,
+        ASTNode::Let,
+        ASTNode::Ident("foo".to_string()),
         ASTNode::String("hello, world!".to_string()),
     ];
 
@@ -75,12 +41,13 @@ fn if_statement() {
 
 #[test]
 fn if_statement_newline() {
-    let input = "if \"TMP\" { \nprint \"hello, world!\"; }; \n";
+    let input = "if \"TMP\" { \nlet foo = \"hello, world!\"; };\n";
 
     let expected = vec![
         ASTNode::If,
         ASTNode::String("TMP".to_string()),
-        ASTNode::Print,
+        ASTNode::Let,
+        ASTNode::Ident("foo".to_string()),
         ASTNode::String("hello, world!".to_string()),
     ];
 
@@ -89,12 +56,13 @@ fn if_statement_newline() {
 
 #[test]
 fn while_statement() {
-    let input = "while \"TMP\" { \nprint \"hello, world!\"; };";
+    let input = "while \"TMP\" { \nlet foo = \"hello, world!\"; };";
 
     let expected = vec![
         ASTNode::While,
         ASTNode::String("TMP".to_string()),
-        ASTNode::Print,
+        ASTNode::Let,
+        ASTNode::Ident("foo".to_string()),
         ASTNode::String("hello, world!".to_string()),
     ];
 
@@ -103,12 +71,13 @@ fn while_statement() {
 
 #[test]
 fn while_statement_newline() {
-    let input = "while \"TMP\" { \nprint \"hello, world!\"; }; \n";
+    let input = "while \"TMP\" { \nlet foo = \"hello, world!\"; }; \n";
 
     let expected = vec![
         ASTNode::While,
         ASTNode::String("TMP".to_string()),
-        ASTNode::Print,
+        ASTNode::Let,
+        ASTNode::Ident("foo".to_string()),
         ASTNode::String("hello, world!".to_string()),
     ];
 
@@ -117,16 +86,19 @@ fn while_statement_newline() {
 
 #[test]
 fn while_statement_nested_statements() {
-    let input = "while \"TMP\" { \nprint \"hello, world!\"; \nprint \"hello, world 2!\"; \nprint \"hello, world 3!\"; \n };";
+    let input = "while \"TMP\" { \nlet x = \"hello, world!\"; \nlet y = \"hello, world 2!\"; \nlet z = \"hello, world 3!\"; \n };";
 
     let expected = vec![
         ASTNode::While,
         ASTNode::String("TMP".to_string()),
-        ASTNode::Print,
+        ASTNode::Let,
+        ASTNode::Ident("x".to_string()),
         ASTNode::String("hello, world!".to_string()),
-        ASTNode::Print,
+        ASTNode::Let,
+        ASTNode::Ident("y".to_string()),
         ASTNode::String("hello, world 2!".to_string()),
-        ASTNode::Print,
+        ASTNode::Let,
+        ASTNode::Ident("z".to_string()),
         ASTNode::String("hello, world 3!".to_string()),
     ];
 
@@ -135,18 +107,20 @@ fn while_statement_nested_statements() {
 
 #[test]
 fn while_statement_nested_block_statements() {
-    let input = "while \"TMP\" { \nprint \"hello, world!\";\nif \"TMP\" { \nwhile \"TMP\" { \nprint \"hello, world 3!\";\n }; \n }; \n };";
+    let input = "while \"TMP\" { \nlet x = \"hello, world!\";\nif \"TMP\" { \nwhile \"TMP\" { \nlet y = \"hello, world 3!\";\n }; \n }; \n };";
 
     let expected = vec![
         ASTNode::While,
         ASTNode::String("TMP".to_string()),
-        ASTNode::Print,
+        ASTNode::Let,
+        ASTNode::Ident("x".to_string()),
         ASTNode::String("hello, world!".to_string()),
         ASTNode::If,
         ASTNode::String("TMP".to_string()),
         ASTNode::While,
         ASTNode::String("TMP".to_string()),
-        ASTNode::Print,
+        ASTNode::Let,
+        ASTNode::Ident("y".to_string()),
         ASTNode::String("hello, world 3!".to_string()),
     ];
 

@@ -65,14 +65,12 @@ pub struct Stmt {
 
 #[derive(Debug)]
 pub enum StmtKind {
+    // "let" (identifier) "=" (expression)
+    Let(Ident, Expr),
     // "if" (condition) "{" \n {statement}* "}"
     If(Expr, Vec<Item>), // WARN: When funcs are added. need to change this to only allow stmts
     // "while" (condition) "{" \n {statement}* "}"
     While(Expr, Vec<Item>),
-    // "let" (identifier) "=" (expression)
-    Let(Ident, Expr),
-    // "print" (expression)
-    Print(Expr),
 }
 
 impl<'a> Parse<'a> for Stmt {
@@ -83,7 +81,6 @@ impl<'a> Parse<'a> for Stmt {
             Token::If => Self::parse_if(parser),
             Token::While => Self::parse_while(parser),
             Token::Let => Self::parse_let(parser),
-            Token::Print => Self::parse_print(parser),
             token => unimplemented!("{:#?}", token), // Handle Err
         };
 

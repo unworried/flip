@@ -66,7 +66,6 @@ impl Walkable for Stmt {
 impl Walkable for StmtKind {
     fn walk<V: Visitor>(&self, visitor: &mut V) {
         match &self {
-            StmtKind::Print(expr) => visitor.visit_expr(expr),
             StmtKind::If(cond, res) => {
                 visitor.visit_expr(cond);
                 for item in res {

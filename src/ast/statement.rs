@@ -5,13 +5,6 @@ use crate::{
 };
 
 impl Stmt {
-    /// Grammar: "print" (expression)
-    pub fn parse_print(parser: &mut Parser) -> StmtKind {
-        let expression = Expr::parse(parser);
-
-        StmtKind::Print(expression)
-    }
-
     /// Grammar: "if" (condition) "{" \n {statement}* "}"
     pub fn parse_if(parser: &mut Parser) -> StmtKind {
         let condition = Expr::parse(parser);

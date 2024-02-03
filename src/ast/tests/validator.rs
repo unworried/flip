@@ -17,7 +17,6 @@ pub enum ASTNode {
     If,
     While,
     Let,
-    Print,
     Integer(isize),
     String(String),
     Binary,
@@ -71,10 +70,6 @@ impl AstValidator {
 impl Visitor for AstValidator {
     fn visit_stmt_kind(&mut self, node: &StmtKind) {
         match &node {
-            StmtKind::Print(expr) => {
-                self.actual.push(ASTNode::Print);
-                expr.walk(self);
-            }
             StmtKind::If(cond, res) => {
                 self.actual.push(ASTNode::If);
                 cond.walk(self);
@@ -107,7 +102,7 @@ impl Visitor for AstValidator {
             ExprKind::Unary(.., int) => {
                 self.actual.push(ASTNode::Unary);
                 int.ptr.walk(self);
-            },
+            }
             ExprKind::Literal(value) => value.walk(self),
             ExprKind::Ident(ident) => self.actual.push(ASTNode::Ident(ident.to_owned())),
         }

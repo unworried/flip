@@ -4,13 +4,16 @@ use super::validator::assert_ast;
 
 #[test]
 fn identifier() {
-    let input = "let test = \"some value\"; print test;";
+    let input = "let test = \"some value\"; if test { let foo = test; };";
 
     let expected = vec![
         ASTNode::Let,
         ASTNode::Ident("test".to_string()),
         ASTNode::String("some value".to_string()),
-        ASTNode::Print,
+        ASTNode::If,
+        ASTNode::Ident("test".to_string()),
+        ASTNode::Let,
+        ASTNode::Ident("foo".to_string()),
         ASTNode::Ident("test".to_string()),
     ];
 
