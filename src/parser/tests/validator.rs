@@ -3,6 +3,7 @@ use crate::{
         visitor::{Visitor, Walkable},
         Ast, ExprKind, Literal, StmtKind,
     },
+    diagnostics::DiagnosticBag,
     lexer::Lexer,
     parser::Parser,
 };
@@ -32,7 +33,8 @@ pub struct AstValidator {
 impl AstValidator {
     pub fn new(input: &str, expected: Vec<ASTNode>) -> Self {
         let mut lexer = Lexer::new(input.to_string());
-        let mut parser = Parser::new(&mut lexer);
+        let diagnostics = DiagnosticBag::new();
+        let mut parser = Parser::new(&mut lexer, diagnostics);
         let ast = parser.parse();
         let mut validator = AstValidator {
             expected,

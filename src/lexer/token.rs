@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-#[derive(Debug, PartialEq)] // TODO: try to remove clone
+#[derive(Debug, PartialEq, Clone)] // TODO: try to remove clone
 pub enum Token {
     // Special
     Assign,
@@ -8,6 +8,7 @@ pub enum Token {
     Illegal,
     Eof,
     Newline,
+    Whitespace, // Whitespace sequence of length n
 
     // Literals
     Int(isize),
@@ -47,7 +48,7 @@ impl Display for Token {
             Token::Ident(_) => "Identifer",
             Token::Illegal => "Illegal Token",
             Token::Eof => "EoF",
-            Token::Newline => r#"\n"#,
+            Token::Newline => r#"'\n'"#,
             Token::Int(_) => "Integer",
             Token::String(_) => "String",
             Token::Equal => "==",
@@ -70,6 +71,7 @@ impl Display for Token {
             Token::LBrace => "{",
             Token::RBrace => "}",
             Token::SemiColon => ";",
+            Token::Whitespace => r#"' '"#,
         };
 
         write!(f, "{}", display)

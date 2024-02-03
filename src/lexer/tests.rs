@@ -6,7 +6,7 @@ fn check_tokens(input: &str, expected: Vec<Token>) {
     for token in expected {
         let next_token = lex.next_token();
         println!("expected: {:?}, got: {:?}", token, next_token);
-        assert_eq!(next_token, token);
+        assert_eq!(next_token.0, token);
     }
 }
 
@@ -85,9 +85,9 @@ fn tokenize_whitespace() {
     let mut lex = Lexer::new(input.to_string());
 
     let next_token = lex.next_token();
-    assert_eq!(next_token, Token::Newline);
+    assert_eq!(next_token.0, Token::Newline);
     let next_token = lex.next_token();
-    assert_eq!(next_token, Token::Eof);
+    assert_eq!(next_token.0, Token::Eof);
 }
 
 #[test]
@@ -142,7 +142,7 @@ fn tokenize_comment() {
     let mut lex = Lexer::new(input.to_string());
 
     let next_token = lex.next_token();
-    assert_eq!(next_token, Token::Eof);
+    assert_eq!(next_token.0, Token::Eof);
 }
 
 #[test]
@@ -151,9 +151,9 @@ fn tokenize_comment_with_newline() {
     let mut lex = Lexer::new(input.to_string());
 
     let next_token = lex.next_token();
-    assert_eq!(next_token, Token::Newline);
+    assert_eq!(next_token.0, Token::Newline);
     let next_token = lex.next_token();
-    assert_eq!(next_token, Token::Eof);
+    assert_eq!(next_token.0, Token::Eof);
 }
 
 #[test]

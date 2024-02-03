@@ -41,14 +41,20 @@ impl Visitor for AstEvaluator {
 
 #[cfg(test)]
 mod tests {
-    #![allow(clippy::identity_op, clippy::erasing_op, clippy::neg_multiply)]
+    #![allow(
+        clippy::identity_op,
+        clippy::erasing_op,
+        clippy::neg_multiply,
+        clippy::double_neg
+    )]
 
     use super::*;
-    use crate::parser::Parser;
+    use crate::{diagnostics::DiagnosticBag, parser::Parser};
 
     fn assert_eval(input: &str, expected: isize) {
         let mut lexer = crate::lexer::Lexer::new(input.to_string());
-        let mut parser = Parser::new(&mut lexer);
+        let diagnostics = DiagnosticBag::new();
+        let mut parser = Parser::new(&mut lexer, diagnostics);
         let program = parser.parse();
         let mut evaluator = AstEvaluator::default();
         evaluator.visit_ast(&program);
@@ -109,14 +115,52 @@ mod tests {
     }
 
     #[test]
+    fn complex_paren_unary() {
+        assert_eq!(-1 + (2 * 3), 5);
+        assert_eval("let x = -1 + (2 * 3);", 5);
+        assert_eq!(-1 * (2 + 3), -5);
+        assert_eval("let x = -1 * (2 + 3);", -5);
+    }
+
+    #[test]
+    fn complex_unary_parent() {
+        assert_eq!(-(1 + 2) * 3, -9);
+        assert_eval("let x = -(1 + 2) * 3;", -9);
+        assert_eq!(-1 * -(-2 + 3), 1);
+        assert_eval("let x = -1 * -(-2 + 3);", 1);
+    }
+
+    #[test]
     #[should_panic]
     fn divide_by_zero() {
         let input = "let x = 7 / (3 - 3);";
         let mut lexer = crate::lexer::Lexer::new(input.to_string());
-        let mut parser = Parser::new(&mut lexer);
+        let diagnostics = DiagnosticBag::new();
+        let mut parser = Parser::new(&mut lexer, diagnostics);
         let program = parser.parse();
         let mut evaluator = AstEvaluator::default();
         evaluator.visit_ast(&program);
         println!("{}", program);
+    }
+
+    #[test]
+    fn fuzzy() {
+        assert_eq!(----------------------------------------------45, 45);
+        assert_eval(
+            "let x = ----------------------------------------------45;",
+            45,
+        );
+        assert_eq!(1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10, 55);
+        assert_eval("let x = 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10;", 55);
+        assert_eq!(1 + 2 * 3 + 4 * 5 + 6 * 7 + 8 * 9 + 10, 151);
+        assert_eval("let x = 1 + 2 * 3 + 4 * 5 + 6 * 7 + 8 * 9 + 10;", 151);
+        assert_eq!(1 * 2 + 3 * 4 + 5 * 6 + 7 * 8 + 9 * 10, 190);
+        assert_eval("let x = 1 * 2 + 3 * 4 + 5 * 6 + 7 * 8 + 9 * 10;", 190);
+        assert_eq!(1 + 2 * 3 * 4 + 5 * 6 * 7 + 8 * 9 * 10, 955);
+        assert_eval("let x = 1 + 2 * 3 * 4 + 5 * 6 * 7 + 8 * 9 * 10;", 955);
+        assert_eval(
+            "let x = (((((((((((((((((((((((((((((1)))))))))))))))))))))))))))));",
+            1,
+        );
     }
 }

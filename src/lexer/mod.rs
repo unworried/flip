@@ -1,3 +1,5 @@
+use crate::span::Span;
+
 pub use self::token::Token;
 
 #[cfg(test)]
@@ -24,11 +26,19 @@ impl Lexer {
         lex
     }
 
-    pub fn next_token(&mut self) -> Token {
-        self.skip_whitespace();
+    pub fn next_token(&mut self) -> (Token, Span) {
+        //self.skip_whitespace();
         self.skip_comment();
+        let start_position = self.position; // FIXME: will only count group of whitespace as 1
+
+        if Self::is_whitespace(self.ch) {
+            let span = Span::new(start_position, self.position);
+            self.read_char();
+            return (self.whitespace(), span);
+        }
 
         let token = match self.ch {
+
             b'\"' => Token::String(self.read_string()),
 
             b'0'..=b'9' => Token::Int(self.read_integer()),
@@ -49,8 +59,9 @@ impl Lexer {
             _ => Token::from(self.ch),
         };
 
+        let span = Span::new(start_position, self.position);
         self.read_char();
-        token
+        (token, span)
     }
 
     fn peek(&self) -> u8 {
@@ -125,11 +136,16 @@ impl Lexer {
         identifier
     }
 
-    fn skip_whitespace(&mut self) {
+    fn is_whitespace(ch: u8) -> bool {
         // u8.is_ascii_whitespace() but without the newline
-        while matches!(self.ch, b'\t' | b'\x0C' | b'\r' | b' ') {
+        matches!(ch, b'\t' | b'\x0C' | b'\r' | b' ')
+    }
+
+    fn whitespace(&mut self) -> Token {
+        while Self::is_whitespace(self.ch) {
             self.read_char();
         }
+        Token::Whitespace
     }
 
     fn skip_comment(&mut self) {

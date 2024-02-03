@@ -1,6 +1,5 @@
 use crate::{
-    lexer::Token,
-    parser::{Parse, Parser, P},
+    lexer::Token, parser::{Parse, Parser, P}, span::Span
 };
 
 pub use self::expression::*;
@@ -21,10 +20,10 @@ pub struct Ast {
 impl Ast {
     pub fn parse(parser: &mut Parser, end_delim: Token) -> Self {
         let mut items = Vec::new();
-        while !parser.current_token(&end_delim) {
+        while !parser.current_token_is(&end_delim) {
             items.push(Item::parse(parser));
 
-            while parser.current_token(&Token::Newline) {
+            while parser.current_token_is(&Token::Newline) {
                 parser.step();
             }
         }
@@ -69,7 +68,7 @@ pub enum StmtKind {
 
 impl<'a> Parse<'a> for Stmt {
     fn parse(parser: &mut Parser<'a>) -> Self {
-        let token = parser.eat();
+        let token = parser.consume();
 
         let kind = match &token {
             Token::Let => Self::parse_let(parser),
@@ -78,9 +77,17 @@ impl<'a> Parse<'a> for Stmt {
             token => unimplemented!("{:#?}", token), // Handle Err
         };
 
-        if !parser.current_token(&Token::SemiColon) {
-            panic!("expected ';', actual: '{:?}'", parser.current_token);
-        } // Seems to be working. needs more testing
+        //parser.consume_and_check(Token::SemiColon);
+        if !parser.current_token_is(&Token::SemiColon) {
+            let previous_span = Span {
+                start: parser.token_span().start - 1,
+                end: parser.token_span().start - 1,
+            };
+            parser
+                .diagnostics
+                .borrow_mut()
+                .unexpected_token(&Token::SemiColon, parser.current_token(), &previous_span);
+        }
         parser.step();
 
         Self { kind }
@@ -104,7 +111,7 @@ impl<'a> Parse<'a> for Expr {
     fn parse(parser: &mut Parser<'a>) -> Self {
         let mut kind = Self::parse_unary_or_primary(parser);
 
-        if BinOp::token_match(&parser.current_token) {
+        if BinOp::token_match(parser.current_token()) {
             kind = Self::parse_binary(parser, kind, 0);
         }
 

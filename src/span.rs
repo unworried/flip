@@ -21,6 +21,6 @@ impl Span {
     }
 
     pub fn length(&self) -> usize {
-        self.end - self.start
+        (self.end - self.start) + 1
     }
 }

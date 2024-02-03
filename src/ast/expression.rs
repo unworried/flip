@@ -35,7 +35,7 @@ impl Expr {
     }
 
     fn parse_binary_operator(parser: &mut Parser) -> Option<BinOp> {
-        match &parser.current_token {
+        match &parser.current_token() {
             Token::Plus => Some(BinOp::Add),
             Token::Minus => Some(BinOp::Sub),
             Token::ForwardSlash => Some(BinOp::Div),
@@ -51,7 +51,7 @@ impl Expr {
     }
 
     pub fn parse_unary_or_primary(parser: &mut Parser) -> ExprKind {
-        if UnOp::token_match(&parser.current_token) {
+        if UnOp::token_match(parser.current_token()) {
             Self::parse_unary(parser)
         } else {
             Self::parse_primary(parser)
@@ -60,7 +60,7 @@ impl Expr {
 
     /// Grammar: (operator) (expression)
     pub fn parse_unary(parser: &mut Parser) -> ExprKind {
-        let operator = match &parser.current_token {
+        let operator = match &parser.current_token() {
             Token::Minus => UnOp::Neg,
             token => unimplemented!("Unexpected token {:?}", token),
         };
@@ -74,7 +74,7 @@ impl Expr {
     }
 
     pub fn parse_primary(parser: &mut Parser) -> ExprKind {
-        let token = parser.eat();
+        let token = parser.consume();
         match &token {
             // Temp before i split into parse_int and parse string
             Token::Int(value) => ExprKind::Literal(Literal::Integer(value.to_owned())),
@@ -91,17 +91,14 @@ impl Expr {
     /// Grammar: "("(expression)")"
     pub fn parse_group(parser: &mut Parser) -> ExprKind {
         let expr = Expr::parse(parser);
-        if !parser.current_token(&Token::RParen) {
-            panic!("expected: ')', actual: '{:?}'", parser.current_token);
-        }
-        parser.step();
+        parser.consume_and_check(Token::RParen);
 
         expr.kind
     }
 
     /// Grammar: (literal) => Token::Int | Token::String
     pub fn parse_literal(parser: &mut Parser) -> ExprKind {
-        let litkind = match &parser.current_token {
+        let litkind = match &parser.current_token() {
             Token::String(value) => Literal::String(value.to_owned()),
             Token::Int(value) => Literal::Integer(value.to_owned()),
             value => unimplemented!("Unexpected token {:?}", value),

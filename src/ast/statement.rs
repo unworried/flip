@@ -9,22 +9,16 @@ impl Stmt {
     pub fn parse_if(parser: &mut Parser) -> StmtKind {
         let condition = Expr::parse(parser);
 
-        if !parser.current_token(&Token::LBrace) {
-            panic!("expected: '{{', actual: '{:?}'", parser.current_token);
-        }
-        parser.step();
+        parser.consume_and_check(Token::LBrace);
 
         // Newline is optional May not need if allow newlines at start of file in ast root struct
-        while parser.current_token(&Token::Newline) {
+        while parser.current_token_is(&Token::Newline) {
             parser.step();
         }
 
         let resolution = Ast::parse(parser, Token::RBrace).items;
 
-        if !parser.current_token(&Token::RBrace) {
-            panic!("expected: '}}', actual: '{:?}'", parser.current_token);
-        }
-        parser.step();
+        parser.consume_and_check(Token::RBrace);
 
         StmtKind::If(condition, resolution)
     }
@@ -33,22 +27,16 @@ impl Stmt {
     pub fn parse_while(parser: &mut Parser) -> StmtKind {
         let condition = Expr::parse(parser);
 
-        if !parser.current_token(&Token::LBrace) {
-            panic!("expected: '{{', actual: '{:?}'", parser.current_token);
-        }
-        parser.step();
+        parser.consume_and_check(Token::LBrace);
 
         // Newline is optional May not need if allow newlines at start of file in ast root struct
-        while parser.current_token(&Token::Newline) {
+        while parser.current_token_is(&Token::Newline) {
             parser.step();
         }
 
         let resolution = Ast::parse(parser, Token::RBrace).items;
 
-        if !parser.current_token(&Token::RBrace) {
-            panic!("expected: '}}', actual: '{:?}'", parser.current_token);
-        }
-        parser.step();
+        parser.consume_and_check(Token::RBrace);
 
         StmtKind::While(condition, resolution)
     }
@@ -57,20 +45,16 @@ impl Stmt {
     pub fn parse_let(parser: &mut Parser) -> StmtKind {
         //let ident = Ident::parse(parser);
         // Temp solution to seperate assignment from refernece. do this properly later...
-        let ident = match &parser.current_token {
+        let ident = match &parser.current_token() {
             Token::Ident(value) => value.to_owned(),
             value => unimplemented!("Unexpected token {:?}", value),
         };
         parser.step();
 
-        if !parser.current_token(&Token::Assign) {
-            panic!("expected: Assignment, actual: {:?}", parser.current_token);
-        }
-        parser.step();
+        parser.consume_and_check(Token::Assign);
 
         let expression = Expr::parse(parser);
 
         StmtKind::Let(ident, expression)
     }
 }
-
