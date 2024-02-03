@@ -61,7 +61,6 @@ impl Stmt {
             Token::Ident(value) => value.to_owned(),
             value => unimplemented!("Unexpected token {:?}", value),
         };
-
         parser.step();
 
         if !parser.current_token(&Token::Assign) {
@@ -70,11 +69,6 @@ impl Stmt {
         parser.step();
 
         let expression = Expr::parse(parser);
-
-        if !parser.symbols.insert(ident.to_owned()) {
-            // Should this be to_owned??
-            panic!("symbol: {:?} already defined", ident);
-        }
 
         StmtKind::Let(ident, expression)
     }

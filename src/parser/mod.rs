@@ -1,8 +1,7 @@
 pub use self::ptr::*;
-use std::collections::HashSet;
 
 use crate::{
-    ast::{Ast, Ident},
+    ast::Ast,
     lexer::{Lexer, Token},
 };
 use std::mem;
@@ -13,9 +12,6 @@ pub struct Parser<'a> {
     lexer: &'a mut Lexer,
     pub current_token: Token,
     pub next_token: Token,
-
-    // Look at better solutions in future
-    pub symbols: HashSet<Ident>,
 }
 
 pub trait Parse<'a>
@@ -34,7 +30,6 @@ impl<'a> Parser<'a> {
             lexer,
             current_token,
             next_token,
-            symbols: HashSet::new(),
         }
     }
 

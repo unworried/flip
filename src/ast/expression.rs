@@ -95,10 +95,6 @@ impl Expr {
             value => unimplemented!("Unexpected token {:?}", value),
         };
 
-        if !parser.symbols.contains(&symbol) {
-            panic!("symbol: {:?} referenced before assignment", symbol);
-        }
-
         ExprKind::Ident(symbol)
     }
 

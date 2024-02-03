@@ -78,9 +78,9 @@ impl<'a> Parse<'a> for Stmt {
         let token = parser.eat();
 
         let kind = match &token {
+            Token::Let => Self::parse_let(parser),
             Token::If => Self::parse_if(parser),
             Token::While => Self::parse_while(parser),
-            Token::Let => Self::parse_let(parser),
             token => unimplemented!("{:#?}", token), // Handle Err
         };
 
