@@ -1,7 +1,7 @@
 use crate::{
     ast::{
         visitor::{Visitor, Walkable},
-        Ast, ExprKind, StmtKind,
+        Ast, ExprKind, Literal, StmtKind,
     },
     lexer::Lexer,
     parser::Parser,
@@ -49,6 +49,8 @@ impl AstValidator {
     }
 
     pub fn validate(&self) {
+        println!("expected: {:?}", self.expected);
+        println!("actual: {:?}", self.actual);
         assert_eq!(
             self.expected.len(),
             self.actual.len(),
@@ -93,6 +95,7 @@ impl Visitor for AstValidator {
     }
 
     fn visit_expr_kind(&mut self, node: &ExprKind) {
+        println!("expr: {:?}", node);
         match &node {
             ExprKind::Binary(.., lhs, rhs) => {
                 self.actual.push(ASTNode::Binary);
@@ -103,16 +106,16 @@ impl Visitor for AstValidator {
                 self.actual.push(ASTNode::Unary);
                 int.ptr.walk(self);
             }
-            ExprKind::Literal(value) => value.walk(self),
+            ExprKind::Literal(value) => self.visit_literal(value),
             ExprKind::Ident(ident) => self.actual.push(ASTNode::Ident(ident.to_owned())),
         }
     }
 
-    fn visit_integer_literal(&mut self, node: &isize) {
-        self.actual.push(ASTNode::Integer(node.to_owned()));
-    }
-
-    fn visit_string_literal(&mut self, node: &str) {
-        self.actual.push(ASTNode::String(node.to_owned()));
+    fn visit_literal(&mut self, lit: &Literal) {
+        println!("literal: {:?}", lit);
+        match &lit {
+            Literal::Integer(int) => self.actual.push(ASTNode::Integer(int.to_owned())),
+            Literal::String(string) => self.actual.push(ASTNode::String(string.to_owned())),
+        }
     }
 }

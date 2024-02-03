@@ -108,34 +108,18 @@ pub enum ExprKind {
 // PAREN ONLY WORKS WHEN Atomic val is on left. e.g. 1 + (2 + 3)
 impl<'a> Parse<'a> for Expr {
     fn parse(parser: &mut Parser<'a>) -> Self {
-        if BinOp::token_match(&parser.next_token) | parser.current_token(&Token::LParen) {
-            match &parser.current_token {
-                Token::Int(_) | Token::Ident(_) => {
-                    let kind = Self::parse_binary(parser, 0);
-                    return Expr { kind }; // May be cleaner solution
-                }
-                _ => {}
-            }
-        }
-
-        if UnOp::token_match(&parser.current_token) {
-            let kind = Self::parse_unary(parser);
-            return Expr {
-                kind, // Need further testing
-            };
-        }
-
-        // Check which match order is faster. e.g. token first or op first
-
-
-        let kind = match &parser.current_token {
-            Token::Int(_) | Token::String(_) => Self::parse_literal(parser),
-            Token::Ident(_) => Self::parse_ident(parser),
-            _ => unimplemented!("{}", &parser.current_token), // Handle Err
+        let lhs = if UnOp::token_match(&parser.current_token) {
+            Self::parse_unary(parser)
+        } else {
+            Self::parse_primary(parser)
         };
 
-        parser.step();
+        // Check which match order is faster. e.g. token first or op first
+        if BinOp::token_match(&parser.current_token) {
+            let kind = Self::parse_binary(parser, lhs, 0);
+            return Expr { kind }; // May be cleaner solution
+        }
 
-        Expr { kind }
+        Expr { kind: lhs }
     }
 }

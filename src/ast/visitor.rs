@@ -38,9 +38,6 @@ pub trait Visitor: Sized {
     fn visit_literal(&mut self, lit: &Literal) {
         lit.walk(self);
     }
-
-    fn visit_string_literal(&mut self, string: &str);
-    fn visit_integer_literal(&mut self, lit: &isize);
 }
 
 impl Walkable for Item {
@@ -109,8 +106,8 @@ impl Walkable for ExprKind {
 impl Walkable for Literal {
     fn walk<V: Visitor>(&self, visitor: &mut V) {
         match &self {
-            Literal::String(string) => visitor.visit_string_literal(string),
-            Literal::Integer(int) => visitor.visit_integer_literal(int),    
+            Literal::String(string) => {},
+            Literal::Integer(int) => {},    
         }
     }
 }

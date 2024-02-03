@@ -92,3 +92,58 @@ fn binary_precedence() {
     assert_ast(input, expected);
 }
 
+#[test]
+fn parenthesis_binary_expression() {
+    let input = "let x = (1 + 2);";
+
+    let expected = vec![
+        ASTNode::Let,
+        ASTNode::Ident("x".to_string()),
+        ASTNode::Binary,
+        ASTNode::Integer(1),
+        ASTNode::Integer(2),
+    ];
+
+    assert_ast(input, expected)
+}
+
+#[test]
+fn binary_expression_nested_parenthesis() {
+    let input = "let x = 2*(1 + (2 * 3));";
+
+    let expected = vec![
+        ASTNode::Let,
+        ASTNode::Ident("x".to_string()),
+        ASTNode::Binary,
+        ASTNode::Integer(2),
+        ASTNode::Binary,
+        ASTNode::Integer(1),
+        ASTNode::Binary,
+        ASTNode::Integer(2),
+        ASTNode::Integer(3),
+    ];
+
+    assert_ast(input, expected)
+}
+
+#[test]
+fn nested_parenthesis_binary_expression() {
+    let input = "let x = (1 + (2 * 3)) * 4 + 2;";
+
+    let expected = vec![
+        ASTNode::Let,
+        ASTNode::Ident("x".to_string()),
+        ASTNode::Binary,
+        ASTNode::Binary,
+        ASTNode::Integer(1),
+        ASTNode::Binary,
+        ASTNode::Integer(2),
+        ASTNode::Integer(3),
+        ASTNode::Binary,
+        ASTNode::Integer(4),
+        ASTNode::Integer(2),
+    ];
+
+    assert_ast(input, expected)
+}
+

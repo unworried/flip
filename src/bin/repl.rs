@@ -8,7 +8,7 @@ fn main() {
 
             let result = parser.parse();
             println!();
-            println!("{:#?}", result);
+            println!("{}", result);
         }
     });
 }

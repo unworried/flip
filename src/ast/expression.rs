@@ -7,43 +7,33 @@ use super::{Expr, ExprKind};
 
 impl Expr {
     /// Grammar: (expression) (operator) (expression)
-    pub fn parse_binary(parser: &mut Parser, precedence: u8) -> ExprKind {
-        // Move this to a parse_primary section to avoid code duplication
-        let leftkind = match &parser.current_token {
-            Token::Int(_) => Self::parse_literal(parser), // TODO: change
-            Token::Ident(_) => Self::parse_ident(parser),
-            Token::LParen => Self::parse_group(parser),
-            _ => {
-                if UnOp::token_match(&parser.current_token) {
-                    return Self::parse_unary(parser);
-                }
-
-                unimplemented!("Unexpected token {:?}", parser.current_token);
-            }
-        };
-
-
-        let mut left = P(Expr { kind: leftkind });
-
-        parser.step();
-        println!("{:?}", parser.current_token);
-        // May need parse step here
+    pub fn parse_binary(parser: &mut Parser, mut left: ExprKind, precedence: u8) -> ExprKind {
         while let Some(operator) = Self::parse_binary_operator(parser) {
             if operator.precedence() <= precedence {
                 break;
             }
-
             parser.step();
-            let right = P(Expr {
-                kind: Self::parse_binary(parser, operator.precedence()),
-            });
 
-            left = P(Expr {
-                kind: ExprKind::Binary(operator, left, right),
-            });
+            let mut right = Expr::parse(parser);
+
+            while let Some(inner_operator) = Self::parse_binary_operator(parser) {
+                let greater_precedence = inner_operator.precedence() > operator.precedence();
+                let equal_precedence = inner_operator.precedence() == operator.precedence();
+                if !greater_precedence && !equal_precedence {
+                    break;
+                }
+
+                right = Expr {
+                    kind: Self::parse_binary(
+                        parser,
+                        right.kind,
+                        std::cmp::max(operator.precedence(), inner_operator.precedence()),
+                    ),
+                };
+            }
+            left = ExprKind::Binary(operator, P(Expr { kind: left }), P(right));
         }
-
-        left.ptr.kind // Change to return box maybe
+        left
     }
 
     fn parse_binary_operator(parser: &mut Parser) -> Option<BinOp> {
@@ -70,32 +60,35 @@ impl Expr {
         };
         parser.step();
 
-        println!("{:?}", parser.current_token);
-
         let expr = P(Expr::parse(parser));
 
         ExprKind::Unary(operator, expr)
     }
 
+    pub fn parse_primary(parser: &mut Parser) -> ExprKind {
+        let token = parser.eat();
+        match &token {
+            // Temp before i split into parse_int and parse string
+            Token::Int(value) => ExprKind::Literal(Literal::Integer(value.to_owned())),
+            Token::String(value) => ExprKind::Literal(Literal::String(value.to_owned())),
+            Token::LParen => Self::parse_group(parser), 
+            // Grammar: (identifier) => Token::Ident
+            Token::Ident(symbol) => ExprKind::Ident(symbol.to_owned()),
+            _ => {
+                unimplemented!("Unexpected token {:?}", token);
+            }
+        }
+    }
+
     /// Grammar: "("(expression)")"
     pub fn parse_group(parser: &mut Parser) -> ExprKind {
-        parser.step();
         let expr = Expr::parse(parser);
         if !parser.current_token(&Token::RParen) {
             panic!("expected: ')', actual: '{:?}'", parser.current_token);
         }
+        parser.step();
 
         expr.kind
-    }
-
-    /// Grammar: (identifier) => Token::Ident
-    pub fn parse_ident(parser: &mut Parser) -> ExprKind {
-        let symbol = match &parser.current_token {
-            Token::Ident(value) => value.to_owned(),
-            value => unimplemented!("Unexpected token {:?}", value),
-        };
-
-        ExprKind::Ident(symbol)
     }
 
     /// Grammar: (literal) => Token::Int | Token::String

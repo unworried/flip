@@ -25,12 +25,17 @@ fn validation_scheme() {
 }
 
 #[test]
-fn if_statement() {
-    let input = "if \"TMP\" { \nlet foo = \"hello, world!\"; };";
+fn if_statement_binary_condition() {
+    let input = "let x = 1; if x == 1 { \nlet foo = \"hello, world!\"; };";
 
     let expected = vec![
+        ASTNode::Let,
+        ASTNode::Ident("x".to_string()),
+        ASTNode::Integer(1),
         ASTNode::If,
-        ASTNode::String("TMP".to_string()),
+        ASTNode::Binary,
+        ASTNode::Ident("x".to_string()),
+        ASTNode::Integer(1),
         ASTNode::Let,
         ASTNode::Ident("foo".to_string()),
         ASTNode::String("hello, world!".to_string()),
@@ -40,12 +45,53 @@ fn if_statement() {
 }
 
 #[test]
-fn if_statement_newline() {
-    let input = "if \"TMP\" { \nlet foo = \"hello, world!\"; };\n";
+fn if_statement_binary_condition_newline() {
+    let input = "let x = 1; if x == 1 { \nlet foo = \"hello, world!\"; }; \n";
 
     let expected = vec![
+        ASTNode::Let,
+        ASTNode::Ident("x".to_string()),
+        ASTNode::Integer(1),
         ASTNode::If,
-        ASTNode::String("TMP".to_string()),
+        ASTNode::Binary,
+        ASTNode::Ident("x".to_string()),
+        ASTNode::Integer(1),
+        ASTNode::Let,
+        ASTNode::Ident("foo".to_string()),
+        ASTNode::String("hello, world!".to_string()),
+    ];
+
+    assert_ast(input, expected)
+}
+
+#[test]
+fn if_statement_primary_ident_condition() {
+    let input = "let x = 1; if x { \nlet foo = \"hello, world!\"; };";
+
+    let expected = vec![
+        ASTNode::Let,
+        ASTNode::Ident("x".to_string()),
+        ASTNode::Integer(1),
+        ASTNode::If,
+        ASTNode::Ident("x".to_string()),
+        ASTNode::Let,
+        ASTNode::Ident("foo".to_string()),
+        ASTNode::String("hello, world!".to_string()),
+    ];
+
+    assert_ast(input, expected)
+}
+
+#[test]
+fn if_statement_primary_ident_condition_newline() {
+    let input = "let x = 1; if x { \nlet foo = \"hello, world!\"; }; \n";
+
+    let expected = vec![
+        ASTNode::Let,
+        ASTNode::Ident("x".to_string()),
+        ASTNode::Integer(1),
+        ASTNode::If,
+        ASTNode::Ident("x".to_string()),
         ASTNode::Let,
         ASTNode::Ident("foo".to_string()),
         ASTNode::String("hello, world!".to_string()),
