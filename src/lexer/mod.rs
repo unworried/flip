@@ -22,6 +22,7 @@ impl Lexer {
             ch: EOF,
         };
         lex.read_char();
+        lex.position = 0;
 
         lex
     }
@@ -38,7 +39,6 @@ impl Lexer {
         }
 
         let token = match self.ch {
-
             b'\"' => Token::String(self.read_string()),
 
             b'0'..=b'9' => Token::Int(self.read_integer()),
@@ -143,6 +143,7 @@ impl Lexer {
 
     fn whitespace(&mut self) -> Token {
         while Self::is_whitespace(self.ch) {
+            println!("Skipping whitespace: {:?}", self.ch as char);
             self.read_char();
         }
         Token::Whitespace
