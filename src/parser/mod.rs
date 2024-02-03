@@ -30,16 +30,16 @@ where
 
 impl<'a> Parser<'a> {
     pub fn new(lexer: &'a mut Lexer, diagnostics: DiagnosticsCell) -> Self {
-        let mut parser = Self {
-            lexer,
-            current_token: (Token::Illegal, Span::default()),
-            next_token: (Token::Illegal, Span::default()),
-            diagnostics,
-        };
+        // Need to handle case where these tokens may be illegal
+        let current_token = lexer.next_token();
+        let next_token = lexer.next_token();
 
-        parser.step();
-        parser.step();
-        parser
+        Self {
+            lexer,
+            current_token,
+            next_token,
+            diagnostics,
+        }
     }
 
     pub fn parse(&mut self) -> Ast {

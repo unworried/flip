@@ -2,12 +2,12 @@ use flipc::{diagnostics::DiagnosticBag, lexer::Lexer, parser::Parser, source::So
 
 fn main() {
     let line = r#"let x = 4;
-    while x {
-        if x {
+    while x = 1 {
+        if x == 4 {
             let y - 5;
-        };
-        let z = 6;
-    };
+        }
+        let z / 6;
+    }
     "#;
 
     let source = Source::new(line.to_string());
@@ -16,8 +16,6 @@ fn main() {
     let mut parser = Parser::new(&mut lexer, diagnostics.clone());
 
     let _result = parser.parse();
-    //println!();
-    //println!("{}", result);
 
     diagnostics.borrow().display(&source);
 }
