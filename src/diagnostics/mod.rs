@@ -1,6 +1,8 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{lexer::Token, span::Span};
+use crate::{lexer::Token, source::Source, span::Span};
+
+use self::display::DiagnosticsDisplay;
 
 pub mod display;
 
@@ -29,6 +31,14 @@ impl DiagnosticBag {
         };
 
         Rc::new(RefCell::new(bag))
+    }
+
+    pub fn display(&self, src: &Source) {
+        if !self.diagnostics.is_empty() {
+            let diagnostics_display =
+                DiagnosticsDisplay::new(src, &self.diagnostics);
+            diagnostics_display.print();
+        }
     }
 
     fn report(&mut self, kind: DiagnosticKind, message: String, span: Span) {
