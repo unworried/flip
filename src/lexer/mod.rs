@@ -22,7 +22,6 @@ impl Lexer {
             ch: EOF,
         };
         lex.read_char();
-        lex.position = 0;
 
         lex
     }
@@ -30,7 +29,7 @@ impl Lexer {
     pub fn next_token(&mut self) -> (Token, Span) {
         //self.skip_whitespace();
         self.skip_comment();
-        let start_position = self.position; // FIXME: will only count group of whitespace as 1
+        let start_position = self.position - 1; // FIXME: will only count group of whitespace as 1
 
         if Self::is_whitespace(self.ch) {
             let span = Span::new(start_position, self.position);
@@ -59,7 +58,7 @@ impl Lexer {
             _ => Token::from(self.ch),
         };
 
-        let span = Span::new(start_position, self.position);
+        let span = Span::new(start_position, self.position -1);
         self.read_char();
         (token, span)
     }

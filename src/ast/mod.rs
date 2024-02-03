@@ -1,5 +1,5 @@
 use crate::{
-    lexer::Token, parser::{Parse, Parser, P}, span::Span
+    lexer::Token, parser::{Parse, Parser, P} 
 };
 
 pub use self::expression::*;
@@ -77,18 +77,7 @@ impl<'a> Parse<'a> for Stmt {
             token => unimplemented!("{:#?}", token), // Handle Err
         };
 
-        //parser.consume_and_check(Token::SemiColon);
-        if !parser.current_token_is(&Token::SemiColon) {
-            let previous_span = Span {
-                start: parser.token_span().start - 1,
-                end: parser.token_span().start - 1,
-            };
-            parser
-                .diagnostics
-                .borrow_mut()
-                .unexpected_token(&Token::SemiColon, parser.current_token(), &previous_span);
-        }
-        parser.step();
+        parser.consume_and_check(Token::SemiColon);
 
         Self { kind }
     }
