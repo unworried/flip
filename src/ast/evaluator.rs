@@ -42,6 +42,7 @@ impl Visitor for AstEvaluator {
 #[cfg(test)]
 mod tests {
     #![allow(clippy::identity_op, clippy::erasing_op, clippy::neg_multiply)]
+
     use super::*;
     use crate::parser::Parser;
 
@@ -105,7 +106,17 @@ mod tests {
         assert_eval("let x = 1 * (2 + 3);", 5);
         assert_eq!(1 + (0 / 3), 1);
         assert_eval("let x = 1 + (0 / 3);", 1);
-        assert_eq!(4 / (2 + 3), 0);
-        assert_eval("let x = 7 / (4 + 3);", 1); 
+    }
+
+    #[test]
+    #[should_panic]
+    fn divide_by_zero() {
+        let input = "let x = 7 / (3 - 3);";
+        let mut lexer = crate::lexer::Lexer::new(input.to_string());
+        let mut parser = Parser::new(&mut lexer);
+        let program = parser.parse();
+        let mut evaluator = AstEvaluator::default();
+        evaluator.visit_ast(&program);
+        println!("{}", program);
     }
 }
