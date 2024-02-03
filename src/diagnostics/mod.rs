@@ -4,7 +4,7 @@ use crate::{lexer::Token, source::Source, span::Span};
 
 use self::display::DiagnosticsDisplay;
 
-pub mod display;
+mod display;
 
 pub struct Diagnostic {
     pub kind: DiagnosticKind,
@@ -70,8 +70,8 @@ impl DiagnosticBag {
         );
     }
 
-    pub fn illegal_token(&mut self, token: &Token, span: &Span) {
-        self.error(format!("illegal token '{}'", token), span.clone());
+    pub fn illegal_token(&mut self, span: &Span) {
+        self.error("illegal token".to_owned(), span.clone());
     }
 
     pub fn unexpected_statement(&mut self, token: &Token, span: &Span) {

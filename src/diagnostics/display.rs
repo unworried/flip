@@ -64,7 +64,7 @@ impl<'a> DiagnosticsDisplay<'a> {
         );
 
         format!(
-            "{}{}{}{}{}\n{}\n{}\n{}",
+            "{}{}{}{}{}\n{}\n{}\n{}\n",
             prefix, COLOR_RED, span, COLOR_RESET, suffix, indicators, pointer, message
         )
     }

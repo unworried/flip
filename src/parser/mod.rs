@@ -57,15 +57,15 @@ impl<'a> Parser<'a> {
         if self.current_token.0 == Token::Illegal {
             self.diagnostics
                 .borrow_mut()
-                .illegal_token(&self.current_token.0, &self.current_token.1);
+                .illegal_token(&self.current_token.1);
         }
     }
 
-    pub fn consume(&mut self) -> Token {
+    pub fn consume(&mut self) -> (Token, Span) {
         // Not sure how mem safe this solution is, seems hacky. Clone Copy expensive but may be
         // safer option
         //let prev_token = mem::replace(&mut self.current_token.0, Token::Illegal);
-        let prev_token = self.current_token.0.clone();
+        let prev_token = self.current_token.clone();
         self.step();
         prev_token
     }

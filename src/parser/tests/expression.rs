@@ -6,13 +6,13 @@ fn identifier() {
 
     let expected = vec![
         ASTNode::Let,
-        ASTNode::Ident("test".to_string()),
+        ASTNode::Variable("test".to_string()),
         ASTNode::String("some value".to_string()),
         ASTNode::If,
-        ASTNode::Ident("test".to_string()),
+        ASTNode::Variable("test".to_string()),
         ASTNode::Let,
-        ASTNode::Ident("foo".to_string()),
-        ASTNode::Ident("test".to_string()),
+        ASTNode::Variable("foo".to_string()),
+        ASTNode::Variable("test".to_string()),
     ];
 
     assert_ast(input, expected);
@@ -24,7 +24,7 @@ fn literal_int() {
 
     let expected = vec![
         ASTNode::Let,
-        ASTNode::Ident("foo".to_string()),
+        ASTNode::Variable("foo".to_string()),
         ASTNode::Integer(123),
     ];
 
@@ -37,7 +37,7 @@ fn literal_string() {
 
     let expected = vec![
         ASTNode::Let,
-        ASTNode::Ident("foo".to_string()),
+        ASTNode::Variable("foo".to_string()),
         ASTNode::String("hello, world!".to_string()),
     ];
 
@@ -50,7 +50,7 @@ fn unary() {
 
     let expected = vec![
         ASTNode::Let,
-        ASTNode::Ident("foo".to_string()),
+        ASTNode::Variable("foo".to_string()),
         ASTNode::Unary,
         ASTNode::Integer(123),
     ];
@@ -64,7 +64,7 @@ fn binary() {
 
     let expected = vec![
         ASTNode::Let,
-        ASTNode::Ident("foo".to_string()),
+        ASTNode::Variable("foo".to_string()),
         ASTNode::Binary,
         ASTNode::Integer(123),
         ASTNode::Integer(456),
@@ -79,7 +79,7 @@ fn binary_precedence() {
 
     let expected = vec![
         ASTNode::Let,
-        ASTNode::Ident("foo".to_string()),
+        ASTNode::Variable("foo".to_string()),
         ASTNode::Binary,
         ASTNode::Integer(123),
         ASTNode::Binary,
@@ -96,7 +96,7 @@ fn parenthesis_binary_expression() {
 
     let expected = vec![
         ASTNode::Let,
-        ASTNode::Ident("x".to_string()),
+        ASTNode::Variable("x".to_string()),
         ASTNode::Binary,
         ASTNode::Integer(1),
         ASTNode::Integer(2),
@@ -111,7 +111,7 @@ fn binary_expression_nested_parenthesis() {
 
     let expected = vec![
         ASTNode::Let,
-        ASTNode::Ident("x".to_string()),
+        ASTNode::Variable("x".to_string()),
         ASTNode::Binary,
         ASTNode::Integer(2),
         ASTNode::Binary,
@@ -130,7 +130,7 @@ fn nested_parenthesis_binary_expression() {
 
     let expected = vec![
         ASTNode::Let,
-        ASTNode::Ident("x".to_string()),
+        ASTNode::Variable("x".to_string()),
         ASTNode::Binary,
         ASTNode::Binary,
         ASTNode::Binary,

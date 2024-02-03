@@ -30,13 +30,13 @@ fn parser_eat() {
     let diagnostics = DiagnosticBag::new();
     let mut parser = Parser::new(&mut lex, diagnostics);
     assert_eq!(parser.current_token(), &Token::Int(1));
-    assert_eq!(parser.consume(), Token::Int(1));
+    assert_eq!(parser.consume().0, Token::Int(1));
     assert_eq!(parser.current_token(), &Token::Int(2));
-    assert_eq!(parser.consume(), Token::Int(2));
+    assert_eq!(parser.consume().0, Token::Int(2));
     assert_eq!(parser.current_token(), &Token::Int(3));
-    assert_eq!(parser.consume(), Token::Int(3));
+    assert_eq!(parser.consume().0, Token::Int(3));
     assert_eq!(parser.current_token(), &Token::Int(4));
-    assert_eq!(parser.consume(), Token::Int(4));
+    assert_eq!(parser.consume().0, Token::Int(4));
     assert_eq!(parser.current_token(), &Token::Eof);
 }
 

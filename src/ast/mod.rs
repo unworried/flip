@@ -60,7 +60,7 @@ pub struct Stmt {
 #[derive(Debug)]
 pub enum StmtKind {
     // "let" (identifier) "=" (expression)
-    Let(Ident, Expr),
+    Let(Ident, Expr), // Fix this
     // "if" (condition) "{" \n {statement}* "}"
     If(Expr, Vec<Item>), // WARN: When funcs are added. need to change this to only allow stmts
     // "while" (condition) "{" \n {statement}* "}"
@@ -70,7 +70,7 @@ pub enum StmtKind {
 
 impl<'a> Parse<'a> for Stmt {
     fn parse(parser: &mut Parser<'a>) -> Self {
-        let token = parser.consume();
+        let (token, span) = parser.consume();
 
         let kind = match &token {
             Token::Let => Self::parse_let(parser),
@@ -80,7 +80,7 @@ impl<'a> Parse<'a> for Stmt {
                 parser
                     .diagnostics
                     .borrow_mut()
-                    .unexpected_statement(token, parser.current_span());
+                    .unexpected_statement(token, &span);
                 StmtKind::Error
             } // Handle Err
         };
@@ -100,8 +100,8 @@ pub struct Expr {
 pub enum ExprKind {
     Binary(BinOp, P<Expr>, P<Expr>),
     Unary(UnOp, P<Expr>),
-    Ident(String), // Might not belong here
     Literal(expression::Literal),
+    Variable(Ident),
     Error,
 }
 

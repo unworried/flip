@@ -8,7 +8,16 @@ impl Source {
     }
 
     pub fn line_index(&self, index: usize) -> usize {
+<<<<<<< HEAD
         self.text[..index].lines().count() - 1
+=======
+        if index == 0 {
+            return 0;
+        }
+
+        (index + self.text[..index].lines().count() - 1) % self.text.lines().count()
+        //self.text[..index].lines().count() - 1
+>>>>>>> b9abefc (fixes)
     }
 
     pub fn line(&self, index: usize) -> &str {

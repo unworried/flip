@@ -84,7 +84,7 @@ impl Walkable for StmtKind {
                     visitor.visit_item(item);
                 }
             }
-            StmtKind::Let(.., expr) => {
+            StmtKind::Let(ident, expr) => {
                 //visitor.visit_expr_kind(ident); // TODO: FIX Ident DEclaration
                 visitor.visit_expr(expr)
             }
@@ -105,7 +105,7 @@ impl Walkable for ExprKind {
             ExprKind::Literal(value) => visitor.visit_literal(value),
             ExprKind::Binary(op, lhs, rhs) => visitor.visit_binary(op, &lhs.ptr, &rhs.ptr),
             ExprKind::Unary(op, expr) => visitor.visit_unary(op, &expr.ptr),
-            ExprKind::Ident(_) => {}
+            ExprKind::Variable(_) => {}
             ExprKind::Error => {}
         }
     }

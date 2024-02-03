@@ -80,19 +80,20 @@ impl Expr {
     }
 
     pub fn parse_primary(parser: &mut Parser) -> ExprKind {
-        let token = parser.consume();
+        let (token, span) = parser.consume();
+
         match &token {
             // Temp before i split into parse_int and parse string
             Token::Int(value) => ExprKind::Literal(Literal::Integer(value.to_owned())),
             Token::String(value) => ExprKind::Literal(Literal::String(value.to_owned())),
             Token::LParen => Self::parse_group(parser),
             // Grammar: (identifier) => Token::Ident
-            Token::Ident(symbol) => ExprKind::Ident(symbol.to_owned()),
+            Token::Ident(symbol) => ExprKind::Variable(symbol.to_owned()),
             _ => {
                 parser
                     .diagnostics
                     .borrow_mut()
-                    .unknown_expression(&token, parser.current_span());
+                    .unknown_expression(&token, &span);
                 ExprKind::Error
             }
         }

@@ -22,7 +22,7 @@ pub enum ASTNode {
     String(String),
     Binary,
     Unary,
-    Ident(String),
+    Variable(String),
 }
 
 pub struct AstValidator {
@@ -88,7 +88,7 @@ impl Visitor for AstValidator {
             }
             StmtKind::Let(ident, expr) => {
                 self.actual.push(ASTNode::Let);
-                self.actual.push(ASTNode::Ident(ident.to_owned()));
+                self.actual.push(ASTNode::Variable(ident.to_owned()));
                 expr.walk(self);
             }
             StmtKind::Error => {}
@@ -107,7 +107,7 @@ impl Visitor for AstValidator {
                 int.ptr.walk(self);
             }
             ExprKind::Literal(value) => self.visit_literal(value),
-            ExprKind::Ident(ident) => self.actual.push(ASTNode::Ident(ident.to_owned())),
+            ExprKind::Variable(ident) => self.actual.push(ASTNode::Variable(ident.to_owned())),
             ExprKind::Error => {}
         }
     }

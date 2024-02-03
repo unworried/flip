@@ -1,11 +1,6 @@
 mod debug;
 
-use flipc::{
-    diagnostics::{display::DiagnosticsDisplay, DiagnosticBag},
-    lexer::Lexer,
-    parser::Parser,
-    source::Source,
-};
+use flipc::{diagnostics::DiagnosticBag, lexer::Lexer, parser::Parser, source::Source};
 
 fn main() {
     std::io::stdin().lines().for_each(|line| {
@@ -19,12 +14,7 @@ fn main() {
             println!();
             println!("{}", result);
 
-            let diagnostics_binding = diagnostics.borrow();
-            if !diagnostics_binding.diagnostics.is_empty() {
-                let diagnostics_display =
-                    DiagnosticsDisplay::new(&source, &diagnostics_binding.diagnostics);
-                diagnostics_display.print();
-            }
+            diagnostics.borrow().display(&source);
         }
     });
 }
