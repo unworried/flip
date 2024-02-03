@@ -1,4 +1,4 @@
-use super::{Ast, Expr, ExprKind, Item, ItemKind, Literal, Stmt, StmtKind};
+use super::{Ast, BinOp, Expr, ExprKind, Item, ItemKind, Literal, Stmt, StmtKind};
 
 pub trait Walkable {
     fn walk<V: Visitor>(&self, visitor: &mut V);
@@ -33,6 +33,11 @@ pub trait Visitor: Sized {
 
     fn visit_expr_kind(&mut self, expr: &ExprKind) {
         expr.walk(self);
+    }
+
+    fn visit_binary(&mut self, _op: &BinOp, lhs: &Expr, rhs: &Expr) {
+        lhs.walk(self);
+        rhs.walk(self);
     }
 
     fn visit_literal(&mut self, lit: &Literal) {
@@ -93,10 +98,7 @@ impl Walkable for ExprKind {
     fn walk<V: Visitor>(&self, visitor: &mut V) {
         match &self {
             ExprKind::Literal(value) => visitor.visit_literal(value),
-            ExprKind::Binary(_, lhs, rhs) => {
-                visitor.visit_expr(&lhs.ptr);
-                visitor.visit_expr(&rhs.ptr);
-            }
+            ExprKind::Binary(op, lhs, rhs) => visitor.visit_binary(op, &lhs.ptr, &rhs.ptr),
             ExprKind::Unary(_, expr) => visitor.visit_expr(&expr.ptr),
             ExprKind::Ident(_) => {}
         }

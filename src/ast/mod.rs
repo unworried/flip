@@ -10,6 +10,7 @@ pub mod visitor;
 mod display;
 mod expression;
 mod statement;
+mod evaluator;
 
 #[derive(Debug)]
 pub struct Ast {
