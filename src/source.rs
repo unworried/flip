@@ -1,0 +1,25 @@
+pub struct Source {
+    text: String,
+}
+
+impl Source {
+    pub fn new(text: String) -> Source {
+        Source { text }
+    }
+
+    pub fn line_index(&self, index: usize) -> usize {
+        self.text[..index].lines().count() - 1 
+    }
+
+    pub fn line(&self, index: usize) -> &str {
+        self.text.lines().nth(index).unwrap() // handle correctly
+    }
+
+    pub fn line_start(&self, index: usize) -> usize {
+        self.text
+            .lines()
+            .take(index)
+            .map(|line| line.len() + 1)
+            .sum()
+    }
+}
