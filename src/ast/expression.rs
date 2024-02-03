@@ -9,12 +9,16 @@ impl Expr {
     /// Grammar: (expression) (operator) (expression)
     pub fn parse_binary(parser: &mut Parser, mut left: ExprKind, precedence: u8) -> ExprKind {
         while let Some(operator) = Self::parse_binary_operator(parser) {
-            if operator.precedence() <= precedence {
+            if operator.precedence() < precedence {
                 break;
             }
             parser.step();
 
-            let mut right = Expr::parse(parser);
+            let mut right = if UnOp::token_match(&parser.current_token) {
+                Self::parse_unary(parser)
+            } else {
+                Self::parse_primary(parser)
+            };
 
             while let Some(inner_operator) = Self::parse_binary_operator(parser) {
                 let greater_precedence = inner_operator.precedence() > operator.precedence();
@@ -23,15 +27,13 @@ impl Expr {
                     break;
                 }
 
-                right = Expr {
-                    kind: Self::parse_binary(
-                        parser,
-                        right.kind,
-                        std::cmp::max(operator.precedence(), inner_operator.precedence()),
-                    ),
-                };
+                right = Self::parse_binary(
+                    parser,
+                    right,
+                    std::cmp::max(operator.precedence(), inner_operator.precedence()),
+                );
             }
-            left = ExprKind::Binary(operator, P(Expr { kind: left }), P(right));
+            left = ExprKind::Binary(operator, P(Expr { kind: left }), P(Expr { kind: right }));
         }
         left
     }
@@ -136,10 +138,10 @@ impl BinOp {
 
     pub fn precedence(&self) -> u8 {
         match self {
-            BinOp::Add | BinOp::Sub => 1,
-            BinOp::Mul | BinOp::Div => 2,
-            BinOp::Eq | BinOp::NotEq => 3,
-            BinOp::LessThan | BinOp::LessThanEq | BinOp::GreaterThan | BinOp::GreaterThanEq => 4,
+            BinOp::Add | BinOp::Sub => 18,
+            BinOp::Mul | BinOp::Div => 19,
+            BinOp::Eq | BinOp::NotEq => 30,
+            BinOp::LessThan | BinOp::LessThanEq | BinOp::GreaterThan | BinOp::GreaterThanEq => 29,
         }
     }
 }

@@ -133,11 +133,11 @@ fn nested_parenthesis_binary_expression() {
         ASTNode::Ident("x".to_string()),
         ASTNode::Binary,
         ASTNode::Binary,
+        ASTNode::Binary,
         ASTNode::Integer(1),
         ASTNode::Binary,
         ASTNode::Integer(2),
         ASTNode::Integer(3),
-        ASTNode::Binary,
         ASTNode::Integer(4),
         ASTNode::Integer(2),
     ];

@@ -4,6 +4,7 @@ use crate::{
 };
 
 pub use self::expression::*;
+pub use self::evaluator::AstEvaluator;
 
 // For testing/debugging
 pub mod visitor;

@@ -70,7 +70,11 @@ impl Visitor for AstDisplay {
     fn visit_expr_kind(&mut self, expr: &super::ExprKind) {
         self.ident += 1;
         match expr {
-            ExprKind::Unary(..) => self.result.push_str("Unary"), 
+            ExprKind::Unary(op, ..) => {
+                self.add_newline();
+                self.add_padding();
+                self.result.push_str(&format!("Unary: {:?}", op));
+            },
             ExprKind::Binary(op, ..) => {
                 self.add_newline();
                 self.add_padding();
@@ -80,6 +84,28 @@ impl Visitor for AstDisplay {
             ExprKind::Ident(s) => self.result.push_str(&s.to_string()),
         }
 
+        expr.walk(self);
+        self.ident -= 1;
+    }
+
+    fn visit_binary(&mut self, _op: &super::BinOp, lhs: &super::Expr, rhs: &super::Expr) {
+        self.ident += 1;
+        self.add_newline();
+        self.add_padding();
+        self.result.push_str("Left: ");
+        lhs.walk(self);
+        self.add_newline();
+        self.add_padding();
+        self.result.push_str("Right: ");
+        rhs.walk(self);
+        self.ident -= 1;
+    }
+
+    fn visit_unary(&mut self, _op: &super::UnOp, expr: &super::Expr) {
+        self.ident += 1;
+        self.add_newline();
+        self.add_padding();
+        self.result.push_str("Value: ");
         expr.walk(self);
         self.ident -= 1;
     }
