@@ -91,6 +91,7 @@ impl Visitor for AstValidator {
                 self.actual.push(ASTNode::Ident(ident.to_owned()));
                 expr.walk(self);
             }
+            StmtKind::Error => {}
         }
     }
 
@@ -107,6 +108,7 @@ impl Visitor for AstValidator {
             }
             ExprKind::Literal(value) => self.visit_literal(value),
             ExprKind::Ident(ident) => self.actual.push(ASTNode::Ident(ident.to_owned())),
+            ExprKind::Error => {}
         }
     }
 

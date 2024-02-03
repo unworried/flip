@@ -70,4 +70,29 @@ impl DiagnosticBag {
             span.clone(),
         );
     }
+
+    pub fn illegal_token(&mut self, token: &Token, span: &Span) {
+        self.error(format!("illegal token '{}'", token), span.clone());
+    }
+
+    pub fn unexpected_statement(&mut self, token: &Token, span: &Span) {
+        self.error(
+            format!("unexpected statement '{}'", token),
+            span.clone(),
+        );
+    }
+
+    pub fn invalid_operator(&mut self, token: &Token, span: &Span) {
+        self.error(
+            format!("invalid operator '{}'", token),
+            span.clone(),
+        );
+    }
+
+    pub fn unknown_expression(&mut self, token: &Token, span: &Span) {
+        self.error(
+            format!("unknown expression '{}'", token),
+            span.clone(),
+        );
+    }
 }

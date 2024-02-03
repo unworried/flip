@@ -11,13 +11,13 @@ fn parser_step() {
     let diagnostics = DiagnosticBag::new();
     let mut parser = Parser::new(&mut lex, diagnostics);
     assert_eq!(parser.current_token(), &Token::Int(1));
-    assert_eq!(parser.next_token(), &Token::Int(2));
+    assert_eq!(parser.next_token(), &Token::Whitespace);
     parser.step();
     assert_eq!(parser.current_token(), &Token::Int(2));
-    assert_eq!(parser.next_token(), &Token::Int(3));
+    assert_eq!(parser.next_token(), &Token::Whitespace);
     parser.step();
     assert_eq!(parser.current_token(), &Token::Int(3));
-    assert_eq!(parser.next_token(), &Token::Int(4));
+    assert_eq!(parser.next_token(), &Token::Whitespace);
     parser.step();
     assert_eq!(parser.current_token(), &Token::Int(4));
     assert_eq!(parser.next_token(), &Token::Eof);

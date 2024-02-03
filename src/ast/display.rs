@@ -55,6 +55,7 @@ impl Visitor for AstDisplay {
             StmtKind::Let(..) => self.result.push_str("let"),
             StmtKind::If(..) => self.result.push_str("if"),
             StmtKind::While(..) => self.result.push_str("while"),
+            StmtKind::Error => self.result.push_str("Error"),
         }
 
         stmt.walk(self);
@@ -82,6 +83,7 @@ impl Visitor for AstDisplay {
             },
             ExprKind::Literal(lit) => lit.walk(self),
             ExprKind::Ident(s) => self.result.push_str(&s.to_string()),
+            ExprKind::Error => self.result.push_str("Error"),
         }
 
         expr.walk(self);

@@ -88,6 +88,7 @@ impl Walkable for StmtKind {
                 //visitor.visit_expr_kind(ident); // TODO: FIX Ident DEclaration
                 visitor.visit_expr(expr)
             },
+            StmtKind::Error => {}
         }
     }
 }
@@ -105,6 +106,7 @@ impl Walkable for ExprKind {
             ExprKind::Binary(op, lhs, rhs) => visitor.visit_binary(op, &lhs.ptr, &rhs.ptr),
             ExprKind::Unary(op, expr) => visitor.visit_unary(op, &expr.ptr),
             ExprKind::Ident(_) => {}
+            ExprKind::Error => {}
         }
     }
 }

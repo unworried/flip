@@ -30,15 +30,16 @@ where
 
 impl<'a> Parser<'a> {
     pub fn new(lexer: &'a mut Lexer, diagnostics: DiagnosticsCell) -> Self {
-        let current_token = lexer.next_token();
-        let next_token = lexer.next_token();
-
-        Self {
+        let mut parser = Self {
             lexer,
-            current_token,
-            next_token,
+            current_token: (Token::Illegal, Span::default()),
+            next_token: (Token::Illegal, Span::default()),
             diagnostics,
-        }
+        };
+
+        parser.step();
+        parser.step();
+        parser
     }
 
     pub fn parse(&mut self) -> Ast {
@@ -51,6 +52,12 @@ impl<'a> Parser<'a> {
         mem::swap(&mut self.current_token, &mut self.next_token);
         if self.current_token.0 == Token::Whitespace {
             self.step();
+        }
+
+        if self.current_token.0 == Token::Illegal {
+            self.diagnostics
+                .borrow_mut()
+                .illegal_token(&self.current_token.0, &self.current_token.1);
         }
     }
 
@@ -82,7 +89,7 @@ impl<'a> Parser<'a> {
         &self.current_token.0 == token
     }
 
-    pub fn token_span(&self) -> &Span {
+    pub fn current_span(&self) -> &Span {
         &self.current_token.1
     }
 

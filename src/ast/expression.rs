@@ -62,7 +62,13 @@ impl Expr {
     pub fn parse_unary(parser: &mut Parser) -> ExprKind {
         let operator = match &parser.current_token() {
             Token::Minus => UnOp::Neg,
-            token => unimplemented!("Unexpected token {:?}", token),
+            token => {
+                parser
+                    .diagnostics
+                    .borrow_mut()
+                    .invalid_operator(token, parser.current_span());
+                return ExprKind::Error;
+            }
         };
         parser.step();
 
@@ -83,7 +89,11 @@ impl Expr {
             // Grammar: (identifier) => Token::Ident
             Token::Ident(symbol) => ExprKind::Ident(symbol.to_owned()),
             _ => {
-                unimplemented!("Unexpected token {:?}", token);
+                parser
+                    .diagnostics
+                    .borrow_mut()
+                    .unknown_expression(&token, parser.current_span());
+                ExprKind::Error
             }
         }
     }
@@ -101,7 +111,13 @@ impl Expr {
         let litkind = match &parser.current_token() {
             Token::String(value) => Literal::String(value.to_owned()),
             Token::Int(value) => Literal::Integer(value.to_owned()),
-            value => unimplemented!("Unexpected token {:?}", value),
+            token => {
+                parser
+                    .diagnostics
+                    .borrow_mut()
+                    .unknown_expression(token, parser.current_span());
+                return ExprKind::Error;
+            }
         };
 
         ExprKind::Literal(litkind)

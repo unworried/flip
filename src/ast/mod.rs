@@ -1,5 +1,6 @@
 use crate::{
-    lexer::Token, parser::{Parse, Parser, P}, 
+    lexer::Token,
+    parser::{Parse, Parser, P},
 };
 
 pub use self::expression::*;
@@ -64,6 +65,7 @@ pub enum StmtKind {
     If(Expr, Vec<Item>), // WARN: When funcs are added. need to change this to only allow stmts
     // "while" (condition) "{" \n {statement}* "}"
     While(Expr, Vec<Item>),
+    Error,
 }
 
 impl<'a> Parse<'a> for Stmt {
@@ -74,7 +76,13 @@ impl<'a> Parse<'a> for Stmt {
             Token::Let => Self::parse_let(parser),
             Token::If => Self::parse_if(parser),
             Token::While => Self::parse_while(parser),
-            token => unimplemented!("{:#?}", token), // Handle Err
+            token => {
+                parser
+                    .diagnostics
+                    .borrow_mut()
+                    .unexpected_statement(token, parser.current_span());
+                StmtKind::Error
+            } // Handle Err
         };
 
         parser.consume_and_check(Token::SemiColon);
@@ -94,6 +102,7 @@ pub enum ExprKind {
     Unary(UnOp, P<Expr>),
     Ident(String), // Might not belong here
     Literal(expression::Literal),
+    Error,
 }
 
 impl<'a> Parse<'a> for Expr {
