@@ -1,13 +1,12 @@
-use super::{visitor::{Visitor, Walkable}, BinOp, Expr, UnOp};
+use super::{
+    visitor::{Visitor, Walkable},
+    BinOp, Expr, UnOp,
+};
 
+// Currently any operation that yields a float is floored.
+#[derive(Default)]
 pub struct AstEvaluator {
     pub last_value: Option<isize>,
-}
-
-impl AstEvaluator {
-    pub fn new() -> Self {
-        Self { last_value: None }
-    }
 }
 
 impl Visitor for AstEvaluator {
@@ -37,5 +36,76 @@ impl Visitor for AstEvaluator {
         if let super::Literal::Integer(i) = lit {
             self.last_value = Some(*i);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #![allow(clippy::identity_op, clippy::erasing_op, clippy::neg_multiply)]
+    use super::*;
+    use crate::parser::Parser;
+
+    fn assert_eval(input: &str, expected: isize) {
+        let mut lexer = crate::lexer::Lexer::new(input.to_string());
+        let mut parser = Parser::new(&mut lexer);
+        let program = parser.parse();
+        let mut evaluator = AstEvaluator::default();
+        evaluator.visit_ast(&program);
+        println!("{}", program);
+        assert_eq!(evaluator.last_value.unwrap(), expected);
+    }
+
+    #[test]
+    fn literal_int() {
+        assert_eval("let x = 123;", 123);
+    }
+
+    #[test]
+    fn unary() {
+        assert_eval("let x = -123;", -123);
+    }
+
+    #[test]
+    fn binary() {
+        assert_eq!(1 + 2, 3);
+        assert_eval("let x = 1 + 2;", 3);
+        assert_eq!(1 - 2, -1);
+        assert_eval("let x = 1 - 2;", -1);
+        assert_eq!(1 * 2, 2);
+        assert_eval("let x = 1 * 2;", 2);
+        assert_eq!(2 / 1, 2);
+        assert_eval("let x = 1 / 2;", 0);
+    }
+
+    #[test]
+    fn complex() {
+        assert_eq!(1 + 2 * 3, 7);
+        assert_eval("let x = 1 + 2 * 3;", 7);
+        assert_eq!(1 * 2 + 3, 5);
+        assert_eval("let x = 1 * 2 + 3;", 5);
+        assert_eq!(1 + 0 / 3, 1);
+        assert_eval("let x = 1 + 0 / 3;", 1);
+        assert_eq!(4 / 2 + 3, 5);
+        assert_eval("let x = 2 / 1 + 3;", 5);
+    }
+
+    #[test]
+    fn complex_unary() {
+        assert_eq!(-1 + 2 * 3, 5);
+        assert_eval("let x = -1 + 2 * 3;", 5);
+        assert_eq!(-1 * 2 + 3, 1);
+        assert_eval("let x = -1 * 2 + 3;", 1);
+    }
+
+    #[test]
+    fn complex_paren() {
+        assert_eq!((1 + 2) * 3, 9);
+        assert_eval("let x = (1 + 2) * 3;", 9);
+        assert_eq!(1 * (2 + 3), 5);
+        assert_eval("let x = 1 * (2 + 3);", 5);
+        assert_eq!(1 + (0 / 3), 1);
+        assert_eval("let x = 1 + (0 / 3);", 1);
+        assert_eq!(4 / (2 + 3), 0);
+        assert_eval("let x = 7 / (4 + 3);", 1); 
     }
 }

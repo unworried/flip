@@ -145,3 +145,7 @@ fn nested_parenthesis_binary_expression() {
     assert_ast(input, expected)
 }
 
+#[test]
+fn operator_precedence() {
+
+}

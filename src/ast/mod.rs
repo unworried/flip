@@ -4,14 +4,13 @@ use crate::{
 };
 
 pub use self::expression::*;
-pub use self::evaluator::AstEvaluator;
 
 // For testing/debugging
-pub mod visitor;
 mod display;
+mod evaluator;
 mod expression;
 mod statement;
-mod evaluator;
+pub mod visitor;
 
 #[derive(Debug)]
 pub struct Ast {
@@ -36,7 +35,6 @@ impl Ast {
 
 #[derive(Debug)]
 pub struct Item {
-    //pub id: ItemId,
     pub kind: ItemKind,
 }
 
@@ -101,21 +99,15 @@ pub enum ExprKind {
     Ident(String), // Might not belong here
     Literal(expression::Literal),
 }
-// PAREN ONLY WORKS WHEN Atomic val is on left. e.g. 1 + (2 + 3)
+
 impl<'a> Parse<'a> for Expr {
     fn parse(parser: &mut Parser<'a>) -> Self {
-        let lhs = if UnOp::token_match(&parser.current_token) {
-            Self::parse_unary(parser)
-        } else {
-            Self::parse_primary(parser)
-        };
+        let mut kind = Self::parse_unary_or_primary(parser);
 
-        // Check which match order is faster. e.g. token first or op first
         if BinOp::token_match(&parser.current_token) {
-            let kind = Self::parse_binary(parser, lhs, 0);
-            return Expr { kind }; // May be cleaner solution
+            kind = Self::parse_binary(parser, kind, 0);
         }
 
-        Expr { kind: lhs }
+        Expr { kind }
     }
 }

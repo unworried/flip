@@ -1,4 +1,4 @@
-use flipc::{ast::{visitor::Visitor, AstEvaluator}, lexer::Lexer, parser::Parser};
+use flipc::{lexer::Lexer, parser::Parser};
 
 fn main() {
     std::io::stdin().lines().for_each(|line| {
@@ -9,9 +9,6 @@ fn main() {
             let result = parser.parse();
             println!();
             println!("{}", result);
-            let mut eval = AstEvaluator::new();
-            eval.visit_ast(&result);
-            println!("{:?}", eval.last_value);
         }
     });
 }

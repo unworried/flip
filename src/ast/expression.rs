@@ -14,11 +14,7 @@ impl Expr {
             }
             parser.step();
 
-            let mut right = if UnOp::token_match(&parser.current_token) {
-                Self::parse_unary(parser)
-            } else {
-                Self::parse_primary(parser)
-            };
+            let mut right = Self::parse_unary_or_primary(parser);
 
             while let Some(inner_operator) = Self::parse_binary_operator(parser) {
                 let greater_precedence = inner_operator.precedence() > operator.precedence();
@@ -54,6 +50,14 @@ impl Expr {
         }
     }
 
+    pub fn parse_unary_or_primary(parser: &mut Parser) -> ExprKind {
+        if UnOp::token_match(&parser.current_token) {
+            Self::parse_unary(parser)
+        } else {
+            Self::parse_primary(parser)
+        }
+    }
+
     /// Grammar: (operator) (expression)
     pub fn parse_unary(parser: &mut Parser) -> ExprKind {
         let operator = match &parser.current_token {
@@ -62,7 +66,9 @@ impl Expr {
         };
         parser.step();
 
-        let expr = P(Expr::parse(parser));
+        let expr = P(Expr {
+            kind: Self::parse_unary_or_primary(parser),
+        });
 
         ExprKind::Unary(operator, expr)
     }
