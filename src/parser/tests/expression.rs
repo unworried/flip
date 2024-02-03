@@ -1,6 +1,4 @@
-use crate::ast::tests::validator::ASTNode;
-
-use super::validator::assert_ast;
+use super::validator::{assert_ast, ASTNode};
 
 #[test]
 fn identifier() {

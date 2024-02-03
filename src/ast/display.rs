@@ -29,10 +29,6 @@ impl AstDisplay {
         &self.result
     }
 
-    fn add_whitespace(&mut self) {
-        self.result.push(' ');
-    }
-
     fn add_newline(&mut self) {
         self.result.push('\n');
     }

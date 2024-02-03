@@ -3,19 +3,13 @@ use crate::{
     parser::{Parse, Parser, P},
 };
 
-use self::expression::*;
-
-// Tmp for primitive symbol checking
-pub use expression::Ident;
+pub use self::expression::*;
 
 // For testing/debugging
+pub mod visitor;
 mod display;
 mod expression;
 mod statement;
-mod visitor;
-
-#[cfg(test)]
-mod tests;
 
 #[derive(Debug)]
 pub struct Ast {

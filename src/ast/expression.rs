@@ -71,7 +71,7 @@ impl Expr {
             // Temp before i split into parse_int and parse string
             Token::Int(value) => ExprKind::Literal(Literal::Integer(value.to_owned())),
             Token::String(value) => ExprKind::Literal(Literal::String(value.to_owned())),
-            Token::LParen => Self::parse_group(parser), 
+            Token::LParen => Self::parse_group(parser),
             // Grammar: (identifier) => Token::Ident
             Token::Ident(symbol) => ExprKind::Ident(symbol.to_owned()),
             _ => {

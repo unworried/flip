@@ -104,10 +104,10 @@ impl Walkable for ExprKind {
 }
 
 impl Walkable for Literal {
-    fn walk<V: Visitor>(&self, visitor: &mut V) {
+    fn walk<V: Visitor>(&self, _visitor: &mut V) {
         match &self {
-            Literal::String(string) => {},
-            Literal::Integer(int) => {},    
+            Literal::String(_string) => {},
+            Literal::Integer(_int) => {},    
         }
     }
 }
