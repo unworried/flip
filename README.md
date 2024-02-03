@@ -1,12 +1,15 @@
-#### Todo:
-- [x] Fix when parse.step is called. impl require new line at end of each line 
-- [ ] Seperate Ident. Not statement or expr
-- [ ] Span nodes?
+### RoadMap
+
+#### Todo
 - [ ] Node id?
-- [ ] How to do traveral?
-- [ ] Smrt pointers?
-
-
 - [ ] Test breaking rules
+- [ ] Scope
+- [ ] Resolver
+- [ ] Variable visitor logic
+- [ ] assignment after declaration logic
+- [ ] Document funcs
+- [ ] Grammer Doc
+- [ ] Types
+    - Should they be strict?
+- [ ] functions
 
-- All idents currently immutableE

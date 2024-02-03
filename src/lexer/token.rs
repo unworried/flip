@@ -1,6 +1,7 @@
 use std::fmt::Display;
 
-#[derive(Debug, PartialEq, Clone)] // TODO: try to remove clone
+/// Token enum representing a lexical token in the input source.
+#[derive(Debug, PartialEq, Clone)]
 pub enum Token {
     // Special
     Assign,

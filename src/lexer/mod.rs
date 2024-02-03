@@ -8,7 +8,13 @@ mod token;
 
 const EOF: u8 = 0;
 
+/// Iterator used to lex compiler input.
+///
+/// Next characters can be peeked using `peek` and read using `read_char`.
+/// The `read_char` method will bump the current character being read.
+/// The lexer will return a `Token` and a `Span` for each token found.
 pub struct Lexer {
+    /// Source Input 
     input: Vec<u8>,
     position: usize,
     ch: u8,
@@ -26,10 +32,11 @@ impl Lexer {
         lex
     }
 
+    /// Returns the next token and matching span.
     pub fn next_token(&mut self) -> (Token, Span) {
         //self.skip_whitespace();
         self.skip_comment();
-        let start_position = self.position - 1; // FIXME: will only count group of whitespace as 1
+        let start_position = self.position - 1; 
 
         if Self::is_whitespace(self.ch) {
             let span = Span::new(start_position, self.position);
@@ -63,6 +70,7 @@ impl Lexer {
         (token, span)
     }
 
+    /// Returns the next character without bumping the current position.
     fn peek(&self) -> u8 {
         if self.position >= self.input.len() {
             return EOF;
@@ -71,6 +79,7 @@ impl Lexer {
         self.input[self.position]
     }
 
+    /// Bumps the current character being read.
     fn read_char(&mut self) {
         if self.position >= self.input.len() {
             self.ch = EOF;
@@ -81,10 +90,12 @@ impl Lexer {
         self.position += 1;
     }
 
+    /// Returns the current position in the input.
     pub fn position(&self) -> usize {
         self.position
     }
 
+    /// Reads a string input and returns it. 
     fn read_string(&mut self) -> String {
         let mut string = String::new();
         self.read_char();
@@ -102,6 +113,7 @@ impl Lexer {
         string
     }
 
+    /// Reads an integer input and returns it.
     fn read_integer(&mut self) -> isize {
         let mut integer = String::new();
 
@@ -119,6 +131,7 @@ impl Lexer {
         integer.parse().unwrap() // TODO HANDLE ERRR
     }
 
+    /// Reads an ident input and returns it.
     fn read_identifier(&mut self) -> String {
         let mut identifier = String::new();
 
@@ -135,11 +148,13 @@ impl Lexer {
         identifier
     }
 
+    /// Returns true if the character is a whitespace.
     fn is_whitespace(ch: u8) -> bool {
         // u8.is_ascii_whitespace() but without the newline
         matches!(ch, b'\t' | b'\x0C' | b'\r' | b' ')
     }
 
+    /// Combines multiple whitespace characters into a single Token/Span and returns it. 
     fn whitespace(&mut self) -> Token {
         while Self::is_whitespace(self.ch) {
             self.read_char();
@@ -147,6 +162,7 @@ impl Lexer {
         Token::Whitespace
     }
 
+    /// Skips all input after a comment character is found until a newline or EOF is found.
     fn skip_comment(&mut self) {
         if self.ch == b'#' {
             while self.ch != b'\n' && self.ch != EOF {
