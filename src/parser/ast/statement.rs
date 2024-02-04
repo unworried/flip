@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use alloc::borrow::ToOwned;
 
 use super::{Ast, Expr, Ident, Stmt, StmtKind};
@@ -7,13 +9,14 @@ use crate::{
 };
 
 #[derive(Debug)]
-pub struct Local {
+pub struct Local<'a> {
     pub pattern: Ident,
     pub init: P<Expr>,
+    phantom: PhantomData<&'a ()>,
 }
 
-impl Stmt {
-    pub fn parse_assignment(parser: &mut Parser, ident: Ident) -> StmtKind {
+impl<'a> Stmt<'a> {
+    pub fn parse_assignment(parser: &mut Parser, ident: Ident) -> StmtKind<'a> {
         // Temp solution to seperate assignment from refernece. do this properly later...
         parser.consume_and_check(Token::Assign);
 
@@ -22,7 +25,7 @@ impl Stmt {
         StmtKind::Assignment(ident, expression)
     }
     /// Grammar: "if" (condition) "{" \n {statement}* "}"
-    pub fn parse_if(parser: &mut Parser) -> StmtKind {
+    pub fn parse_if(parser: &mut Parser<'a>) -> StmtKind<'a> {
         let condition = Expr::parse(parser);
 
         parser.consume_and_check(Token::LBrace);
@@ -40,7 +43,7 @@ impl Stmt {
     }
 
     /// Grammar: "while" (condition) "{" \n {statement}* "}"
-    pub fn parse_while(parser: &mut Parser) -> StmtKind {
+    pub fn parse_while(parser: &mut Parser<'a>) -> StmtKind<'a> {
         let condition = Expr::parse(parser);
 
         parser.consume_and_check(Token::LBrace);
@@ -58,7 +61,7 @@ impl Stmt {
     }
 
     /// Grammar: "let" (ident) "=" (expression)
-    pub fn parse_let(parser: &mut Parser) -> StmtKind {
+    pub fn parse_let(parser: &mut Parser) -> StmtKind<'a> {
         //let ident = Ident::parse(parser);
         // Temp solution to seperate assignment from refernece. do this properly later...
         let ident = match &parser.current_token() {
@@ -74,6 +77,7 @@ impl Stmt {
         let local = Local {
             pattern: ident,
             init: expression,
+            phantom: PhantomData,
         };
         StmtKind::Let(P(local))
     }

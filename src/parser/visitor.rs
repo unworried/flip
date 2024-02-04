@@ -1,4 +1,6 @@
-use super::ast::{statement::Local, Ast, BinOp, Expr, ExprKind, Item, ItemKind, Literal, Stmt, StmtKind, UnOp};
+use super::ast::{
+    statement::Local, Ast, BinOp, Expr, ExprKind, Item, ItemKind, Literal, Stmt, StmtKind, UnOp,
+};
 
 pub trait Walkable {
     fn walk<V: Visitor>(&self, visitor: &mut V);
@@ -58,13 +60,13 @@ pub trait Visitor: Sized {
     }
 }
 
-impl Walkable for Item {
+impl<'a> Walkable for Item<'a> {
     fn walk<V: Visitor>(&self, visitor: &mut V) {
         visitor.visit_item_kind(&self.kind);
     }
 }
 
-impl Walkable for ItemKind {
+impl<'a> Walkable for ItemKind<'a> {
     fn walk<V: Visitor>(&self, visitor: &mut V) {
         match &self {
             ItemKind::Statement(stmt) => visitor.visit_stmt(stmt),
@@ -72,13 +74,13 @@ impl Walkable for ItemKind {
     }
 }
 
-impl Walkable for Stmt {
+impl<'a> Walkable for Stmt<'a> {
     fn walk<V: Visitor>(&self, visitor: &mut V) {
         visitor.visit_stmt_kind(&self.kind);
     }
 }
 
-impl Walkable for StmtKind {
+impl<'a> Walkable for StmtKind<'a> {
     fn walk<V: Visitor>(&self, visitor: &mut V) {
         match &self {
             StmtKind::If(cond, res) => {

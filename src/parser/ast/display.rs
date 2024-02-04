@@ -5,7 +5,7 @@ use crate::parser::visitor::{Visitor, Walkable};
 
 use super::{Ast, ExprKind, Literal, Stmt, StmtKind};
 
-impl Display for Ast {
+impl<'a> Display for Ast<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         let mut display = AstDisplay::new();
         write!(f, "{}", display.build(self))

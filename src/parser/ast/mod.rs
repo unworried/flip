@@ -14,13 +14,13 @@ pub mod expression;
 pub mod statement;
 
 #[derive(Debug)]
-pub struct Ast {
-    pub items: Vec<Item>, // HashMap<ItemIdm, Item>
+pub struct Ast<'a> {
+    pub items: Vec<Item<'a>>, // HashMap<ItemIdm, Item>
 }
 
 /// Grammar: {(statement);}*
-impl Ast {
-    pub fn parse(parser: &mut Parser, end_delim: Token) -> Self {
+impl<'a> Ast<'a> {
+    pub fn parse(parser: &mut Parser<'a>, end_delim: Token) -> Self {
         let mut items = Vec::new();
         while !parser.current_token_is(&end_delim) {
             items.push(Item::parse(parser));
@@ -35,17 +35,17 @@ impl Ast {
 }
 
 #[derive(Debug)]
-pub struct Item {
-    pub kind: ItemKind,
+pub struct Item<'a> {
+    pub kind: ItemKind<'a>,
 }
 
 #[derive(Debug)]
-pub enum ItemKind {
+pub enum ItemKind<'a> {
     //Function(Function),
-    Statement(Stmt),
+    Statement(Stmt<'a>),
 }
 
-impl<'a> Parse<'a> for Item {
+impl<'a> Parse<'a> for Item<'a> {
     fn parse(parser: &mut Parser<'a>) -> Self {
         let kind = ItemKind::Statement(Stmt::parse(parser));
 
@@ -54,24 +54,24 @@ impl<'a> Parse<'a> for Item {
 }
 
 #[derive(Debug)]
-pub struct Stmt {
-    pub kind: StmtKind,
+pub struct Stmt<'a> {
+    pub kind: StmtKind<'a>,
 }
 
 #[derive(Debug)]
-pub enum StmtKind {
+pub enum StmtKind<'a> {
     // "let" (identifier) "=" (expression)
-    Let(P<Local>), // Fix this
+    Let(P<Local<'a>>), // Fix this
     // (variable) "=" (expression)
     Assignment(Ident, P<Expr>),
     // "if" (condition) "{" \n {statement}* "}"
-    If(Expr, Vec<Item>), // WARN: When funcs are added. need to change this to only allow stmts
+    If(Expr, Vec<Item<'a>>), // WARN: When funcs are added. need to change this to only allow stmts
     // "while" (condition) "{" \n {statement}* "}"
-    While(Expr, Vec<Item>),
+    While(Expr, Vec<Item<'a>>),
     Error,
 }
 
-impl<'a> Parse<'a> for Stmt {
+impl<'a> Parse<'a> for Stmt<'a> {
     fn parse(parser: &mut Parser<'a>) -> Self {
         let (token, span) = parser.consume();
 

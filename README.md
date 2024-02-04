@@ -13,3 +13,6 @@
     - Should they be strict?
 - [ ] functions
 
+
+- [ ] Does ast need lifetimes for resolver?
+
