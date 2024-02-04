@@ -29,6 +29,13 @@ impl Resolver {
     }
 }
 
+
+/*
+ * TODO: Need to check declarationations first then assignments. This will allow for more error messages
+ * e.g. if a variable is used before it is declared, we can tell the user that the variable is
+ * either not defined or is referenced before assignment depending on if the variable is ever
+ * declared within the scope.
+ */
 impl Visitor for Resolver {
     fn visit_local(&mut self, local: &Local) {
         let scope = self.scopes.last_mut().unwrap();
