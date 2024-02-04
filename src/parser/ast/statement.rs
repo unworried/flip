@@ -1,12 +1,26 @@
 use alloc::borrow::ToOwned;
 
-use super::{Ast, Expr, Stmt, StmtKind};
+use super::{Ast, Expr, Ident, Stmt, StmtKind};
 use crate::{
     lexer::Token,
-    parser::{Parse, Parser},
+    parser::{Parse, Parser, P},
 };
 
+#[derive(Debug)]
+pub struct Local {
+    pub pattern: Ident,
+    pub init: P<Expr>,
+}
+
 impl Stmt {
+    pub fn parse_assignment(parser: &mut Parser, ident: Ident) -> StmtKind {
+        // Temp solution to seperate assignment from refernece. do this properly later...
+        parser.consume_and_check(Token::Assign);
+
+        let expression = P(Expr::parse(parser));
+
+        StmtKind::Assignment(ident, expression)
+    }
     /// Grammar: "if" (condition) "{" \n {statement}* "}"
     pub fn parse_if(parser: &mut Parser) -> StmtKind {
         let condition = Expr::parse(parser);
@@ -55,8 +69,12 @@ impl Stmt {
 
         parser.consume_and_check(Token::Assign);
 
-        let expression = Expr::parse(parser);
+        let expression = P(Expr::parse(parser));
 
-        StmtKind::Let(ident, expression)
+        let local = Local {
+            pattern: ident,
+            init: expression,
+        };
+        StmtKind::Let(P(local))
     }
 }

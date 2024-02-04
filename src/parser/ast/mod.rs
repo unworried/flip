@@ -6,13 +6,12 @@ use crate::{
 };
 
 pub use self::expression::*;
+use self::statement::Local;
 
 // For testing/debugging
 mod display;
-mod evaluator;
-mod expression;
-mod statement;
-pub mod visitor;
+pub mod expression;
+pub mod statement;
 
 #[derive(Debug)]
 pub struct Ast {
@@ -62,7 +61,9 @@ pub struct Stmt {
 #[derive(Debug)]
 pub enum StmtKind {
     // "let" (identifier) "=" (expression)
-    Let(Ident, Expr), // Fix this
+    Let(P<Local>), // Fix this
+    // (variable) "=" (expression)
+    Assignment(Ident, P<Expr>),
     // "if" (condition) "{" \n {statement}* "}"
     If(Expr, Vec<Item>), // WARN: When funcs are added. need to change this to only allow stmts
     // "while" (condition) "{" \n {statement}* "}"
@@ -76,6 +77,7 @@ impl<'a> Parse<'a> for Stmt {
 
         let kind = match &token {
             Token::Let => Self::parse_let(parser),
+            Token::Ident(ident) => Self::parse_assignment(parser, ident.to_owned()),
             Token::If => Self::parse_if(parser),
             Token::While => Self::parse_while(parser),
             token => {

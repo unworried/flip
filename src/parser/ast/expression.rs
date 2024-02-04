@@ -9,6 +9,7 @@ use crate::{
 use super::{Expr, ExprKind};
 
 impl Expr {
+
     /// Grammar: (expression) (operator) (expression)
     pub fn parse_binary(parser: &mut Parser, mut left: ExprKind, precedence: u8) -> ExprKind {
         while let Some(operator) = Self::parse_binary_operator(parser) {

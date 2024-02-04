@@ -71,7 +71,6 @@ impl<'a> DiagnosticsDisplay<'a> {
         )
     }
 
-    #[cfg(feature = "std")]
     pub fn print(&self) {
         for diagnostic in self.diagnostics {
             println!("{}", self.stringify(diagnostic));

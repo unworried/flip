@@ -4,7 +4,3 @@ authors = ["unworried"]
 description = "The Flip Compiler"
 edition = "2021"
 version = "0.1.0"
-
-[features]
-default = ["std"]
-std = []

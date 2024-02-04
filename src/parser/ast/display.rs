@@ -1,10 +1,9 @@
 use alloc::string::{String, ToString};
 use core::fmt::{Display, Formatter, Result};
 
-use super::{
-    visitor::{Visitor, Walkable},
-    Ast, ExprKind, Literal, Stmt, StmtKind,
-};
+use crate::parser::visitor::{Visitor, Walkable};
+
+use super::{Ast, ExprKind, Literal, Stmt, StmtKind};
 
 impl Display for Ast {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
@@ -57,6 +56,7 @@ impl Visitor for AstDisplay {
             StmtKind::Let(..) => self.result.push_str("let"),
             StmtKind::If(..) => self.result.push_str("if"),
             StmtKind::While(..) => self.result.push_str("while"),
+            StmtKind::Assignment(..) => self.result.push_str("assignment"),
             StmtKind::Error => self.result.push_str("Error"),
         }
 

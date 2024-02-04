@@ -1,6 +1,6 @@
 use super::{
+    ast::{BinOp, Expr, Literal, UnOp},
     visitor::{Visitor, Walkable},
-    BinOp, Expr, UnOp,
 };
 
 // Currently any operation that yields a float is floored.
@@ -24,7 +24,7 @@ impl Visitor for AstEvaluator {
         });
     }
 
-    fn visit_unary(&mut self, op: &super::UnOp, expr: &Expr) {
+    fn visit_unary(&mut self, op: &UnOp, expr: &Expr) {
         expr.walk(self);
         let value = self.last_value.unwrap();
         self.last_value = Some(match op {
@@ -32,8 +32,8 @@ impl Visitor for AstEvaluator {
         });
     }
 
-    fn visit_literal(&mut self, lit: &super::Literal) {
-        if let super::Literal::Integer(i) = lit {
+    fn visit_literal(&mut self, lit: &Literal) {
+        if let Literal::Integer(i) = lit {
             self.last_value = Some(*i);
         }
     }

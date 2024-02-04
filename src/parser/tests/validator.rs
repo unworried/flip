@@ -1,11 +1,11 @@
 use crate::{
-    ast::{
-        visitor::{Visitor, Walkable},
-        Ast, ExprKind, Literal, StmtKind,
-    },
     diagnostics::DiagnosticBag,
     lexer::Lexer,
-    parser::Parser,
+    parser::{
+        ast::{Ast, ExprKind, Literal, StmtKind},
+        visitor::{Visitor, Walkable},
+        Parser,
+    },
 };
 
 pub fn assert_ast(input: &str, expected: Vec<ASTNode>) {
@@ -86,10 +86,15 @@ impl Visitor for AstValidator {
                     item.walk(self);
                 }
             }
-            StmtKind::Let(ident, expr) => {
+            StmtKind::Let(local) => {
                 self.actual.push(ASTNode::Let);
+                self.actual
+                    .push(ASTNode::Variable(local.ptr.pattern.to_owned()));
+                local.ptr.init.ptr.walk(self);
+            }
+            StmtKind::Assignment(ident, expr) => {
                 self.actual.push(ASTNode::Variable(ident.to_owned()));
-                expr.walk(self);
+                expr.ptr.walk(self);
             }
             StmtKind::Error => {}
         }

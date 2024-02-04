@@ -1,14 +1,17 @@
+use self::ast::Ast;
 pub use self::ptr::*;
 
 use crate::{
-    ast::Ast,
     diagnostics::DiagnosticsCell,
     lexer::{Lexer, Token},
     span::Span,
 };
 use core::mem;
 
+pub mod ast;
+mod evaluator;
 mod ptr;
+pub mod visitor;
 
 #[cfg(test)]
 mod tests;

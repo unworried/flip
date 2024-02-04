@@ -1,4 +1,4 @@
-use super::{Ast, BinOp, Expr, ExprKind, Item, ItemKind, Literal, Stmt, StmtKind, UnOp};
+use super::ast::{statement::Local, Ast, BinOp, Expr, ExprKind, Item, ItemKind, Literal, Stmt, StmtKind, UnOp};
 
 pub trait Walkable {
     fn walk<V: Visitor>(&self, visitor: &mut V);
@@ -47,6 +47,15 @@ pub trait Visitor: Sized {
     fn visit_literal(&mut self, lit: &Literal) {
         lit.walk(self);
     }
+
+    fn visit_local(&mut self, local: &Local) {
+        local.init.ptr.walk(self);
+    }
+
+    fn visit_assignment(&mut self, ident: &String, expr: &Expr) {
+        //in.visit_assignment(ident); // TODO: FIX Ident DEclaration
+        expr.walk(self);
+    }
 }
 
 impl Walkable for Item {
@@ -84,9 +93,11 @@ impl Walkable for StmtKind {
                     visitor.visit_item(item);
                 }
             }
-            StmtKind::Let(ident, expr) => {
-                //visitor.visit_expr_kind(ident); // TODO: FIX Ident DEclaration
-                visitor.visit_expr(expr)
+            StmtKind::Let(local) => {
+                visitor.visit_local(&local.ptr);
+            }
+            StmtKind::Assignment(ident, expr) => {
+                visitor.visit_assignment(ident, &expr.ptr);
             }
             StmtKind::Error => {}
         }
