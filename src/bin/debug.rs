@@ -1,6 +1,6 @@
 use flipc::{diagnostics::DiagnosticBag, lexer::Lexer, parser::Parser, source::Source};
 
-fn main() {
+fn main() -> Result<(), ()> {
     let line = r#"let x = 4;
     while x = 1 {
         if x == 4 {
@@ -17,9 +17,7 @@ fn main() {
 
     let _result = parser.parse();
 
-    diagnostics
-        .borrow()
-        .check(&source)
-        .map_err(|_| diagnostics.clone())
-        .unwrap();
+    diagnostics.borrow().check(&source).map_err(|_| ())?;
+
+    Ok(())
 }

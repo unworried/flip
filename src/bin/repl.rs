@@ -1,6 +1,6 @@
 use flipc::{diagnostics::DiagnosticBag, lexer::Lexer, parser::Parser, source::Source};
 
-fn main() {
+fn main() -> Result<(), ()> {
     std::io::stdin().lines().for_each(|line| {
         if let Ok(line) = line {
             let source = Source::new(line.to_string());
@@ -12,11 +12,8 @@ fn main() {
             println!();
             println!("{}", result);
 
-            diagnostics
-                .borrow()
-                .check(&source)
-                .map_err(|_| diagnostics.clone())
-                .unwrap();
+            diagnostics.borrow().check(&source).ok();
         }
     });
+    Ok(())
 }

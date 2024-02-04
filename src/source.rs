@@ -11,8 +11,6 @@ impl Source {
     }
 
     pub fn line_index(&self, index: usize) -> usize {
-        println!("index: {}", index);
-        println!("lines: {}", self.text.len());
         if index == 0 {
             return 0;
         }
