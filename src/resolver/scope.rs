@@ -27,6 +27,3 @@ impl Default for Scope {
         Self::new()
     }
 }
-
-
-

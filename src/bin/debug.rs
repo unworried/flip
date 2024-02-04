@@ -1,5 +1,9 @@
 use flipc::{
-    diagnostics::DiagnosticBag, lexer::Lexer, parser::Parser, resolver::{scope::Scope, Resolver}, source::Source
+    diagnostics::DiagnosticBag,
+    lexer::Lexer,
+    parser::Parser,
+    resolver::{scope::Scope, Resolver},
+    source::Source,
 };
 
 fn main() -> Result<(), ()> {
@@ -21,10 +25,9 @@ fn main() -> Result<(), ()> {
 
     let result = parser.parse();
 
-
     let mut resolver = Resolver::new(vec![Scope::default()], diagnostics.clone());
     resolver.resolve(&result);
-    
+
     diagnostics.borrow().check(&source).map_err(|_| ())?;
 
     Ok(())

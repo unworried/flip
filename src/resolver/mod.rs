@@ -29,7 +29,6 @@ impl Resolver {
     }
 }
 
-
 /*
  * TODO: Need to check declarationations first then assignments. This will allow for more error messages
  * e.g. if a variable is used before it is declared, we can tell the user that the variable is

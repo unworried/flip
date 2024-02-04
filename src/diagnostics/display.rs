@@ -30,7 +30,7 @@ impl<'a> DiagnosticsDisplay<'a> {
 
         let prefix_start = cmp::max(0, column as isize - MESSAGE_PADDING as isize) as usize;
         let prefix_end = column;
-    
+
         let prefix = &line[prefix_start..prefix_end];
 
         let suffix_start = cmp::min(column + diagnostic.span.length(), line.len());

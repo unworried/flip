@@ -63,13 +63,13 @@ pub trait Visitor: Sized {
     fn visit_variable(&mut self, _ident: &Ident) {}
 }
 
-impl<'a> Walkable for Item<'a> {
+impl<'a> Walkable for Item {
     fn walk<V: Visitor>(&self, visitor: &mut V) {
         visitor.visit_item_kind(&self.kind);
     }
 }
 
-impl<'a> Walkable for ItemKind<'a> {
+impl<'a> Walkable for ItemKind {
     fn walk<V: Visitor>(&self, visitor: &mut V) {
         match &self {
             ItemKind::Statement(stmt) => visitor.visit_stmt(stmt),
@@ -77,13 +77,13 @@ impl<'a> Walkable for ItemKind<'a> {
     }
 }
 
-impl<'a> Walkable for Stmt<'a> {
+impl<'a> Walkable for Stmt {
     fn walk<V: Visitor>(&self, visitor: &mut V) {
         visitor.visit_stmt_kind(&self.kind);
     }
 }
 
-impl<'a> Walkable for StmtKind<'a> {
+impl<'a> Walkable for StmtKind {
     fn walk<V: Visitor>(&self, visitor: &mut V) {
         match &self {
             StmtKind::If(cond, res) => {
@@ -109,19 +109,19 @@ impl<'a> Walkable for StmtKind<'a> {
     }
 }
 
-impl Walkable for Expr {
+impl<'a> Walkable for Expr {
     fn walk<V: Visitor>(&self, visitor: &mut V) {
         visitor.visit_expr_kind(&self.kind);
     }
 }
 
-impl Walkable for ExprKind {
+impl<'a> Walkable for ExprKind {
     fn walk<V: Visitor>(&self, visitor: &mut V) {
         match &self {
             ExprKind::Literal(value) => visitor.visit_literal(value),
             ExprKind::Binary(op, lhs, rhs) => visitor.visit_binary(op, &lhs.ptr, &rhs.ptr),
             ExprKind::Unary(op, expr) => visitor.visit_unary(op, &expr.ptr),
-            ExprKind::Variable(ident) => visitor.visit_variable(ident), 
+            ExprKind::Variable(ident) => visitor.visit_variable(ident),
             ExprKind::Error => {}
         }
     }

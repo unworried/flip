@@ -1,6 +1,9 @@
 use alloc::boxed::Box;
 use core::fmt::{Debug, Formatter, Result};
-use std::{fmt::Display, ops::{Deref, DerefMut}};
+use std::{
+    fmt::Display,
+    ops::{Deref, DerefMut},
+};
 
 /// Owned Smart Pointer::: may not need this, inspired by rustc
 #[derive(PartialEq)]

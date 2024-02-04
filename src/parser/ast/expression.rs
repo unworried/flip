@@ -13,6 +13,7 @@ impl Expr {
     /// Grammar: (expression) (operator) (expression)
     pub fn parse_binary(parser: &mut Parser, mut left: ExprKind, precedence: u8) -> ExprKind {
         let start_span = parser.current_span().clone();
+
         while let Some(operator) = Self::parse_binary_operator(parser) {
             if operator.precedence() < precedence {
                 break;
@@ -38,7 +39,7 @@ impl Expr {
                 operator,
                 P(Expr {
                     kind: left,
-                    span: start_span.to_owned(),
+                    span: start_span.clone(),
                 }),
                 P(Expr {
                     kind: right,
@@ -76,13 +77,14 @@ impl Expr {
     /// Grammar: (operator) (expression)
     pub fn parse_unary(parser: &mut Parser) -> ExprKind {
         let start_span = parser.current_span().clone();
+
         let operator = match &parser.current_token() {
             Token::Minus => UnOp::Neg,
             token => {
                 parser
                     .diagnostics
                     .borrow_mut()
-                    .invalid_operator(token, parser.current_span());
+                    .invalid_operator(token, &parser.current_span());
                 return ExprKind::Error;
             }
         };
@@ -90,7 +92,7 @@ impl Expr {
 
         let expr = P(Expr {
             kind: Self::parse_unary_or_primary(parser),
-            span: Span::combine(vec![start_span, parser.current_span().clone()]),
+            span: Span::combine(vec![&start_span, &parser.current_span()]),
         });
 
         ExprKind::Unary(operator, expr)
@@ -133,7 +135,7 @@ impl Expr {
                 parser
                     .diagnostics
                     .borrow_mut()
-                    .unknown_expression(token, parser.current_span());
+                    .unknown_expression(&token, &parser.current_span());
                 return ExprKind::Error;
             }
         };

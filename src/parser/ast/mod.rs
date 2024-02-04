@@ -15,13 +15,13 @@ pub mod expression;
 pub mod statement;
 
 #[derive(Debug)]
-pub struct Ast<'a> {
-    pub items: Vec<Item<'a>>, // HashMap<ItemIdm, Item>
+pub struct Ast {
+    pub items: Vec<Item>, // HashMap<ItemIdm, Item>
 }
 
 /// Grammar: {(statement);}*
-impl<'a> Ast<'a> {
-    pub fn parse(parser: &mut Parser<'a>, end_delim: Token) -> Self {
+impl Ast {
+    pub fn parse(parser: &mut Parser, end_delim: Token) -> Self {
         let mut items = Vec::new();
         while !parser.current_token_is(&end_delim) {
             items.push(Item::parse(parser));
@@ -36,17 +36,17 @@ impl<'a> Ast<'a> {
 }
 
 #[derive(Debug)]
-pub struct Item<'a> {
-    pub kind: ItemKind<'a>,
+pub struct Item {
+    pub kind: ItemKind,
 }
 
 #[derive(Debug)]
-pub enum ItemKind<'a> {
+pub enum ItemKind {
     //Function(Function),
-    Statement(Stmt<'a>),
+    Statement(Stmt),
 }
 
-impl<'a> Parse<'a> for Item<'a> {
+impl<'a> Parse<'a> for Item {
     fn parse(parser: &mut Parser<'a>) -> Self {
         let kind = ItemKind::Statement(Stmt::parse(parser));
 
@@ -55,31 +55,33 @@ impl<'a> Parse<'a> for Item<'a> {
 }
 
 #[derive(Debug)]
-pub struct Stmt<'a> {
-    pub kind: StmtKind<'a>,
+pub struct Stmt {
+    pub kind: StmtKind,
     pub span: Span,
 }
 
 #[derive(Debug)]
-pub enum StmtKind<'a> {
+pub enum StmtKind {
     // "let" (identifier) "=" (expression)
-    Let(P<Local<'a>>), // Fix this
+    Let(P<Local>), // Fix this
     // (variable) "=" (expression)
     Assignment(Ident, P<Expr>),
     // "if" (condition) "{" \n {statement}* "}"
-    If(Expr, Vec<Item<'a>>), // WARN: When funcs are added. need to change this to only allow stmts
+    If(Expr, Vec<Item>), // WARN: When funcs are added. need to change this to only allow stmts
     // "while" (condition) "{" \n {statement}* "}"
-    While(Expr, Vec<Item<'a>>),
+    While(Expr, Vec<Item>),
     Error,
 }
 
-impl<'a> Parse<'a> for Stmt<'a> {
+impl<'a> Parse<'a> for Stmt {
     fn parse(parser: &mut Parser<'a>) -> Self {
         let (token, start_span) = parser.consume();
 
         let kind = match &token {
             Token::Let => Self::parse_let(parser),
-            Token::Ident(ident) => Self::parse_assignment(parser, (ident.to_owned(), start_span.clone())),
+            Token::Ident(ident) => {
+                Self::parse_assignment(parser, (ident.to_owned(), start_span.clone()))
+            }
             Token::If => Self::parse_if(parser),
             Token::While => Self::parse_while(parser),
             token => {
@@ -95,7 +97,7 @@ impl<'a> Parse<'a> for Stmt<'a> {
 
         Self {
             kind,
-            span: Span::combine(vec![start_span, parser.current_span().clone()]),
+            span: Span::combine(vec![&start_span, &parser.current_span()]),
         }
     }
 }
@@ -127,7 +129,7 @@ impl<'a> Parse<'a> for Expr {
 
         Expr {
             kind,
-            span: Span::combine(vec![start_span, parser.current_span().clone()]),
+            span: Span::combine(vec![&start_span, &parser.current_span()]),
         }
     }
 }

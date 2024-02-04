@@ -1,23 +1,19 @@
-use std::marker::PhantomData;
-
 use alloc::borrow::ToOwned;
 
 use super::{Ast, Expr, Ident, Stmt, StmtKind};
 use crate::{
     lexer::Token,
     parser::{Parse, Parser, P},
-    span::Span,
 };
 
 #[derive(Debug)]
-pub struct Local<'a> {
+pub struct Local {
     pub pattern: Ident,
     pub init: P<Expr>,
-    phantom: PhantomData<&'a ()>,
 }
 
-impl<'a> Stmt<'a> {
-    pub fn parse_assignment(parser: &mut Parser, ident: Ident) -> StmtKind<'a> {
+impl Stmt {
+    pub fn parse_assignment(parser: &mut Parser, ident: Ident) -> StmtKind {
         // Temp solution to seperate assignment from refernece. do this properly later...
         parser.consume_and_check(Token::Assign);
 
@@ -26,7 +22,7 @@ impl<'a> Stmt<'a> {
         StmtKind::Assignment(ident, expression)
     }
     /// Grammar: "if" (condition) "{" \n {statement}* "}"
-    pub fn parse_if(parser: &mut Parser<'a>) -> StmtKind<'a> {
+    pub fn parse_if(parser: &mut Parser) -> StmtKind {
         let condition = Expr::parse(parser);
 
         parser.consume_and_check(Token::LBrace);
@@ -44,7 +40,7 @@ impl<'a> Stmt<'a> {
     }
 
     /// Grammar: "while" (condition) "{" \n {statement}* "}"
-    pub fn parse_while(parser: &mut Parser<'a>) -> StmtKind<'a> {
+    pub fn parse_while(parser: &mut Parser) -> StmtKind {
         let condition = Expr::parse(parser);
 
         parser.consume_and_check(Token::LBrace);
@@ -62,12 +58,12 @@ impl<'a> Stmt<'a> {
     }
 
     /// Grammar: "let" (ident) "=" (expression)
-    pub fn parse_let(parser: &mut Parser) -> StmtKind<'a> {
+    pub fn parse_let(parser: &mut Parser) -> StmtKind {
         //let ident = Ident::parse(parser);
         // Temp solution to seperate assignment from refernece. do this properly later...
-        let start_span = parser.current_span().clone();
+        let start_span = parser.current_span();
         let ident = match &parser.current_token() {
-            Token::Ident(value) => (value.to_owned(), start_span.clone()),
+            Token::Ident(value) => (value.to_owned(), start_span.to_owned()),
             value => unimplemented!("Unexpected token {:?}", value),
         };
         parser.step();
@@ -79,7 +75,6 @@ impl<'a> Stmt<'a> {
         let local = Local {
             pattern: ident,
             init: expression,
-            phantom: PhantomData,
         };
         StmtKind::Let(P(local))
     }

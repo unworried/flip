@@ -11,7 +11,7 @@ impl Span {
         Self { start, end }
     }
 
-    pub fn combine(mut spans: Vec<Span>) -> Span {
+    pub fn combine(mut spans: Vec<&Span>) -> Span {
         spans.sort_by(|a, b| a.start.cmp(&b.start));
 
         let start = spans.first().unwrap().start; // TODO: Deal with errors

@@ -97,7 +97,10 @@ impl DiagnosticBag {
     }
 
     pub fn variable_already_declared(&mut self, pattern: &String, span: &Span) {
-        self.error(format!("local variable: {}, already exists in scope", pattern), span.clone());
+        self.error(
+            format!("local variable: {}, already exists in scope", pattern),
+            span.clone(),
+        );
     }
 
     pub fn undeclared_variable_assignment(&mut self, ident: &String, span: &Span) {
@@ -105,6 +108,9 @@ impl DiagnosticBag {
     }
 
     pub fn reference_before_assignment(&mut self, ident: &String, span: &Span) {
-        self.error(format!("{} referenced before assignment", ident), span.clone());
+        self.error(
+            format!("{} referenced before assignment", ident),
+            span.clone(),
+        );
     }
 }
