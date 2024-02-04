@@ -6,7 +6,7 @@ use crate::{
     lexer::{Lexer, Token},
     span::Span,
 };
-use std::mem;
+use core::mem;
 
 mod ptr;
 

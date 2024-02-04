@@ -1,4 +1,5 @@
-use std::fmt::{self, Debug};
+use core::fmt::{Debug, Formatter, Result};
+use alloc::boxed::Box;
 
 /// Owned Smart Pointer::: may not need this, inspired by rustc
 #[derive(PartialEq, Clone)]
@@ -14,7 +15,7 @@ pub fn P<T: 'static>(value: T) -> P<T> {
 }
 
 impl<T: ?Sized + Debug> Debug for P<T> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         Debug::fmt(&self.ptr, f)
     }
 }

@@ -1,3 +1,5 @@
+use alloc::{string::String, vec::Vec};
+
 use crate::span::Span;
 
 pub use self::token::Token;
@@ -14,7 +16,7 @@ const EOF: u8 = 0;
 /// The `read_char` method will bump the current character being read.
 /// The lexer will return a `Token` and a `Span` for each token found.
 pub struct Lexer {
-    /// Source Input 
+    /// Source Input
     input: Vec<u8>,
     position: usize,
     ch: u8,
@@ -36,7 +38,7 @@ impl Lexer {
     pub fn next_token(&mut self) -> (Token, Span) {
         //self.skip_whitespace();
         self.skip_comment();
-        let start_position = self.position - 1; 
+        let start_position = self.position - 1;
 
         if Self::is_whitespace(self.ch) {
             let span = Span::new(start_position, self.position);
@@ -95,7 +97,7 @@ impl Lexer {
         self.position
     }
 
-    /// Reads a string input and returns it. 
+    /// Reads a string input and returns it.
     fn read_string(&mut self) -> String {
         let mut string = String::new();
         self.read_char();
@@ -154,7 +156,7 @@ impl Lexer {
         matches!(ch, b'\t' | b'\x0C' | b'\r' | b' ')
     }
 
-    /// Combines multiple whitespace characters into a single Token/Span and returns it. 
+    /// Combines multiple whitespace characters into a single Token/Span and returns it.
     fn whitespace(&mut self) -> Token {
         while Self::is_whitespace(self.ch) {
             self.read_char();

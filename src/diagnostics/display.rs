@@ -1,4 +1,5 @@
-use std::cmp;
+use alloc::string::String;
+use core::cmp;
 
 use crate::source::Source;
 
@@ -29,6 +30,7 @@ impl<'a> DiagnosticsDisplay<'a> {
 
         let prefix_start = cmp::max(0, column as isize - MESSAGE_PADDING as isize) as usize;
         let prefix_end = column;
+    
         let prefix = &line[prefix_start..prefix_end];
 
         let suffix_start = cmp::min(column + diagnostic.span.length(), line.len());
@@ -69,6 +71,7 @@ impl<'a> DiagnosticsDisplay<'a> {
         )
     }
 
+    #[cfg(feature = "std")]
     pub fn print(&self) {
         for diagnostic in self.diagnostics {
             println!("{}", self.stringify(diagnostic));

@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 use crate::{
     lexer::Token,
     parser::{Parse, Parser, P},

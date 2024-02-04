@@ -1,3 +1,6 @@
+use alloc::{borrow::ToOwned, string::String};
+use core::cmp;
+
 use crate::{
     lexer::Token,
     parser::{Parse, Parser, P},
@@ -26,7 +29,7 @@ impl Expr {
                 right = Self::parse_binary(
                     parser,
                     right,
-                    std::cmp::max(operator.precedence(), inner_operator.precedence()),
+                    cmp::max(operator.precedence(), inner_operator.precedence()),
                 );
             }
             left = ExprKind::Binary(operator, P(Expr { kind: left }), P(Expr { kind: right }));

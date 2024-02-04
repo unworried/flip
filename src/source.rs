@@ -1,3 +1,6 @@
+use alloc::string::String;
+
+#[derive(Debug)]
 pub struct Source {
     text: String,
 }
@@ -8,12 +11,14 @@ impl Source {
     }
 
     pub fn line_index(&self, index: usize) -> usize {
+        println!("index: {}", index);
+        println!("lines: {}", self.text.len());
         if index == 0 {
             return 0;
         }
 
-        (index + self.text[..index].lines().count() - 1) % self.text.lines().count()
-        //self.text[..index].lines().count() - 1
+        //(index + self.text[..index].lines().count() - 1) % self.text.lines().count()
+        self.text[..index].lines().count() - 1
     }
 
     pub fn line(&self, index: usize) -> &str {

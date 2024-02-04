@@ -1,4 +1,5 @@
-use std::fmt::Display;
+use alloc::string::{String, ToString};
+use core::fmt::{Display, Formatter, Result};
 
 use super::{
     visitor::{Visitor, Walkable},
@@ -6,7 +7,7 @@ use super::{
 };
 
 impl Display for Ast {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         let mut display = AstDisplay::new();
         write!(f, "{}", display.build(self))
     }

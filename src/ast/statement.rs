@@ -1,3 +1,5 @@
+use alloc::borrow::ToOwned;
+
 use super::{Ast, Expr, Stmt, StmtKind};
 use crate::{
     lexer::Token,

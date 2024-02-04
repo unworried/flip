@@ -1,5 +1,3 @@
-mod debug;
-
 use flipc::{diagnostics::DiagnosticBag, lexer::Lexer, parser::Parser, source::Source};
 
 fn main() {
@@ -14,7 +12,11 @@ fn main() {
             println!();
             println!("{}", result);
 
-            diagnostics.borrow().display(&source);
+            diagnostics
+                .borrow()
+                .check(&source)
+                .map_err(|_| diagnostics.clone())
+                .unwrap();
         }
     });
 }

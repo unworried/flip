@@ -1,23 +1,31 @@
-use std::{cell::RefCell, rc::Rc};
+use alloc::{borrow::ToOwned, rc::Rc, string::String, vec::Vec};
+use core::cell::RefCell;
 
-use crate::{lexer::Token, source::Source, span::Span};
+use crate::{
+    error::{CompilerError, Result},
+    lexer::Token,
+    source::Source,
+    span::Span,
+};
 
 use self::display::DiagnosticsDisplay;
 
 mod display;
 
+#[derive(Debug)]
 pub struct Diagnostic {
     pub kind: DiagnosticKind,
     pub message: String,
     pub span: Span,
 }
 
+#[derive(Debug)]
 pub enum DiagnosticKind {
     Error,
     Warning,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct DiagnosticBag {
     pub diagnostics: Vec<Diagnostic>,
 }
@@ -33,11 +41,13 @@ impl DiagnosticBag {
         Rc::new(RefCell::new(bag))
     }
 
-    pub fn display(&self, src: &Source) {
+    pub fn check(&self, src: &Source) -> Result<()> {
         if !self.diagnostics.is_empty() {
             let diagnostics_display = DiagnosticsDisplay::new(src, &self.diagnostics);
             diagnostics_display.print();
+            return Err(CompilerError::Diagnostics);
         }
+        Ok(())
     }
 
     fn report(&mut self, kind: DiagnosticKind, message: String, span: Span) {

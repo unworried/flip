@@ -1,4 +1,5 @@
-use std::fmt::Display;
+use alloc::string::String;
+use core::fmt::{Display, Formatter, Result};
 
 /// Token enum representing a lexical token in the input source.
 #[derive(Debug, PartialEq, Clone)]
@@ -43,7 +44,7 @@ pub enum Token {
 }
 
 impl Display for Token {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         let display = match self {
             Token::Assign => "=",
             Token::Ident(val) => return write!(f, "Ident({})", val),

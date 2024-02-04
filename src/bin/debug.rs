@@ -17,5 +17,9 @@ fn main() {
 
     let _result = parser.parse();
 
-    diagnostics.borrow().display(&source);
+    diagnostics
+        .borrow()
+        .check(&source)
+        .map_err(|_| diagnostics.clone())
+        .unwrap();
 }
