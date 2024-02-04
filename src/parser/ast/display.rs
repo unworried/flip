@@ -84,7 +84,7 @@ impl Visitor for AstDisplay {
                 self.result.push_str(&format!("Binary: {:?}", op));
             }
             ExprKind::Literal(lit) => lit.walk(self),
-            ExprKind::Variable(s) => self.result.push_str(&s.to_string()),
+            ExprKind::Variable(s) => self.result.push_str(&s.0.to_string()),
             ExprKind::Error => self.result.push_str("Error"),
         }
 

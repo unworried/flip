@@ -6,6 +6,7 @@ use super::{Ast, Expr, Ident, Stmt, StmtKind};
 use crate::{
     lexer::Token,
     parser::{Parse, Parser, P},
+    span::Span,
 };
 
 #[derive(Debug)]
@@ -64,8 +65,9 @@ impl<'a> Stmt<'a> {
     pub fn parse_let(parser: &mut Parser) -> StmtKind<'a> {
         //let ident = Ident::parse(parser);
         // Temp solution to seperate assignment from refernece. do this properly later...
+        let start_span = parser.current_span().clone();
         let ident = match &parser.current_token() {
-            Token::Ident(value) => value.to_owned(),
+            Token::Ident(value) => (value.to_owned(), start_span.clone()),
             value => unimplemented!("Unexpected token {:?}", value),
         };
         parser.step();

@@ -3,6 +3,7 @@ use alloc::vec::Vec;
 use crate::{
     lexer::Token,
     parser::{Parse, Parser, P},
+    span::Span,
 };
 
 pub use self::expression::*;
@@ -56,6 +57,7 @@ impl<'a> Parse<'a> for Item<'a> {
 #[derive(Debug)]
 pub struct Stmt<'a> {
     pub kind: StmtKind<'a>,
+    pub span: Span,
 }
 
 #[derive(Debug)]
@@ -73,31 +75,35 @@ pub enum StmtKind<'a> {
 
 impl<'a> Parse<'a> for Stmt<'a> {
     fn parse(parser: &mut Parser<'a>) -> Self {
-        let (token, span) = parser.consume();
+        let (token, start_span) = parser.consume();
 
         let kind = match &token {
             Token::Let => Self::parse_let(parser),
-            Token::Ident(ident) => Self::parse_assignment(parser, ident.to_owned()),
+            Token::Ident(ident) => Self::parse_assignment(parser, (ident.to_owned(), start_span.clone())),
             Token::If => Self::parse_if(parser),
             Token::While => Self::parse_while(parser),
             token => {
                 parser
                     .diagnostics
                     .borrow_mut()
-                    .unexpected_statement(token, &span);
+                    .unexpected_statement(token, &start_span);
                 StmtKind::Error
             } // Handle Err
         };
 
         parser.consume_and_check(Token::SemiColon);
 
-        Self { kind }
+        Self {
+            kind,
+            span: Span::combine(vec![start_span, parser.current_span().clone()]),
+        }
     }
 }
 
 #[derive(Debug)]
 pub struct Expr {
     pub kind: ExprKind,
+    pub span: Span,
 }
 
 #[derive(Debug)]
@@ -111,12 +117,17 @@ pub enum ExprKind {
 
 impl<'a> Parse<'a> for Expr {
     fn parse(parser: &mut Parser<'a>) -> Self {
+        let start_span = parser.current_span().clone();
+
         let mut kind = Self::parse_unary_or_primary(parser);
 
         if BinOp::token_match(parser.current_token()) {
             kind = Self::parse_binary(parser, kind, 0);
         }
 
-        Expr { kind }
+        Expr {
+            kind,
+            span: Span::combine(vec![start_span, parser.current_span().clone()]),
+        }
     }
 }

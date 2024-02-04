@@ -4,14 +4,15 @@ use core::cmp;
 use crate::{
     lexer::Token,
     parser::{Parse, Parser, P},
+    span::Span,
 };
 
 use super::{Expr, ExprKind};
 
 impl Expr {
-
     /// Grammar: (expression) (operator) (expression)
     pub fn parse_binary(parser: &mut Parser, mut left: ExprKind, precedence: u8) -> ExprKind {
+        let start_span = parser.current_span().clone();
         while let Some(operator) = Self::parse_binary_operator(parser) {
             if operator.precedence() < precedence {
                 break;
@@ -33,7 +34,17 @@ impl Expr {
                     cmp::max(operator.precedence(), inner_operator.precedence()),
                 );
             }
-            left = ExprKind::Binary(operator, P(Expr { kind: left }), P(Expr { kind: right }));
+            left = ExprKind::Binary(
+                operator,
+                P(Expr {
+                    kind: left,
+                    span: start_span.to_owned(),
+                }),
+                P(Expr {
+                    kind: right,
+                    span: parser.current_span().clone(),
+                }),
+            );
         }
         left
     }
@@ -64,6 +75,7 @@ impl Expr {
 
     /// Grammar: (operator) (expression)
     pub fn parse_unary(parser: &mut Parser) -> ExprKind {
+        let start_span = parser.current_span().clone();
         let operator = match &parser.current_token() {
             Token::Minus => UnOp::Neg,
             token => {
@@ -78,6 +90,7 @@ impl Expr {
 
         let expr = P(Expr {
             kind: Self::parse_unary_or_primary(parser),
+            span: Span::combine(vec![start_span, parser.current_span().clone()]),
         });
 
         ExprKind::Unary(operator, expr)
@@ -92,7 +105,7 @@ impl Expr {
             Token::String(value) => ExprKind::Literal(Literal::String(value.to_owned())),
             Token::LParen => Self::parse_group(parser),
             // Grammar: (identifier) => Token::Ident
-            Token::Ident(symbol) => ExprKind::Variable(symbol.to_owned()),
+            Token::Ident(symbol) => ExprKind::Variable((symbol.to_owned(), span)),
             _ => {
                 parser
                     .diagnostics
@@ -182,7 +195,7 @@ impl UnOp {
     }
 }
 
-pub type Ident = String;
+pub type Ident = (String, Span);
 
 #[derive(Debug)]
 pub enum Literal {

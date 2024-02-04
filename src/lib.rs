@@ -8,5 +8,6 @@ pub mod diagnostics;
 mod error;
 pub mod lexer;
 pub mod parser;
+pub mod resolver;
 pub mod source;
 mod span;

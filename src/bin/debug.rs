@@ -1,12 +1,10 @@
 use flipc::{
-    diagnostics::DiagnosticBag,
-    lexer::Lexer,
-    parser::Parser,
-    source::Source,
+    diagnostics::DiagnosticBag, lexer::Lexer, parser::Parser, resolver::{scope::Scope, Resolver}, source::Source
 };
 
 fn main() -> Result<(), ()> {
-    let line = r#"let x = 4;
+    let line = r#"x = y; 
+    let x = 4; let x = 4;
     while x == 1 {
         if x == 4 {
             x = 5;
@@ -21,9 +19,12 @@ fn main() -> Result<(), ()> {
     let diagnostics = DiagnosticBag::new();
     let mut parser = Parser::new(&mut lexer, diagnostics.clone());
 
-    let _result = parser.parse();
+    let result = parser.parse();
 
 
+    let mut resolver = Resolver::new(vec![Scope::default()], diagnostics.clone());
+    resolver.resolve(&result);
+    
     diagnostics.borrow().check(&source).map_err(|_| ())?;
 
     Ok(())

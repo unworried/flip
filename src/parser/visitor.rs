@@ -1,5 +1,6 @@
 use super::ast::{
-    statement::Local, Ast, BinOp, Expr, ExprKind, Item, ItemKind, Literal, Stmt, StmtKind, UnOp,
+    statement::Local, Ast, BinOp, Expr, ExprKind, Ident, Item, ItemKind, Literal, Stmt, StmtKind,
+    UnOp,
 };
 
 pub trait Walkable {
@@ -54,10 +55,12 @@ pub trait Visitor: Sized {
         local.init.ptr.walk(self);
     }
 
-    fn visit_assignment(&mut self, ident: &String, expr: &Expr) {
+    fn visit_assignment(&mut self, _ident: &Ident, expr: &Expr) {
         //in.visit_assignment(ident); // TODO: FIX Ident DEclaration
         expr.walk(self);
     }
+
+    fn visit_variable(&mut self, _ident: &Ident) {}
 }
 
 impl<'a> Walkable for Item<'a> {
@@ -118,7 +121,7 @@ impl Walkable for ExprKind {
             ExprKind::Literal(value) => visitor.visit_literal(value),
             ExprKind::Binary(op, lhs, rhs) => visitor.visit_binary(op, &lhs.ptr, &rhs.ptr),
             ExprKind::Unary(op, expr) => visitor.visit_unary(op, &expr.ptr),
-            ExprKind::Variable(_) => {}
+            ExprKind::Variable(ident) => visitor.visit_variable(ident), 
             ExprKind::Error => {}
         }
     }

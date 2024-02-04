@@ -56,10 +56,10 @@ impl<'a> DiagnosticsDisplay<'a> {
             COLOR_ORANGE,
             diagnostic.message,
             COLOR_RESET,
-            column + 1,
+            line_index + 1,
             COLOR_ORANGE,
             COLOR_RESET,
-            line_index + 1,
+            column + 1,
             COLOR_ORANGE,
             COLOR_RESET,
             indent = indent
