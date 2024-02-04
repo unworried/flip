@@ -22,7 +22,10 @@ impl Source {
     }
 
     pub fn line(&self, index: usize) -> Result<&str> {
-        self.text.lines().nth(index).ok_or_else(|| CompilerError::ReadSource)
+        self.text
+            .lines()
+            .nth(index)
+            .ok_or_else(|| CompilerError::ReadSource)
     }
 
     pub fn line_start(&self, index: usize) -> usize {
