@@ -1,7 +1,7 @@
 use alloc::string::String;
 use core::cmp;
 
-use crate::source::Source;
+use crate::{error::Result, source::Source};
 
 use super::Diagnostic;
 
@@ -21,9 +21,9 @@ impl<'a> DiagnosticsDisplay<'a> {
     }
 
     /// Formats diagnostic in desired format for user presentation
-    pub fn stringify(&self, diagnostic: &Diagnostic) -> String {
+    pub fn stringify(&self, diagnostic: &Diagnostic) -> Result<String> {
         let line_index = self.text.line_index(diagnostic.span.start);
-        let line = self.text.line(line_index);
+        let line = self.text.line(line_index)?;
         let line_start = self.text.line_start(line_index);
 
         let column = diagnostic.span.start - line_start;
@@ -65,15 +65,17 @@ impl<'a> DiagnosticsDisplay<'a> {
             indent = indent
         );
 
-        format!(
+        Ok(format!(
             "{}{}{}{}{}\n{}\n{}\n{}\n",
             prefix, COLOR_RED, span, COLOR_RESET, suffix, indicators, pointer, message
-        )
+        ))
     }
 
-    pub fn print(&self) {
+    pub fn print(&self) -> Result<()> {
         for diagnostic in self.diagnostics {
-            println!("{}", self.stringify(diagnostic));
+            println!("{}", self.stringify(diagnostic)?);
         }
+
+        Ok(())
     }
 }

@@ -1,5 +1,7 @@
 use alloc::string::String;
 
+use crate::error::{CompilerError, Result};
+
 #[derive(Debug)]
 pub struct Source {
     text: String,
@@ -19,8 +21,8 @@ impl Source {
         self.text[..index].lines().count() - 1
     }
 
-    pub fn line(&self, index: usize) -> &str {
-        self.text.lines().nth(index).unwrap() // handle correctly
+    pub fn line(&self, index: usize) -> Result<&str> {
+        self.text.lines().nth(index).ok_or_else(|| CompilerError::ReadSource)
     }
 
     pub fn line_start(&self, index: usize) -> usize {

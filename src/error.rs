@@ -12,6 +12,7 @@ pub trait Error: Debug + Display {
 #[derive(Debug)]
 pub enum CompilerError {
     Diagnostics,
+    ReadSource,
 }
 
 impl Error for CompilerError {}
@@ -21,6 +22,7 @@ impl Display for CompilerError {
     fn fmt(&self, f: &mut Formatter) -> core::result::Result<(), core::fmt::Error> {
         let message = match self {
             CompilerError::Diagnostics => "diagnostics found errors",
+            CompilerError::ReadSource => "failed to read source file",
         };
         write!(f, "compiler error: {}", message)
     }
