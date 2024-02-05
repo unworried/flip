@@ -39,24 +39,42 @@ impl AstDisplay {
             self.result.push_str("  ");
         }
     }
+
+    fn add_expression_header(&mut self) {
+        self.result.push_str("Expression: ");
+    }
 }
 
 impl Visitor for AstDisplay {
     fn visit_stmt(&mut self, stmt: &Stmt) {
-        self.add_newline();
-        self.add_padding();
         self.result.push_str("Statement: ");
         stmt.walk(self);
         self.ident -= 1;
+        self.add_newline();
+        self.add_newline();
+        self.add_padding();
     }
 
     fn visit_stmt_kind(&mut self, stmt: &StmtKind) {
         self.ident += 1;
         match stmt {
-            StmtKind::Let(..) => self.result.push_str("let"),
-            StmtKind::If(..) => self.result.push_str("if"),
-            StmtKind::While(..) => self.result.push_str("while"),
-            StmtKind::Assignment(..) => self.result.push_str("assignment"),
+            StmtKind::Let(local) => {
+                self.result.push_str("Let ");
+                self.result.push_str(&local.ptr.pattern.0);
+                self.add_newline();
+                self.add_padding();
+                self.result.push_str("Expression: ");
+            }
+
+            StmtKind::If(..) => self.result.push_str("If"),
+            StmtKind::While(..) => self.result.push_str("While"),
+            StmtKind::Assignment(local) => {
+                self.result.push_str("Assign ");
+                self.result.push_str(&local.ptr.pattern.0);
+                self.add_newline();
+                self.add_padding();
+                self.result.push_str("Expression: ");
+            },
             StmtKind::Error => self.result.push_str("Error"),
         }
 
@@ -66,7 +84,7 @@ impl Visitor for AstDisplay {
     fn visit_expr(&mut self, expr: &super::Expr) {
         self.add_newline();
         self.add_padding();
-        self.result.push_str("Expression: ");
+        self.add_expression_header();
         expr.walk(self);
     }
 

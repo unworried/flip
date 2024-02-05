@@ -89,12 +89,13 @@ impl Visitor for AstValidator {
             StmtKind::Let(local) => {
                 self.actual.push(ASTNode::Let);
                 self.actual
-                    .push(ASTNode::Variable(local.ptr.pattern.0.to_owned()));
+                    .push(ASTNode::Variable(local.pattern.0.to_owned()));
                 local.ptr.init.ptr.walk(self);
             }
-            StmtKind::Assignment(ident, expr) => {
-                self.actual.push(ASTNode::Variable(ident.0.to_owned()));
-                expr.ptr.walk(self);
+            StmtKind::Assignment(local) => {
+                self.actual
+                    .push(ASTNode::Variable(local.pattern.0.to_owned()));
+                local.ptr.init.ptr.walk(self);
             }
             StmtKind::Error => {}
         }

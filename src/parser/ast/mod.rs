@@ -65,7 +65,7 @@ pub enum StmtKind {
     // "let" (identifier) "=" (expression)
     Let(P<Local>), // Fix this
     // (variable) "=" (expression)
-    Assignment(Ident, P<Expr>),
+    Assignment(P<Local>),
     // "if" (condition) "{" \n {statement}* "}"
     If(Expr, Vec<Item>), // WARN: When funcs are added. need to change this to only allow stmts
     // "while" (condition) "{" \n {statement}* "}"

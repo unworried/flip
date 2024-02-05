@@ -2,6 +2,7 @@ use self::ast::Ast;
 pub use self::ptr::*;
 
 use crate::{
+    cache::Cache,
     diagnostics::DiagnosticsCell,
     lexer::{Lexer, Token},
     span::Span,
@@ -57,11 +58,11 @@ impl<'a> Parser<'a> {
             self.step();
         }
 
-        if self.current_token.0 == Token::Illegal {
+        /*if self.current_token.0 == Token::Illegal {
             self.diagnostics
                 .borrow_mut()
                 .illegal_token(&self.current_token.1);
-        }
+        }*/
     }
 
     pub fn consume(&mut self) -> (Token, Span) {
@@ -102,6 +103,10 @@ impl<'a> Parser<'a> {
 
     pub fn next_token_is(&self, token: &Token) -> bool {
         &self.next_token.0 == token
+    }
+
+    pub fn next_span(&self) -> &Span {
+        &self.next_token.1
     }
 
     pub fn current_position(&self) -> usize {

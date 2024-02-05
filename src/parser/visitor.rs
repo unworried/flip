@@ -51,25 +51,28 @@ pub trait Visitor: Sized {
         lit.walk(self);
     }
 
-    fn visit_local(&mut self, local: &Local) {
-        local.init.ptr.walk(self);
+    fn visit_declaration(&mut self, local: &Local) {
+        self.visit_local(local);
     }
 
-    fn visit_assignment(&mut self, _ident: &Ident, expr: &Expr) {
-        //in.visit_assignment(ident); // TODO: FIX Ident DEclaration
-        expr.walk(self);
+    fn visit_assignment(&mut self, local: &Local) {
+        self.visit_local(local);
+    }
+
+    fn visit_local(&mut self, local: &Local) {
+        local.init.ptr.walk(self);
     }
 
     fn visit_variable(&mut self, _ident: &Ident) {}
 }
 
-impl<'a> Walkable for Item {
+impl Walkable for Item {
     fn walk<V: Visitor>(&self, visitor: &mut V) {
         visitor.visit_item_kind(&self.kind);
     }
 }
 
-impl<'a> Walkable for ItemKind {
+impl Walkable for ItemKind {
     fn walk<V: Visitor>(&self, visitor: &mut V) {
         match &self {
             ItemKind::Statement(stmt) => visitor.visit_stmt(stmt),
@@ -77,13 +80,13 @@ impl<'a> Walkable for ItemKind {
     }
 }
 
-impl<'a> Walkable for Stmt {
+impl Walkable for Stmt {
     fn walk<V: Visitor>(&self, visitor: &mut V) {
         visitor.visit_stmt_kind(&self.kind);
     }
 }
 
-impl<'a> Walkable for StmtKind {
+impl Walkable for StmtKind {
     fn walk<V: Visitor>(&self, visitor: &mut V) {
         match &self {
             StmtKind::If(cond, res) => {
@@ -99,23 +102,23 @@ impl<'a> Walkable for StmtKind {
                 }
             }
             StmtKind::Let(local) => {
-                visitor.visit_local(&local.ptr);
+                visitor.visit_declaration(&local.ptr);
             }
-            StmtKind::Assignment(ident, expr) => {
-                visitor.visit_assignment(ident, &expr.ptr);
+            StmtKind::Assignment(local) => {
+                visitor.visit_assignment(&local.ptr);
             }
             StmtKind::Error => {}
         }
     }
 }
 
-impl<'a> Walkable for Expr {
+impl Walkable for Expr {
     fn walk<V: Visitor>(&self, visitor: &mut V) {
         visitor.visit_expr_kind(&self.kind);
     }
 }
 
-impl<'a> Walkable for ExprKind {
+impl Walkable for ExprKind {
     fn walk<V: Visitor>(&self, visitor: &mut V) {
         match &self {
             ExprKind::Literal(value) => visitor.visit_literal(value),

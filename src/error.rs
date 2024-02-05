@@ -24,6 +24,7 @@ impl Display for CompilerError {
             CompilerError::Diagnostics => "diagnostics found errors",
             CompilerError::ReadSource => "failed to read source file",
         };
+
         write!(f, "compiler error: {}", message)
     }
 }

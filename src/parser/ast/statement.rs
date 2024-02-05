@@ -19,7 +19,12 @@ impl Stmt {
 
         let expression = P(Expr::parse(parser));
 
-        StmtKind::Assignment(ident, expression)
+        let local = Local {
+            pattern: ident,
+            init: expression,
+        };
+
+        StmtKind::Assignment(P(local))
     }
     /// Grammar: "if" (condition) "{" \n {statement}* "}"
     pub fn parse_if(parser: &mut Parser) -> StmtKind {
