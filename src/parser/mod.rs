@@ -9,7 +9,6 @@ use crate::{
 use core::mem;
 
 pub mod ast;
-mod evaluator;
 mod ptr;
 pub mod visitor;
 
@@ -106,9 +105,5 @@ impl<'a> Parser<'a> {
 
     pub fn next_span(&self) -> &Span {
         &self.next_token.1
-    }
-
-    pub fn current_position(&self) -> usize {
-        self.lexer.position()
     }
 }

@@ -4,7 +4,9 @@ use std::{
 };
 
 use crate::{
-    diagnostics::DiagnosticsCell, parser::ast::{statement::Local, Expr, Ident}, span::Span
+    diagnostics::DiagnosticsCell,
+    parser::ast::{statement::Local, Expr, Ident},
+    span::Span,
 };
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
