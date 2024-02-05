@@ -5,12 +5,12 @@
 extern crate alloc;
 
 // Create frontend interal mod to remove need for pub modifiers
+pub mod cache;
 pub mod diagnostics;
 pub mod error;
+mod escape_codes;
 pub mod lexer;
 pub mod parser;
 pub mod resolver;
 pub mod source;
 mod span;
-pub mod cache;
-mod escape_codes;

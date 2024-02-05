@@ -74,7 +74,7 @@ impl Visitor for AstDisplay {
                 self.add_newline();
                 self.add_padding();
                 self.result.push_str("Expression: ");
-            },
+            }
             StmtKind::Error => self.result.push_str("Error"),
         }
 

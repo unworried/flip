@@ -64,7 +64,14 @@ impl<'a> DiagnosticsDisplay<'a> {
 
         Ok(format!(
             "{}{}{}{}{}\n{}\n{}\n{}\n",
-            prefix, Color::Red, span, Color::Reset, suffix, indicators, pointer, message
+            prefix,
+            Color::Red,
+            span,
+            Color::Reset,
+            suffix,
+            indicators,
+            pointer,
+            message
         ))
     }
 
