@@ -3,6 +3,8 @@ use std::fmt::Display;
 pub enum Color {
     Red,
     Orange,
+    Cyan,
+    Magenta,
     Reset,
 }
 
@@ -11,6 +13,8 @@ impl AsRef<str> for Color {
         match self {
             Color::Red => "\x1b[31m\x1b[1m",
             Color::Orange => "\x1b[33m\x1b[1m",
+            Color::Cyan => "\x1b[36m\x1b[1m",
+            Color::Magenta => "\x1b[35m\x1b[1m",
             Color::Reset => "\x1b[0m",
         }
     }

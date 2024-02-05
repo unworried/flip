@@ -1,7 +1,10 @@
 use alloc::string::{String, ToString};
 use core::fmt::{Display, Formatter, Result};
 
-use crate::parser::visitor::{Visitor, Walkable};
+use crate::{
+    escape_codes::Color,
+    parser::visitor::{Visitor, Walkable},
+};
 
 use super::{Ast, ExprKind, Literal, Stmt, StmtKind};
 
@@ -40,14 +43,20 @@ impl AstDisplay {
         }
     }
 
-    fn add_expression_header(&mut self) {
-        self.result.push_str("Expression: ");
+    fn add_statement_header(&mut self) {
+        self.result
+            .push_str(&format!("{}Statement:{} ", Color::Magenta, Color::Reset));
+    }
+
+    fn add_expression_header(&mut self, text: &str) {
+        self.result
+            .push_str(&format!("{}{}:{} ", Color::Cyan, text, Color::Reset));
     }
 }
 
 impl Visitor for AstDisplay {
     fn visit_stmt(&mut self, stmt: &Stmt) {
-        self.result.push_str("Statement: ");
+        self.add_statement_header();
         stmt.walk(self);
         self.ident -= 1;
         self.add_newline();
@@ -59,11 +68,11 @@ impl Visitor for AstDisplay {
         self.ident += 1;
         match stmt {
             StmtKind::Let(local) => {
-                self.result.push_str("Let ");
+                self.result.push_str("Declare ");
                 self.result.push_str(&local.ptr.pattern.0);
                 self.add_newline();
                 self.add_padding();
-                self.result.push_str("Expression: ");
+                self.add_expression_header("Expression");
             }
 
             StmtKind::If(..) => self.result.push_str("If"),
@@ -73,7 +82,7 @@ impl Visitor for AstDisplay {
                 self.result.push_str(&local.ptr.pattern.0);
                 self.add_newline();
                 self.add_padding();
-                self.result.push_str("Expression: ");
+                self.add_expression_header("Expression");
             }
             StmtKind::Error => self.result.push_str("Error"),
         }
@@ -84,7 +93,7 @@ impl Visitor for AstDisplay {
     fn visit_expr(&mut self, expr: &super::Expr) {
         self.add_newline();
         self.add_padding();
-        self.add_expression_header();
+        self.add_expression_header("Expression");
         expr.walk(self);
     }
 
