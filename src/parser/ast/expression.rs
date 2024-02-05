@@ -84,10 +84,26 @@ impl Expr {
                 parser
                     .diagnostics
                     .borrow_mut()
-                    .invalid_operator(token, &parser.current_span());
+                    .invalid_operator(token, parser.current_span());
                 return ExprKind::Error;
             }
         };
+
+        /*
+         * Should this really be caught here?
+         * Catches cases where whitespace between operator and expression
+         * e.g. - 1, let foo = - bar;
+         * instead of:
+         * -1, let foo = -bar;
+         */
+        if parser.next_token_is(&Token::Whitespace) {
+            parser.diagnostics.borrow_mut().unexpected_token(
+                parser.current_token(),
+                parser.next_token(),
+                parser.next_span(),
+            );
+        }
+
         parser.step();
 
         let expr = P(Expr {
@@ -99,7 +115,29 @@ impl Expr {
     }
 
     pub fn parse_primary(parser: &mut Parser) -> ExprKind {
-        let (token, span) = parser.consume();
+        let (mut token, span) = parser.consume();
+
+        // Very Ugly, abstract or cleanup.
+        while !matches!(
+            &token,
+            Token::Int(_) | Token::String(_) | Token::LParen | Token::Ident(_)
+        ) {
+            let end_span;
+            (token, end_span) = parser.consume();
+
+            if !matches!(
+                parser.current_token(),
+                Token::Int(_) | Token::String(_) | Token::LParen | Token::Ident(_)
+            ) {
+                continue;
+            }
+
+            let span_combine = Span::combine(vec![&span, &end_span]);
+            parser
+                .diagnostics
+                .borrow_mut()
+                .unknown_expression(&token, &span_combine);
+        }
 
         match &token {
             // Temp before i split into parse_int and parse string
@@ -108,13 +146,7 @@ impl Expr {
             Token::LParen => Self::parse_group(parser),
             // Grammar: (identifier) => Token::Ident
             Token::Ident(symbol) => ExprKind::Variable((symbol.to_owned(), span)),
-            _ => {
-                parser
-                    .diagnostics
-                    .borrow_mut()
-                    .unknown_expression(&token, &span);
-                ExprKind::Error
-            }
+            _ => panic!("Really should reach here, implement fatal error instead"),
         }
     }
 
@@ -135,7 +167,7 @@ impl Expr {
                 parser
                     .diagnostics
                     .borrow_mut()
-                    .unknown_expression(&token, &parser.current_span());
+                    .unknown_expression(token, parser.current_span());
                 return ExprKind::Error;
             }
         };
