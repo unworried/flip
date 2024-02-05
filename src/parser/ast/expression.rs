@@ -117,26 +117,19 @@ impl Expr {
     pub fn parse_primary(parser: &mut Parser) -> ExprKind {
         let (mut token, span) = parser.consume();
 
-        // Very Ugly, abstract or cleanup.
-        while !matches!(
-            &token,
-            Token::Int(_) | Token::String(_) | Token::LParen | Token::Ident(_)
-        ) {
+        // Recursivly catches invalid tokens until a valid token is found to continue parsing
+        // correctly after an error
+        while !match_primary(&token) {
             let end_span;
             (token, end_span) = parser.consume();
 
-            if !matches!(
-                parser.current_token(),
-                Token::Int(_) | Token::String(_) | Token::LParen | Token::Ident(_)
-            ) {
-                continue;
+            if match_primary(parser.current_token()) {
+                let span_combine = Span::combine(vec![&span, &end_span]);
+                parser
+                    .diagnostics
+                    .borrow_mut()
+                    .unknown_expression(&token, &span_combine);
             }
-
-            let span_combine = Span::combine(vec![&span, &end_span]);
-            parser
-                .diagnostics
-                .borrow_mut()
-                .unknown_expression(&token, &span_combine);
         }
 
         match &token {
@@ -146,7 +139,7 @@ impl Expr {
             Token::LParen => Self::parse_group(parser),
             // Grammar: (identifier) => Token::Ident
             Token::Ident(symbol) => ExprKind::Variable((symbol.to_owned(), span)),
-            _ => panic!("Really should reach here, implement fatal error instead"),
+            _ => panic!("Really shouldn't reach here, implement fatal error instead"),
         }
     }
 
@@ -174,6 +167,13 @@ impl Expr {
 
         ExprKind::Literal(litkind)
     }
+}
+
+fn match_primary(token: &Token) -> bool {
+    matches!(
+        token,
+        Token::Int(_) | Token::String(_) | Token::LParen | Token::Ident(_)
+    )
 }
 
 #[derive(Debug)]
