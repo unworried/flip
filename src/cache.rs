@@ -93,9 +93,9 @@ impl Cache {
 
     pub fn push_child(&self, parent: &DefinitionId, child: &DefinitionId) {
         let mut id = *parent;
-        while let Some(ref child) = self.definitions.borrow().get(&id).unwrap().child {
-            id = *child;
-            continue;
+
+        while let Some(child) = self.definitions.borrow().get(&id).and_then(|def| def.child) {
+            id = child;
         }
 
         if let Some(def) = self.definitions.borrow_mut().get_mut(&id) {

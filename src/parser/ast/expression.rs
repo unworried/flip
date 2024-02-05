@@ -117,9 +117,17 @@ impl Expr {
 
         // Recursivly catches invalid tokens until a valid token is found to continue parsing
         // correctly after an error
+        // WARN SOURCE OF RECURSION ERROR
         while !match_primary(&token) {
             let new_span;
             (token, new_span) = parser.consume();
+
+            // Tmp fix to recursion error. Impl in parser instead
+            // Something is wrong with span counting... spamming random chars yields out of bounds
+            // panic
+            if parser.current_token_is(&Token::Eof) {
+                return ExprKind::Error;
+            }
 
             if match_primary(parser.current_token()) {
                 let span_combine = Span::combine(vec![&span, &new_span]);
