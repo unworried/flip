@@ -1,7 +1,7 @@
 use alloc::string::String;
 use core::cmp;
 
-use crate::{error::Result, source::Source};
+use crate::{error::Result, escape_codes::Color, source::Source};
 
 use super::Diagnostic;
 
@@ -11,9 +11,6 @@ pub struct DiagnosticsDisplay<'a> {
 }
 
 const MESSAGE_PADDING: usize = 16;
-const COLOR_RED: &str = "\x1b[31m\x1b[1m";
-const COLOR_ORANGE: &str = "\x1b[33m\x1b[1m";
-const COLOR_RESET: &str = "\x1b[0m";
 
 impl<'a> DiagnosticsDisplay<'a> {
     pub fn new(text: &'a Source, diagnostics: &'a [Diagnostic]) -> Self {
@@ -53,21 +50,21 @@ impl<'a> DiagnosticsDisplay<'a> {
         let message = format!(
             "{:indent$}+-- {}{} ({}{}{}:{}{}{}){}",
             "",
-            COLOR_ORANGE,
+            Color::Orange,
             diagnostic.message,
-            COLOR_RESET,
+            Color::Reset,
             line_index + 1,
-            COLOR_ORANGE,
-            COLOR_RESET,
+            Color::Orange,
+            Color::Reset,
             column + 1,
-            COLOR_ORANGE,
-            COLOR_RESET,
+            Color::Orange,
+            Color::Reset,
             indent = indent
         );
 
         Ok(format!(
             "{}{}{}{}{}\n{}\n{}\n{}\n",
-            prefix, COLOR_RED, span, COLOR_RESET, suffix, indicators, pointer, message
+            prefix, Color::Red, span, Color::Reset, suffix, indicators, pointer, message
         ))
     }
 

@@ -45,8 +45,10 @@ impl DiagnosticBag {
         if !self.diagnostics.is_empty() {
             let diagnostics_display = DiagnosticsDisplay::new(src, &self.diagnostics);
             diagnostics_display.print()?;
+
             return Err(CompilerError::Diagnostics);
         }
+
         Ok(())
     }
 
