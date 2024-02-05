@@ -1,19 +1,12 @@
-use flipc::{diagnostics::DiagnosticBag, lexer::Lexer, parser::Parser, source::Source};
+use flipc::frontend;
 
-fn main() -> Result<(), ()> {
+fn main() {
     std::io::stdin().lines().for_each(|line| {
         if let Ok(line) = line {
-            let source = Source::new(line.to_string());
-            let mut lexer = Lexer::new(line.to_string());
-            let diagnostics = DiagnosticBag::new();
-            let mut parser = Parser::new(&mut lexer, diagnostics.clone());
-
-            let result = parser.parse();
-            println!();
-            println!("{}", result);
-
-            diagnostics.borrow().check(&source).ok();
+            match frontend::check(&line) {
+                Ok(_) => {}
+                Err(e) => println!("{}", e),
+            }
         }
     });
-    Ok(())
 }

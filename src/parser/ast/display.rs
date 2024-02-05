@@ -106,12 +106,14 @@ impl Visitor for AstDisplay {
                 self.add_expression_header("Unary");
                 self.result.push_str(&format!("{:?}", op));
             }
+
             ExprKind::Binary(op, ..) => {
                 self.add_newline();
                 self.add_padding();
                 self.add_expression_header("Binary");
                 self.result.push_str(&format!("{:?}", op));
             }
+
             ExprKind::Literal(lit) => lit.walk(self),
             ExprKind::Variable(s) => self.result.push_str(&s.0.to_string()),
             ExprKind::Error => self.result.push_str("Error"),

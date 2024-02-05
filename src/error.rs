@@ -21,7 +21,7 @@ impl Error for CompilerError {}
 impl Display for CompilerError {
     fn fmt(&self, f: &mut Formatter) -> core::result::Result<(), core::fmt::Error> {
         let message = match self {
-            CompilerError::Diagnostics => "diagnostics found errors",
+            CompilerError::Diagnostics => "diagnostic errors found",
             CompilerError::ReadSource => "failed to read source file",
         };
 

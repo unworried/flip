@@ -115,21 +115,22 @@ impl Expr {
     }
 
     pub fn parse_primary(parser: &mut Parser) -> ExprKind {
-        let (mut token, span) = parser.consume();
+        let (mut token, mut span) = parser.consume();
 
         // Recursivly catches invalid tokens until a valid token is found to continue parsing
         // correctly after an error
         while !match_primary(&token) {
-            let end_span;
-            (token, end_span) = parser.consume();
+            let new_span;
+            (token, new_span) = parser.consume();
 
             if match_primary(parser.current_token()) {
-                let span_combine = Span::combine(vec![&span, &end_span]);
+                let span_combine = Span::combine(vec![&span, &new_span]);
                 parser
                     .diagnostics
                     .borrow_mut()
                     .unknown_expression(&token, &span_combine);
             }
+            span = new_span;
         }
 
         match &token {
