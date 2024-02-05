@@ -1,8 +1,6 @@
-use crate::{
-    diagnostics::DiagnosticBag,
-    lexer::{Lexer, Token},
-    parser::Parser,
-};
+use crate::diagnostics::DiagnosticBag;
+use crate::lexer::{Lexer, Token};
+use crate::parser::Parser;
 
 #[test]
 fn parser_step() {

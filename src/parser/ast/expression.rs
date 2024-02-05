@@ -1,13 +1,11 @@
-use alloc::{borrow::ToOwned, string::String};
+use alloc::borrow::ToOwned;
+use alloc::string::String;
 use core::cmp;
 
-use crate::{
-    lexer::Token,
-    parser::{Parse, Parser, P},
-    span::Span,
-};
-
 use super::{Expr, ExprKind};
+use crate::lexer::Token;
+use crate::parser::{Parse, Parser, P};
+use crate::span::Span;
 
 impl Expr {
     /// Grammar: (expression) (operator) (expression)

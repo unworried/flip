@@ -1,12 +1,10 @@
+use core::mem;
+
 use self::ast::Ast;
 pub use self::ptr::*;
-
-use crate::{
-    diagnostics::DiagnosticsCell,
-    lexer::{Lexer, Token},
-    span::Span,
-};
-use core::mem;
+use crate::diagnostics::DiagnosticsCell;
+use crate::lexer::{Lexer, Token};
+use crate::span::Span;
 
 pub mod ast;
 mod ptr;

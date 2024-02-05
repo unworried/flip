@@ -1,7 +1,5 @@
-use crate::parser::{
-    ast::{BinOp, Expr, Ident, Literal, UnOp},
-    visitor::{Visitor, Walkable},
-};
+use crate::parser::ast::{BinOp, Expr, Ident, Literal, UnOp};
+use crate::parser::visitor::{Visitor, Walkable};
 
 // Currently any operation that yields a float is floored.
 #[derive(Default)]
@@ -71,7 +69,8 @@ mod tests {
     )]
 
     use super::*;
-    use crate::{diagnostics::DiagnosticBag, parser::Parser};
+    use crate::diagnostics::DiagnosticBag;
+    use crate::parser::Parser;
 
     fn assert_eval(input: &str, expected: isize) {
         let mut lexer = crate::lexer::Lexer::new(input.to_string());

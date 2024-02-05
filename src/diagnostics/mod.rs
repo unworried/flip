@@ -1,14 +1,14 @@
-use alloc::{borrow::ToOwned, rc::Rc, string::String, vec::Vec};
+use alloc::borrow::ToOwned;
+use alloc::rc::Rc;
+use alloc::string::String;
+use alloc::vec::Vec;
 use core::cell::RefCell;
 
-use crate::{
-    error::{CompilerError, Result},
-    lexer::Token,
-    source::Source,
-    span::Span,
-};
-
 use self::display::DiagnosticsDisplay;
+use crate::error::{CompilerError, Result};
+use crate::lexer::Token;
+use crate::source::Source;
+use crate::span::Span;
 
 mod display;
 

@@ -1,8 +1,8 @@
-use alloc::{string::String, vec::Vec};
-
-use crate::span::Span;
+use alloc::string::String;
+use alloc::vec::Vec;
 
 pub use self::token::Token;
+use crate::span::Span;
 
 #[cfg(test)]
 mod tests;

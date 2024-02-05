@@ -1,12 +1,25 @@
-use crate::{
-    cache::{Cache, DefinitionKind},
-    parser::{
-        ast::{statement::Local, Ast, Expr, ExprKind, Ident, Literal},
-        visitor::Visitor,
-    },
-};
-
-use self::{evaluator::evaluate_expression, scope::Scope};
+//! resolver/mod.rs - Defines the variable resolution logic responsible for checking declartions,
+//! assignments and references. Linear Binary Equations are evaluated and replaced with their
+//! constant result. Variable assignments are linked in a chain starting from the root variable to
+//! the leaf.
+//!
+//! The goal of the resolver is to ensure that all variables are declared before they are used, and
+//! that all assignments are valid.
+//!
+//! The resolver is implemented as a visitor pattern, where the resolver visits the AST and builds
+//! a definition map.
+//!
+//! The follow diagnostics can be returned from this module:
+//! - symbol_already_declared: The symbol has already been declared in the current scope.
+//! - undeclared_assignment: The symbol has not been declared before it was assigned.
+//! - undeclared_reference: The symbol has not been declared before it was referenced.
+//! - reference_before_assignment: The symbol was referenced before it was declared.
+use self::evaluator::evaluate_expression;
+use self::scope::Scope;
+use crate::cache::{Cache, DefinitionKind};
+use crate::parser::ast::statement::Local;
+use crate::parser::ast::{Ast, Expr, ExprKind, Ident, Literal};
+use crate::parser::visitor::Visitor;
 
 mod evaluator;
 mod scope;
@@ -56,9 +69,7 @@ impl<'a> Resolver<'a> {
         }
     }
 
-    /*
-     * TODO: Cleanup this code. This is terrible
-     */
+    // TODO: Cleanup this code. This is terrible
     fn check_references(&mut self) {
         for (_, info) in self.cache.definitions.borrow().iter() {
             if info.kind != DefinitionKind::Reference {

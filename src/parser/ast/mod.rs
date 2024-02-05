@@ -1,13 +1,10 @@
 use alloc::vec::Vec;
 
-use crate::{
-    lexer::Token,
-    parser::{Parse, Parser, P},
-    span::Span,
-};
-
 pub use self::expression::*;
 use self::statement::Local;
+use crate::lexer::Token;
+use crate::parser::{Parse, Parser, P};
+use crate::span::Span;
 
 // For testing/debugging
 mod display;

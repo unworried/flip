@@ -1,6 +1,6 @@
+use super::ast::statement::Local;
 use super::ast::{
-    statement::Local, Ast, BinOp, Expr, ExprKind, Ident, Item, ItemKind, Literal, Stmt, StmtKind,
-    UnOp,
+    Ast, BinOp, Expr, ExprKind, Ident, Item, ItemKind, Literal, Stmt, StmtKind, UnOp,
 };
 
 pub trait Walkable {

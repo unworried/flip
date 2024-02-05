@@ -1,12 +1,9 @@
 use alloc::string::{String, ToString};
 use core::fmt::{Display, Formatter, Result};
 
-use crate::{
-    escape_codes::Color,
-    parser::visitor::{Visitor, Walkable},
-};
-
 use super::{Ast, ExprKind, Literal, Stmt, StmtKind};
+use crate::escape_codes::Color;
+use crate::parser::visitor::{Visitor, Walkable};
 
 impl Display for Ast {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {

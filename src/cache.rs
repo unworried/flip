@@ -1,13 +1,11 @@
-use std::{
-    cell::{RefCell, RefMut},
-    collections::{hash_map::Entry, HashMap},
-};
+use std::cell::{RefCell, RefMut};
+use std::collections::hash_map::Entry;
+use std::collections::HashMap;
 
-use crate::{
-    diagnostics::{DiagnosticBag, DiagnosticsCell},
-    parser::ast::{statement::Local, Expr, Ident},
-    span::Span,
-};
+use crate::diagnostics::{DiagnosticBag, DiagnosticsCell};
+use crate::parser::ast::statement::Local;
+use crate::parser::ast::{Expr, Ident};
+use crate::span::Span;
 
 pub type DefinitionId = usize;
 

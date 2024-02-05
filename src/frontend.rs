@@ -1,7 +1,10 @@
-use crate::{
-    cache::Cache, diagnostics::DiagnosticBag, error::Result, lexer::Lexer, parser::Parser,
-    resolver::Resolver, source::Source,
-};
+use crate::cache::Cache;
+use crate::diagnostics::DiagnosticBag;
+use crate::error::Result;
+use crate::lexer::Lexer;
+use crate::parser::Parser;
+use crate::resolver::Resolver;
+use crate::source::Source;
 
 pub fn check(input: &str) -> Result<()> {
     let diagnostics = DiagnosticBag::new();

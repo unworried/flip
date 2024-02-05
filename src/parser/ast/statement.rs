@@ -1,10 +1,8 @@
 use alloc::borrow::ToOwned;
 
 use super::{Ast, Expr, Ident, Stmt, StmtKind};
-use crate::{
-    lexer::Token,
-    parser::{Parse, Parser, P},
-};
+use crate::lexer::Token;
+use crate::parser::{Parse, Parser, P};
 
 #[derive(Debug)]
 pub struct Local {

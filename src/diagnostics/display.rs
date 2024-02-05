@@ -1,9 +1,10 @@
 use alloc::string::String;
 use core::cmp;
 
-use crate::{error::Result, escape_codes::Color, source::Source};
-
 use super::Diagnostic;
+use crate::error::Result;
+use crate::escape_codes::Color;
+use crate::source::Source;
 
 pub struct DiagnosticsDisplay<'a> {
     text: &'a Source, // May need more info => SourceCode struct

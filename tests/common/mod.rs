@@ -1,4 +1,5 @@
-use std::{fs::File, io::Read};
+use std::fs::File;
+use std::io::Read;
 
 pub fn read_source_file(path: &str) -> String {
     println!("Reading source file: {}", path);

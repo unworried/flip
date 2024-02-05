@@ -1,12 +1,8 @@
-use crate::{
-    diagnostics::DiagnosticBag,
-    lexer::Lexer,
-    parser::{
-        ast::{Ast, ExprKind, Literal, StmtKind},
-        visitor::{Visitor, Walkable},
-        Parser,
-    },
-};
+use crate::diagnostics::DiagnosticBag;
+use crate::lexer::Lexer;
+use crate::parser::ast::{Ast, ExprKind, Literal, StmtKind};
+use crate::parser::visitor::{Visitor, Walkable};
+use crate::parser::Parser;
 
 pub fn assert_ast(input: &str, expected: Vec<ASTNode>) {
     let validator = AstValidator::new(input, expected);
