@@ -73,7 +73,7 @@ impl Display for Token {
             Token::LBrace => "{",
             Token::RBrace => "}",
             Token::SemiColon => ";",
-            Token::Whitespace => r#"' '"#,
+            Token::Whitespace => r#" "#,
         };
 
         write!(f, "{}", display)

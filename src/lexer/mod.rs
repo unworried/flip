@@ -35,13 +35,15 @@ impl Lexer {
     }
 
     /// Returns the next token and matching span.
+    // May be able to change a bit to fix indexing properly
     pub fn next_token(&mut self) -> (Token, Span) {
         //self.skip_whitespace();
         self.skip_comment();
         let start_position = self.position - 1;
 
         if Self::is_whitespace(self.ch) {
-            let span = Span::new(start_position, self.position);
+            // - 1 to get the last whitespace char not the next non whitespace char
+            let span = Span::new(start_position, self.position - 1);
             self.read_char();
             return (self.whitespace(), span);
         }
