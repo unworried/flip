@@ -8,7 +8,8 @@ use crate::{
 
 use self::scope::Scope;
 
-pub mod scope;
+mod scope;
+mod evaluator;
 
 pub struct Resolver<'a> {
     cache: &'a Cache,

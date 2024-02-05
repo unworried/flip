@@ -1,8 +1,3 @@
-use super::{
-    ast::{BinOp, Expr, Literal, UnOp},
-    visitor::{Visitor, Walkable},
-};
-
 // Currently any operation that yields a float is floored.
 #[derive(Default)]
 pub struct AstEvaluator {
