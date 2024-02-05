@@ -1,3 +1,9 @@
+//! lexer/mod.rs - Performs lexical anaylsis on the input source code. The lexer is responsible for
+//! converting the input source code into a token stream attaching a span to each token to be used
+//! when parsing.
+//!
+//! The lexer is implemented as an iterator that returns a token and a span for each token found.
+//! The lexer is also responsible for skipping whitespace and comments.
 use alloc::string::String;
 use alloc::vec::Vec;
 
@@ -18,11 +24,15 @@ const EOF: u8 = 0;
 pub struct Lexer {
     /// Source Input
     input: Vec<u8>,
+    /// Current position in the input
     position: usize,
+    /// Current character being read
     ch: u8,
 }
 
 impl Lexer {
+    /// Creates a new lexer from the input source code.
+    /// The input is converted into a byte array.
     pub fn new(input: String) -> Self {
         let mut lex = Self {
             input: input.into_bytes(),
@@ -59,8 +69,9 @@ impl Lexer {
                 if self.peek() == b'=' {
                     let prev_ch = self.ch;
                     self.read_char();
-                    // FIXME: Change to Vec<u8> From impl or seperate pub fn
-                    Token::from(format!("{}{}", prev_ch as char, self.ch as char))
+
+                    Token::from((prev_ch, self.ch))
+                    //Token::from(format!("{}{}", prev_ch as char, self.ch as char))
                 } else {
                     Token::from(self.ch)
                 }

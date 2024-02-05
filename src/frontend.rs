@@ -1,3 +1,6 @@
+//! frontend.rs - Module for the compiler frontend wrapper. The frontend is responsible for taking
+//! the input source code and converting it into an abstract syntax tree (AST) and then checking the
+//! AST for syntax and semantic errors.
 use crate::cache::Cache;
 use crate::diagnostics::DiagnosticBag;
 use crate::error::Result;

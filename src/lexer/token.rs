@@ -10,7 +10,8 @@ pub enum Token {
     Illegal,
     Eof,
     Newline,
-    Whitespace, // Whitespace sequence of length n
+    // Whitespace sequence of length n
+    Whitespace,
 
     // Literals
     Int(isize),
@@ -103,14 +104,28 @@ impl From<u8> for Token {
     }
 }
 
+impl From<(u8, u8)> for Token {
+    fn from((ch, next_ch): (u8, u8)) -> Self {
+        match (ch, next_ch) {
+            (b'=', b'=') => Self::Equal,
+            (b'!', b'=') => Self::NotEqual,
+            (b'<', b'=') => Self::LessThanEqual,
+            (b'>', b'=') => Self::GreaterThanEqual,
+
+            _ => Self::Illegal,
+        }
+    }
+}
+
 impl From<String> for Token {
     fn from(value: String) -> Self {
         match value.as_str() {
+            /*
             "==" => Self::Equal,
             "!=" => Self::NotEqual,
             "<=" => Self::LessThanEqual,
             ">=" => Self::GreaterThanEqual,
-
+            */
             "let" => Self::Let,
             "if" => Self::If,
             "else" => Self::Else,
@@ -143,12 +158,12 @@ mod tests {
 
     #[test]
     fn equal() {
-        assert_eq!(Token::from(String::from("==")), Token::Equal);
+        assert_eq!(Token::from((b'=', b'=')), Token::Equal);
     }
 
     #[test]
     fn not_equal() {
-        assert_eq!(Token::from(String::from("!=")), Token::NotEqual);
+        assert_eq!(Token::from((b'!', b'=')), Token::NotEqual);
     }
 
     #[test]
@@ -178,7 +193,7 @@ mod tests {
 
     #[test]
     fn lesser_than_equal() {
-        assert_eq!(Token::from(String::from("<=")), Token::LessThanEqual);
+        assert_eq!(Token::from((b'<', b'=')), Token::LessThanEqual);
     }
 
     #[test]
@@ -188,6 +203,6 @@ mod tests {
 
     #[test]
     fn greater_than_equal() {
-        assert_eq!(Token::from(String::from(">=")), Token::GreaterThanEqual);
+        assert_eq!(Token::from((b'>', b'=')), Token::GreaterThanEqual);
     }
 }

@@ -14,10 +14,9 @@ impl Span {
     pub fn combine(mut spans: Vec<&Span>) -> Span {
         spans.sort_by(|a, b| a.start.cmp(&b.start));
 
-        let start = spans.first().unwrap().start; // TODO: Deal with errors
+        // TODO: Deal with errors
+        let start = spans.first().unwrap().start;
         let end = spans.last().unwrap().end;
-
-        // Do i need string lit?
 
         Span::new(start, end)
     }

@@ -1,3 +1,5 @@
+//! diagnostics/display.rs - Module for displaying diagnostics to the user. The display module
+//! takes the source code and the diagnostics and formats them for user presentation.
 use alloc::string::String;
 use core::cmp;
 

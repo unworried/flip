@@ -1,3 +1,5 @@
+//! cache.rs - Module storing the global cache for the compiler frontend. The cache is used to
+//! store the symbols table, links and the diagnostics stack.
 use std::cell::{RefCell, RefMut};
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
@@ -27,7 +29,6 @@ pub enum DefinitionKind {
 
 // TODO: Add diagnostics only in cache (Centralize) then cache can be made on large Cell not
 // individuals
-
 pub struct Cache {
     pub definitions: RefCell<HashMap<DefinitionId, DefinitionInfo>>,
     diagnostics: DiagnosticsCell,
@@ -97,6 +98,8 @@ impl Cache {
             continue;
         }
 
-        self.definitions.borrow_mut().get_mut(&id).unwrap().child = Some(*child);
+        if let Some(def) = self.definitions.borrow_mut().get_mut(&id) {
+            def.child = Some(*child);
+        } // Handle None
     }
 }
