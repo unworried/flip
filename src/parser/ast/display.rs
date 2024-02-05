@@ -103,12 +103,14 @@ impl Visitor for AstDisplay {
             ExprKind::Unary(op, ..) => {
                 self.add_newline();
                 self.add_padding();
-                self.result.push_str(&format!("Unary: {:?}", op));
+                self.add_expression_header("Unary");
+                self.result.push_str(&format!("{:?}", op));
             }
             ExprKind::Binary(op, ..) => {
                 self.add_newline();
                 self.add_padding();
-                self.result.push_str(&format!("Binary: {:?}", op));
+                self.add_expression_header("Binary");
+                self.result.push_str(&format!("{:?}", op));
             }
             ExprKind::Literal(lit) => lit.walk(self),
             ExprKind::Variable(s) => self.result.push_str(&s.0.to_string()),
@@ -123,11 +125,11 @@ impl Visitor for AstDisplay {
         self.ident += 1;
         self.add_newline();
         self.add_padding();
-        self.result.push_str("Left: ");
+        self.add_expression_header("Left");
         lhs.walk(self);
         self.add_newline();
         self.add_padding();
-        self.result.push_str("Right: ");
+        self.add_expression_header("Right");
         rhs.walk(self);
         self.ident -= 1;
     }
