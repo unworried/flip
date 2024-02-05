@@ -94,11 +94,6 @@ impl Lexer {
         self.position += 1;
     }
 
-    /// Returns the current position in the input.
-    pub fn position(&self) -> usize {
-        self.position
-    }
-
     /// Reads a string input and returns it.
     fn read_string(&mut self) -> String {
         let mut string = String::new();

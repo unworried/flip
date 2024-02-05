@@ -1,12 +1,12 @@
 use crate::{
-    cache::{Cache, DefinitionId, DefinitionKind},
+    cache::{Cache, DefinitionKind},
     parser::{
-        ast::{statement::Local, Ast, Ident},
+        ast::{statement::Local, Ast, Expr, ExprKind, Ident, Literal},
         visitor::Visitor,
     },
 };
 
-use self::scope::Scope;
+use self::{evaluator::evaluate_expression, scope::Scope};
 
 mod evaluator;
 mod scope;
@@ -27,52 +27,69 @@ impl<'a> Resolver<'a> {
     pub fn resolve(&mut self, ast: &Ast) {
         self.visit_ast(ast);
         self.check_references();
+        self.evaluate_parents();
+    }
+
+    fn evaluate_parents(&mut self) {
+        for (_, info) in self.cache.definitions.borrow_mut().iter_mut() {
+            let expr = match &info.expr {
+                Some(expr) => {
+                    if let ExprKind::Literal(_) = expr.kind {
+                        continue;
+                    }
+                    expr
+                }
+                None => continue,
+            };
+
+            match evaluate_expression(expr) {
+                Some(value) => {
+                    info.expr = Some(Expr {
+                        kind: ExprKind::Literal(Literal::Integer(value)),
+                        span: expr.span.clone(),
+                    });
+                }
+                None => {
+                    continue;
+                }
+            }
+        }
     }
 
     /*
      * TODO: Cleanup this code. This is terrible
      */
     fn check_references(&mut self) {
-        self.cache
-            .definitions
-            .borrow()
-            .iter()
-            .for_each(|(_, info)| {
-                if info.kind == DefinitionKind::Reference {
-                    let pattern = &info.pattern;
-                    match self.scope.variables.borrow().get(pattern) {
-                        Some(parent_id) => {
-                            let parent_span = self
-                                .cache
-                                .definitions
-                                .borrow()
-                                .get(parent_id)
-                                .unwrap()
-                                .span
-                                .clone();
-                            if parent_span > info.span {
-                                self.cache
-                                    .diagnostics
-                                    .borrow_mut()
-                                    .reference_before_assignment(pattern, &info.span);
-                            }
-                        }
+        for (_, info) in self.cache.definitions.borrow().iter() {
+            if info.kind != DefinitionKind::Reference {
+                continue;
+            }
 
-                        None => {
+            let pattern = &info.pattern;
+            match self.scope.variables.borrow().get(pattern) {
+                Some(parent_id) => {
+                    if let Some(parent_info) = self.cache.definitions.borrow().get(parent_id) {
+                        if parent_info.span > info.span {
                             self.cache
-                                .diagnostics
-                                .borrow_mut()
-                                .undeclared_reference(pattern, &info.span);
+                                .diagnostics()
+                                .reference_before_assignment(pattern, &info.span);
                         }
                     }
                 }
-            });
+
+                None => {
+                    self.cache
+                        .diagnostics()
+                        .undeclared_reference(pattern, &info.span);
+                }
+            }
+        }
     }
 
-    fn push_parent(&mut self, child_ident: &str) -> Result<(), ()> {
+    fn push_child(&mut self, child_ident: &str) -> Result<(), ()> {
         match self.scope.variables.borrow().get(child_ident) {
             Some(id) => {
-                self.cache.push_parent(id, &DefinitionId(self.scope.count));
+                self.cache.push_child(id, &self.scope.count);
                 Ok(())
             }
 
@@ -87,8 +104,7 @@ impl Visitor for Resolver<'_> {
 
         if self.scope.check_variable(pattern) {
             self.cache
-                .diagnostics
-                .borrow_mut()
+                .diagnostics()
                 .symbol_already_declared(pattern, &local.pattern.1);
             self.visit_local(local);
             return;
@@ -101,21 +117,20 @@ impl Visitor for Resolver<'_> {
     }
 
     fn visit_assignment(&mut self, local: &Local) {
-        self.cache
-            .push_assignment(DefinitionId(self.scope.count), local);
+        self.cache.push_assignment(self.scope.count, local);
 
-        if self.push_parent(&local.pattern.0).is_err() {
+        if self.push_child(&local.pattern.0).is_err() {
             self.cache
-                .diagnostics
-                .borrow_mut()
+                .diagnostics()
                 .undeclared_assignment(&local.pattern.0, &local.pattern.1);
         };
+        self.scope.count += 1;
 
         self.visit_local(local);
     }
 
     fn visit_variable(&mut self, ident: &Ident) {
-        let id = DefinitionId(self.scope.count);
+        let id = self.scope.count;
         self.scope.count += 1;
         self.cache.push_reference(id, ident);
     }

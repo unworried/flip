@@ -32,7 +32,7 @@ impl Scope {
         let mut variable_store = self.variables.borrow_mut();
         let id = self.count;
         self.count += 1;
-        variable_store.insert(name, DefinitionId(id));
-        DefinitionId(id)
+        variable_store.insert(name, id);
+        id
     }
 }

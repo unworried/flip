@@ -20,6 +20,8 @@
 
 
 #### Todo
+- [ ] Investigate why repl will break with random string of characters.
+    - Infinite loop in expr check?
 - [ ] Test breaking rules
 - [ ] Scope
 - [ ] Variable visitor logic

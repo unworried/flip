@@ -1,16 +1,15 @@
 use std::{
-    cell::RefCell,
+    cell::{RefCell, RefMut},
     collections::{hash_map::Entry, HashMap},
 };
 
 use crate::{
-    diagnostics::DiagnosticsCell,
+    diagnostics::{DiagnosticBag, DiagnosticsCell},
     parser::ast::{statement::Local, Expr, Ident},
     span::Span,
 };
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct DefinitionId(pub usize);
+pub type DefinitionId = usize;
 
 #[derive(Debug, Clone)]
 pub struct DefinitionInfo {
@@ -18,7 +17,7 @@ pub struct DefinitionInfo {
     pub kind: DefinitionKind,
     pub span: Span,
     pub expr: Option<Expr>,
-    pub parent: Option<DefinitionId>,
+    pub child: Option<DefinitionId>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -33,7 +32,7 @@ pub enum DefinitionKind {
 
 pub struct Cache {
     pub definitions: RefCell<HashMap<DefinitionId, DefinitionInfo>>,
-    pub diagnostics: DiagnosticsCell,
+    diagnostics: DiagnosticsCell,
 }
 
 impl Cache {
@@ -46,11 +45,15 @@ impl Cache {
 }
 
 impl Cache {
-    pub fn get(&self, id: DefinitionId) -> Option<DefinitionInfo> {
-        match self.definitions.borrow_mut().entry(id) {
+    pub fn get(&self, id: &DefinitionId) -> Option<DefinitionInfo> {
+        match self.definitions.borrow_mut().entry(*id) {
             Entry::Occupied(entry) => Some(entry.get().clone()),
             Entry::Vacant(_) => None,
         }
+    }
+
+    pub fn diagnostics(&self) -> RefMut<'_, DiagnosticBag> {
+        self.diagnostics.borrow_mut()
     }
 
     pub fn push_declartion(&self, id: DefinitionId, info: &Local) {
@@ -59,7 +62,7 @@ impl Cache {
             kind: DefinitionKind::Declaration,
             span: info.pattern.1.clone(),
             expr: Some(*info.init.ptr.clone()),
-            parent: None,
+            child: None,
         };
 
         self.definitions.borrow_mut().insert(id, info);
@@ -71,7 +74,7 @@ impl Cache {
             kind: DefinitionKind::Assignment,
             span: info.pattern.1.clone(),
             expr: Some(*info.init.ptr.clone()),
-            parent: None,
+            child: None,
         };
 
         self.definitions.borrow_mut().insert(id, info);
@@ -83,13 +86,19 @@ impl Cache {
             kind: DefinitionKind::Reference,
             span: info.1.clone(),
             expr: None,
-            parent: None,
+            child: None,
         };
 
         self.definitions.borrow_mut().insert(id, info);
     }
 
-    pub fn push_parent(&self, parent: &DefinitionId, child: &DefinitionId) {
-        self.definitions.borrow_mut().get_mut(child).unwrap().parent = Some(parent.clone());
+    pub fn push_child(&self, parent: &DefinitionId, child: &DefinitionId) {
+        let mut id = *parent;
+        while let Some(ref child) = self.definitions.borrow().get(&id).unwrap().child {
+            id = *child;
+            continue;
+        }
+
+        self.definitions.borrow_mut().get_mut(&id).unwrap().child = Some(*child);
     }
 }

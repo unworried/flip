@@ -1,20 +1,38 @@
 use crate::parser::{
-    ast::{BinOp, Expr, Literal, UnOp},
+    ast::{BinOp, Expr, Ident, Literal, UnOp},
     visitor::{Visitor, Walkable},
 };
 
 // Currently any operation that yields a float is floored.
 #[derive(Default)]
-pub struct AstEvaluator {
+pub struct Evaluator {
     pub last_value: Option<isize>,
 }
 
-impl Visitor for AstEvaluator {
+pub fn evaluate_expression(expr: &Expr) -> Option<isize> {
+    let mut evaluator = Evaluator::default();
+    expr.walk(&mut evaluator);
+    evaluator.last_value
+}
+
+impl Visitor for Evaluator {
+    fn visit_variable(&mut self, _ident: &Ident) {
+        self.last_value = None;
+    }
+
     fn visit_binary(&mut self, op: &BinOp, lhs: &Expr, rhs: &Expr) {
         lhs.walk(self);
-        let left = self.last_value.unwrap();
+        let left = match self.last_value {
+            Some(value) => value,
+            None => return,
+        };
+
         rhs.walk(self);
-        let right = self.last_value.unwrap();
+        let right = match self.last_value {
+            Some(value) => value,
+            None => return,
+        };
+
         self.last_value = Some(match op {
             BinOp::Add => left + right,
             BinOp::Sub => left - right,
@@ -26,7 +44,11 @@ impl Visitor for AstEvaluator {
 
     fn visit_unary(&mut self, op: &UnOp, expr: &Expr) {
         expr.walk(self);
-        let value = self.last_value.unwrap();
+        let value = match self.last_value {
+            Some(value) => value,
+            None => return,
+        };
+
         self.last_value = Some(match op {
             UnOp::Neg => -value,
         });
@@ -56,7 +78,7 @@ mod tests {
         let diagnostics = DiagnosticBag::new();
         let mut parser = Parser::new(&mut lexer, diagnostics);
         let program = parser.parse();
-        let mut evaluator = AstEvaluator::default();
+        let mut evaluator = Evaluator::default();
         evaluator.visit_ast(&program);
         println!("{}", program);
         assert_eq!(evaluator.last_value.unwrap(), expected);
@@ -138,7 +160,7 @@ mod tests {
         let diagnostics = DiagnosticBag::new();
         let mut parser = Parser::new(&mut lexer, diagnostics);
         let program = parser.parse();
-        let mut evaluator = AstEvaluator::default();
+        let mut evaluator = Evaluator::default();
         evaluator.visit_ast(&program);
         println!("{}", program);
     }

@@ -21,7 +21,5 @@ pub fn check(input: &str) -> Result<()> {
 
     diagnostics.borrow().check(&source)?;
 
-    println!("{:#?}", cache.definitions);
-
     Ok(())
 }
