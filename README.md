@@ -10,12 +10,18 @@
 => LLVM IR Codegen
 => Object file/Output
 
+#### Frontend
+- Input => Lexer => TokenStream
+- TokenStream => Parser => AST
+- AST => Resolver => Definitions Table
+- Definitions Table: Resolver => Binary/Unary Evaluation
+    - Issue Diagnostic Warning for binary operations not including vars.
+    - 
+
 
 #### Todo
-- [ ] Node id?
 - [ ] Test breaking rules
 - [ ] Scope
-- [ ] Resolver
 - [ ] Variable visitor logic
 - [ ] assignment after declaration logic
 - [ ] Document funcs
