@@ -98,20 +98,27 @@ impl DiagnosticBag {
         self.error(format!("unknown expression '{}'", token), span.clone());
     }
 
-    pub fn variable_already_declared(&mut self, pattern: &String, span: &Span) {
+    pub fn symbol_already_declared(&mut self, pattern: &String, span: &Span) {
         self.error(
-            format!("local variable: {}, already exists in scope", pattern),
+            format!("symbol: '{}' already exists in scope", pattern),
             span.clone(),
         );
     }
 
-    pub fn undeclared_variable_assignment(&mut self, ident: &String, span: &Span) {
-        self.error(format!("unknown local variable: {}", ident), span.clone());
+    pub fn undeclared_assignment(&mut self, ident: &String, span: &Span) {
+        self.error(format!("undeclared symbol: '{}'", ident), span.clone());
+    }
+
+    pub fn undeclared_reference(&mut self, ident: &String, span: &Span) {
+        self.error(
+            format!("symbol: '{}' is never declared", ident),
+            span.clone(),
+        );
     }
 
     pub fn reference_before_assignment(&mut self, ident: &String, span: &Span) {
         self.error(
-            format!("{} referenced before assignment", ident),
+            format!("symbol: '{}' referenced before assignment", ident),
             span.clone(),
         );
     }

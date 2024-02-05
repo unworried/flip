@@ -7,6 +7,7 @@ pub type VarCell = Rc<RefCell<HashMap<String, DefinitionId>>>;
 #[derive(Debug)]
 pub struct Scope {
     pub variables: VarCell,
+    pub count: usize,
 }
 
 impl Default for Scope {
@@ -19,6 +20,7 @@ impl Scope {
     pub fn new() -> Self {
         Self {
             variables: Rc::new(RefCell::new(HashMap::new())),
+            count: 0,
         }
     }
 
@@ -28,8 +30,9 @@ impl Scope {
 
     pub fn declare_variable(&mut self, name: String) -> DefinitionId {
         let mut variable_store = self.variables.borrow_mut();
-        let len = variable_store.len();
-        variable_store.insert(name, DefinitionId(len));
-        DefinitionId(len)
+        let id = self.count;
+        self.count += 1;
+        variable_store.insert(name, DefinitionId(id));
+        DefinitionId(id)
     }
 }

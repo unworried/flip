@@ -119,8 +119,8 @@ impl Visitor for AstDisplay {
             ExprKind::Error => self.result.push_str("Error"),
         }
 
-        expr.walk(self);
         self.ident -= 1;
+        expr.walk(self);
     }
 
     fn visit_binary(&mut self, _op: &super::BinOp, lhs: &super::Expr, rhs: &super::Expr) {
@@ -134,6 +134,8 @@ impl Visitor for AstDisplay {
         self.add_expression_header("Right");
         rhs.walk(self);
         self.ident -= 1;
+        self.add_newline();
+        self.add_padding();
     }
 
     fn visit_unary(&mut self, _op: &super::UnOp, expr: &super::Expr) {

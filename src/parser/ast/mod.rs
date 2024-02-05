@@ -102,13 +102,13 @@ impl<'a> Parse<'a> for Stmt {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Expr {
     pub kind: ExprKind,
     pub span: Span,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ExprKind {
     Binary(BinOp, P<Expr>, P<Expr>),
     Unary(UnOp, P<Expr>),

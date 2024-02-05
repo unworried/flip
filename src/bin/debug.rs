@@ -11,6 +11,7 @@ fn main() {
     };
     "#;
 
+    //let line = r#"let x = 4; x = 5;"#;
     match frontend::check(line) {
         Ok(_) => println!("No errors found"),
         Err(e) => println!("{}", e),

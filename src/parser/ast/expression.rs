@@ -177,7 +177,7 @@ fn match_primary(token: &Token) -> bool {
     )
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum BinOp {
     Add,
     Sub,
@@ -218,7 +218,7 @@ impl BinOp {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum UnOp {
     //Not,
     Neg,
@@ -232,7 +232,7 @@ impl UnOp {
 
 pub type Ident = (String, Span);
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Literal {
     String(String),
     Integer(isize),

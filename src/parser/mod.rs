@@ -2,7 +2,6 @@ use self::ast::Ast;
 pub use self::ptr::*;
 
 use crate::{
-    cache::Cache,
     diagnostics::DiagnosticsCell,
     lexer::{Lexer, Token},
     span::Span,

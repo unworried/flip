@@ -16,9 +16,12 @@ pub fn check(input: &str) -> Result<()> {
     println!();
     println!("{}", result);
 
-    let mut resolver = Resolver::new(cache);
-    resolver.search(&result);
+    let mut resolver = Resolver::new(&cache);
+    resolver.resolve(&result);
 
     diagnostics.borrow().check(&source)?;
+
+    println!("{:#?}", cache.definitions);
+
     Ok(())
 }
