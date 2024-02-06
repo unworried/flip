@@ -15,12 +15,12 @@
 //! - undeclared_reference: The symbol has not been declared before it was referenced.
 //! - reference_before_assignment: The symbol was referenced before it was declared.
 use self::scope::Scope;
-use crate::cache::{Cache, DefinitionKind};
+use crate::cache::Cache;
 use crate::parser::ast::statement::Local;
 use crate::parser::ast::{Ast, Ident};
 use crate::parser::visitor::Visitor;
 
-mod evaluator;
+pub mod evaluator;
 mod scope;
 
 pub struct Resolver<'a> {
@@ -38,7 +38,8 @@ impl<'a> Resolver<'a> {
 
     pub fn resolve(&mut self, ast: &Ast) {
         self.visit_ast(ast);
-        self.check_references();
+        println!("{:#?}", self.cache.definitions.borrow());
+        //self.check_references();
         //self.evaluate_parents();
     }
 
@@ -69,7 +70,7 @@ impl<'a> Resolver<'a> {
     }*/
 
     // TODO: Cleanup this code. This is terrible
-    fn check_references(&self) {
+    /*fn check_references(&self) {
         for (_, info) in self.cache.definitions.borrow().iter() {
             if info.kind != DefinitionKind::Reference {
                 continue;
@@ -94,9 +95,9 @@ impl<'a> Resolver<'a> {
                 }
             }
         }
-    }
+    }*/
 
-    fn push_child(&mut self, child_ident: &str) -> Result<(), ()> {
+    /*fn push_child(&mut self, child_ident: &str) -> Result<(), ()> {
         match self.scope.variables.get(child_ident) {
             Some(id) => {
                 self.cache.push_child(id, &self.scope.count);
@@ -105,7 +106,7 @@ impl<'a> Resolver<'a> {
 
             None => Err(()),
         }
-    }
+    }*/
 }
 
 impl Visitor for Resolver<'_> {
@@ -127,21 +128,28 @@ impl Visitor for Resolver<'_> {
     }
 
     fn visit_assignment(&mut self, local: &Local) {
-        self.cache.push_assignment(self.scope.count, local);
-
-        if self.push_child(&local.pattern.0).is_err() {
-            self.cache
-                .diagnostics()
-                .undeclared_assignment(&local.pattern.0, &local.pattern.1);
-        };
-        self.scope.count += 1;
+        match self.scope.variables.get(&local.pattern.0) {
+            Some(id) => {
+                self.cache.push_assignment(id, local);
+            }
+            None => {
+                self.cache
+                    .diagnostics()
+                    .undeclared_assignment(&local.pattern.0, &local.pattern.1);
+            }
+        }
 
         self.visit_local(local);
     }
 
     fn visit_variable(&mut self, ident: &Ident) {
-        let id = self.scope.count;
+        if !self.scope.check_variable(&ident.0) {
+            self.cache
+                .diagnostics()
+                .undeclared_reference(&ident.0, &ident.1);
+        };
+        /*let id = self.scope.count;
         self.scope.count += 1;
-        self.cache.push_reference(id, ident);
+        self.cache.push_reference(id, ident);*/
     }
 }

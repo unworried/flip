@@ -6,7 +6,7 @@ use std::collections::HashMap;
 
 use crate::diagnostics::{DiagnosticBag, DiagnosticsCell};
 use crate::parser::ast::statement::Local;
-use crate::parser::ast::{Expr, Ident};
+use crate::parser::ast::Expr;
 use crate::span::Span;
 
 pub type DefinitionId = usize;
@@ -15,9 +15,7 @@ pub type DefinitionId = usize;
 pub struct DefinitionInfo {
     pub pattern: String,
     pub kind: DefinitionKind,
-    pub span: Span,
-    pub expr: Option<Expr>,
-    pub child: Option<DefinitionId>,
+    pub values: HashMap<Span, Expr>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -26,6 +24,21 @@ pub enum DefinitionKind {
     Assignment,
     Reference,
 }
+
+/*
+ * MemCache
+ * ------
+ * Need to implement this as a hash table or btree to allow for fast lookups.
+ * This will be used to store the variables in the current scope.
+ *
+ * Index | Symbol | Type | HashMap<EndSpan, Value>
+ * e.g.
+ * 0     | x      | i64  | { 5: 10, 17: 11, 20: 12 }
+ *
+ * HashMap<Symbol, Index> Kept in scope. This will be used to look up the index of the variable
+ * and check the current value of the variable dependent on the current span.
+ *
+ */
 
 // TODO: Add diagnostics only in cache (Centralize) then cache can be made on large Cell not
 // individuals
@@ -44,13 +57,6 @@ impl Cache {
 }
 
 impl Cache {
-    pub fn get(&self, id: &DefinitionId) -> Option<DefinitionInfo> {
-        match self.definitions.borrow_mut().entry(*id) {
-            Entry::Occupied(entry) => Some(entry.get().clone()),
-            Entry::Vacant(_) => None,
-        }
-    }
-
     pub fn diagnostics(&self) -> RefMut<'_, DiagnosticBag> {
         self.diagnostics.borrow_mut()
     }
@@ -59,31 +65,26 @@ impl Cache {
         self.definitions.borrow().get(id).cloned()
     }
 
-    pub fn push_declartion(&self, id: DefinitionId, info: &Local) {
-        let info = DefinitionInfo {
-            pattern: info.pattern.0.clone(),
+    pub fn push_declartion(&self, id: DefinitionId, local: &Local) {
+        let mut info = DefinitionInfo {
+            pattern: local.pattern.0.clone(),
             kind: DefinitionKind::Declaration,
-            span: info.pattern.1.clone(),
-            expr: Some(*info.init.ptr.clone()),
-            child: None,
+            values: HashMap::new(),
         };
+
+        info.values.insert(local.pattern.1.clone(), *local.init.ptr.clone());
 
         self.definitions.borrow_mut().insert(id, info);
     }
 
-    pub fn push_assignment(&self, id: DefinitionId, info: &Local) {
-        let info = DefinitionInfo {
-            pattern: info.pattern.0.clone(),
-            kind: DefinitionKind::Assignment,
-            span: info.pattern.1.clone(),
-            expr: Some(*info.init.ptr.clone()),
-            child: None,
-        };
-
-        self.definitions.borrow_mut().insert(id, info);
+    pub fn push_assignment(&self, id: &DefinitionId, local: &Local) {
+        if let Some(info) = self.definitions.borrow_mut().get_mut(id) {
+            info.values
+                .insert(local.pattern.1.clone(), *local.init.ptr.clone());
+        }
     }
 
-    pub fn push_reference(&self, id: DefinitionId, info: &Ident) {
+    /*pub fn push_reference(&self, id: DefinitionId, info: &Ident) {
         let info = DefinitionInfo {
             pattern: info.0.clone(),
             kind: DefinitionKind::Reference,
@@ -93,9 +94,9 @@ impl Cache {
         };
 
         self.definitions.borrow_mut().insert(id, info);
-    }
+    }*/
 
-    pub fn push_child(&self, parent: &DefinitionId, child: &DefinitionId) {
+    /*pub fn push_child(&self, parent: &DefinitionId, child: &DefinitionId) {
         let mut id = *parent;
 
         while let Some(child) = self.definitions.borrow().get(&id).and_then(|def| def.child) {
@@ -105,5 +106,5 @@ impl Cache {
         if let Some(def) = self.definitions.borrow_mut().get_mut(&id) {
             def.child = Some(*child);
         } // Handle None
-    }
+    }*/
 }

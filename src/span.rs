@@ -1,6 +1,6 @@
 use alloc::vec::Vec;
 
-#[derive(Debug, PartialEq, Clone, Default, PartialOrd)]
+#[derive(Debug, PartialEq, Clone, Default, PartialOrd, Eq, Hash)]
 pub struct Span {
     pub start: usize,
     pub end: usize,
