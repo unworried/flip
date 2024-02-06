@@ -1,7 +1,8 @@
 use alloc::vec::Vec;
 
 pub use self::expression::*;
-use self::statement::Local;
+use self::statement::Definition;
+use crate::cache::DefinitionId;
 use crate::lexer::Token;
 use crate::parser::{Parse, Parser, P};
 use crate::span::Span;
@@ -60,9 +61,9 @@ pub struct Stmt {
 #[derive(Debug)]
 pub enum StmtKind {
     // "let" (identifier) "=" (expression)
-    Let(P<Local>), // Fix this
+    Let(Definition), // Fix this
     // (variable) "=" (expression)
-    Assignment(P<Local>),
+    Assignment(Definition),
     // "if" (condition) "{" \n {statement}* "}"
     If(Expr, Vec<Item>), // WARN: When funcs are added. need to change this to only allow stmts
     // "while" (condition) "{" \n {statement}* "}"
@@ -110,7 +111,7 @@ pub enum ExprKind {
     Binary(BinOp, P<Expr>, P<Expr>),
     Unary(UnOp, P<Expr>),
     Literal(expression::Literal),
-    Variable(Ident),
+    Variable(Ident, Option<DefinitionId>),
     Error,
 }
 

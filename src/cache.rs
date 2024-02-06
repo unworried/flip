@@ -1,29 +1,10 @@
 //! cache.rs - Module storing the global cache for the compiler frontend. The cache is used to
 //! store the symbols table, links and the diagnostics stack.
 use std::cell::{RefCell, RefMut};
-use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 
 use crate::diagnostics::{DiagnosticBag, DiagnosticsCell};
-use crate::parser::ast::statement::Local;
-use crate::parser::ast::Expr;
-use crate::span::Span;
-
-pub type DefinitionId = usize;
-
-#[derive(Debug, Clone)]
-pub struct DefinitionInfo {
-    pub pattern: String,
-    pub kind: DefinitionKind,
-    pub values: HashMap<Span, Expr>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum DefinitionKind {
-    Declaration,
-    Assignment,
-    Reference,
-}
+use crate::parser::ast::statement::Definition;
 
 /*
  * MemCache
@@ -40,10 +21,12 @@ pub enum DefinitionKind {
  *
  */
 
+pub type DefinitionId = usize;
+
 // TODO: Add diagnostics only in cache (Centralize) then cache can be made on large Cell not
 // individuals
 pub struct Cache {
-    pub definitions: RefCell<HashMap<DefinitionId, DefinitionInfo>>,
+    pub definitions: RefCell<HashMap<DefinitionId, Definition>>,
     diagnostics: DiagnosticsCell,
 }
 
@@ -61,27 +44,14 @@ impl Cache {
         self.diagnostics.borrow_mut()
     }
 
-    pub fn lookup(&self, id: &DefinitionId) -> Option<DefinitionInfo> {
+    pub fn lookup(&self, id: &DefinitionId) -> Option<Definition> {
         self.definitions.borrow().get(id).cloned()
     }
 
-    pub fn push_declartion(&self, id: DefinitionId, local: &Local) {
-        let mut info = DefinitionInfo {
-            pattern: local.pattern.0.clone(),
-            kind: DefinitionKind::Declaration,
-            values: HashMap::new(),
-        };
-
-        info.values.insert(local.pattern.1.clone(), *local.init.ptr.clone());
-
-        self.definitions.borrow_mut().insert(id, info);
-    }
-
-    pub fn push_assignment(&self, id: &DefinitionId, local: &Local) {
-        if let Some(info) = self.definitions.borrow_mut().get_mut(id) {
-            info.values
-                .insert(local.pattern.1.clone(), *local.init.ptr.clone());
-        }
+    pub fn push_definition(&self, definition: &Definition) -> DefinitionId {
+        let id  = self.definitions.borrow().len();
+        self.definitions.borrow_mut().insert(id, definition.clone());
+        id
     }
 
     /*pub fn push_reference(&self, id: DefinitionId, info: &Ident) {

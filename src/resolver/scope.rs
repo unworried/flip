@@ -20,13 +20,11 @@ impl Scope {
         }
     }
 
-    pub fn check_variable(&self, name: &str) -> bool {
-        self.variables.get(name).is_some()
+    pub fn get_variable_ref(&self, name: &str) -> Option<&DefinitionId> {
+        self.variables.get(name)
     }
 
-    pub fn declare_variable(&mut self, name: String) -> DefinitionId {
-        let id = self.variables.len();
+    pub fn define_variable(&mut self, name: String, id: DefinitionId) {
         self.variables.insert(name, id);
-        id
     }
 }

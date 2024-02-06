@@ -15,10 +15,9 @@
 //! - undeclared_reference: The symbol has not been declared before it was referenced.
 //! - reference_before_assignment: The symbol was referenced before it was declared.
 use self::scope::Scope;
-use crate::cache::Cache;
-use crate::parser::ast::statement::Local;
-use crate::parser::ast::{Ast, Ident};
-use crate::parser::visitor::Visitor;
+use crate::cache::{Cache, DefinitionId};
+use crate::parser::ast::statement::Definition;
+use crate::parser::ast::{Ast, Expr, ExprKind, Ident, Item, ItemKind, Stmt, StmtKind};
 
 pub mod evaluator;
 mod scope;
@@ -28,7 +27,111 @@ pub struct Resolver<'a> {
     scope: Scope,
 }
 
-impl<'a> Resolver<'a> {
+impl Resolver<'_> {
+    pub fn start(ast: Ast, cache: &Cache) {
+        let mut resolver = Resolver {
+            cache,
+            scope: Scope::new(),
+        };
+        resolver.define(ast);
+    }
+
+    pub fn define(&mut self, ast: Ast) {
+        self.visit_ast(ast);
+    }
+}
+
+pub trait DefVisitor {
+    fn visit_ast(&mut self, ast: Ast) {
+        for item in ast.items {
+            self.visit_item(item);
+        }
+    }
+
+    fn visit_item(&mut self, item: Item) {
+        self.visit_item_kind(item.kind);
+    }
+
+    fn visit_item_kind(&mut self, kind: ItemKind) {
+        match kind {
+            ItemKind::Statement(stmt) => self.visit_stmt(stmt),
+        }
+    }
+
+    fn visit_stmt(&mut self, stmt: Stmt) {
+        self.visit_stmt_kind(stmt.kind);
+    }
+
+    fn visit_stmt_kind(&mut self, kind: StmtKind) {
+        match kind {
+            StmtKind::Let(definition) => self.visit_declaration(definition),
+            StmtKind::Assignment(definition) => self.visit_assignment(definition),
+            StmtKind::If(condition, resolution) => {
+                self.visit_expr(condition);
+                for item in resolution {
+                    self.visit_item(item);
+                }
+            }
+            StmtKind::While(condition, resolution) => {
+                self.visit_expr(condition);
+                for item in resolution {
+                    self.visit_item(item);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn visit_expr(&mut self, expr: Expr) {
+        self.visit_expr_kind(expr.kind);
+    }
+
+    fn visit_expr_kind(&mut self, expr: ExprKind) {
+        if let ExprKind::Variable(ident, defid) = expr {
+            self.visit_variable(&ident, defid)
+        }
+    }
+
+    fn visit_declaration(&mut self, definition: Definition);
+    fn visit_assignment(&mut self, definition: Definition);
+    fn visit_variable(&mut self, ident: &Ident, defid: Option<DefinitionId>);
+}
+
+// Rough testing
+impl DefVisitor for Resolver<'_> {
+    fn visit_declaration(&mut self, definition: Definition) {
+        let pattern = &definition.pattern.0;
+        let id = self.cache.push_definition(&definition);
+
+        self.scope.define_variable(pattern.to_owned(), id);
+        self.visit_expr(*definition.init.ptr);
+    }
+
+    fn visit_assignment(&mut self, definition: Definition) {
+        let pattern = &definition.pattern.0;
+        let id = self.cache.push_definition(&definition);
+
+        self.scope.define_variable(pattern.to_owned(), id);
+        self.visit_expr(*definition.init.ptr);
+    }
+
+    fn visit_variable(&mut self, ident: &Ident, mut defid: Option<DefinitionId>) {
+        if defid.is_some() {
+            unreachable!();
+        }
+
+        match self.scope.get_variable_ref(&ident.0) {
+            Some(id) => defid = Some(*id),
+            None => {
+                self.cache
+                    .diagnostics()
+                    .undeclared_reference(&ident.0, &ident.1);
+            }
+        }
+    }
+}
+
+/*impl<'a> Resolver<'a> {
     pub fn new(cache: &'a Cache) -> Self {
         Self {
             cache,
@@ -110,7 +213,7 @@ impl<'a> Resolver<'a> {
 }
 
 impl Visitor for Resolver<'_> {
-    fn visit_declaration(&mut self, local: &Local) {
+    fn visit_declaration(&mut self, local: &Definition) {
         let pattern = &local.pattern.0;
 
         if self.scope.check_variable(pattern) {
@@ -127,7 +230,7 @@ impl Visitor for Resolver<'_> {
         self.visit_local(local);
     }
 
-    fn visit_assignment(&mut self, local: &Local) {
+    fn visit_assignment(&mut self, local: &Definition) {
         match self.scope.variables.get(&local.pattern.0) {
             Some(id) => {
                 self.cache.push_assignment(id, local);
@@ -152,4 +255,4 @@ impl Visitor for Resolver<'_> {
         self.scope.count += 1;
         self.cache.push_reference(id, ident);*/
     }
-}
+}*/

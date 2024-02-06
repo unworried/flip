@@ -1,11 +1,13 @@
 use alloc::borrow::ToOwned;
 
 use super::{Ast, Expr, Ident, Stmt, StmtKind};
+use crate::cache::DefinitionId;
 use crate::lexer::Token;
 use crate::parser::{Parse, Parser, P};
 
-#[derive(Debug)]
-pub struct Local {
+#[derive(Debug, Clone)]
+pub struct Definition {
+    pub id: Option<DefinitionId>,
     pub pattern: Ident,
     pub init: P<Expr>,
 }
@@ -17,12 +19,13 @@ impl Stmt {
 
         let expression = P(Expr::parse(parser));
 
-        let local = Local {
+        let def = Definition {
+            id: None,
             pattern: ident,
             init: expression,
         };
 
-        StmtKind::Assignment(P(local))
+        StmtKind::Assignment(def)
     }
     /// Grammar: "if" (condition) "{" \n {statement}* "}"
     pub fn parse_if(parser: &mut Parser) -> StmtKind {
@@ -75,10 +78,11 @@ impl Stmt {
 
         let expression = P(Expr::parse(parser));
 
-        let local = Local {
+        let def = Definition {
+            id: None,
             pattern: ident,
             init: expression,
         };
-        StmtKind::Let(P(local))
+        StmtKind::Let(def)
     }
 }

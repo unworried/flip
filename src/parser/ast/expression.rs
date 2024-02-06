@@ -145,7 +145,7 @@ impl Expr {
             Token::String(value) => ExprKind::Literal(Literal::String(value.to_owned())),
             Token::LParen => Self::parse_group(parser),
             // Grammar: (identifier) => Token::Ident
-            Token::Ident(symbol) => ExprKind::Variable((symbol.to_owned(), span)),
+            Token::Ident(symbol) => ExprKind::Variable((symbol.to_owned(), span), None),
             _ => panic!("Really shouldn't reach here, implement fatal error instead"),
         }
     }

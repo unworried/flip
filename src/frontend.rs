@@ -18,12 +18,11 @@ pub fn check(input: &str) -> Result<()> {
     let mut lexer = Lexer::new(input.to_string());
     let mut parser = Parser::new(&mut lexer, diagnostics.clone());
 
-    let result = parser.parse();
+    let ast = parser.parse();
     println!();
-    println!("{}", result);
+    println!("{}", ast);
 
-    let mut resolver = Resolver::new(&cache);
-    resolver.resolve(&result);
+    Resolver::start(ast, &cache);
 
     diagnostics.borrow().check(&source)?;
 

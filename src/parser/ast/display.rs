@@ -66,7 +66,7 @@ impl Visitor for AstDisplay {
         match stmt {
             StmtKind::Let(local) => {
                 self.result.push_str("Declare ");
-                self.result.push_str(&local.ptr.pattern.0);
+                self.result.push_str(&local.pattern.0);
                 self.add_newline();
                 self.add_padding();
                 self.add_expression_header("Expression");
@@ -76,7 +76,7 @@ impl Visitor for AstDisplay {
             StmtKind::While(..) => self.result.push_str("While"),
             StmtKind::Assignment(local) => {
                 self.result.push_str("Assign ");
-                self.result.push_str(&local.ptr.pattern.0);
+                self.result.push_str(&local.pattern.0);
                 self.add_newline();
                 self.add_padding();
                 self.add_expression_header("Expression");
@@ -112,7 +112,7 @@ impl Visitor for AstDisplay {
             }
 
             ExprKind::Literal(lit) => lit.walk(self),
-            ExprKind::Variable(s) => self.result.push_str(&s.0.to_string()),
+            ExprKind::Variable(s, ..) => self.result.push_str(&s.0.to_string()),
             ExprKind::Error => self.result.push_str("Error"),
         }
 

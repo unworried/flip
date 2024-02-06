@@ -1,4 +1,6 @@
-use super::ast::statement::Local;
+use crate::cache::DefinitionId;
+
+use super::ast::statement::Definition;
 use super::ast::{
     Ast, BinOp, Expr, ExprKind, Ident, Item, ItemKind, Literal, Stmt, StmtKind, UnOp,
 };
@@ -51,19 +53,20 @@ pub trait Visitor: Sized {
         lit.walk(self);
     }
 
-    fn visit_declaration(&mut self, local: &Local) {
+    fn visit_declaration(&mut self, local: &Definition) {
         self.visit_local(local);
     }
 
-    fn visit_assignment(&mut self, local: &Local) {
+    fn visit_assignment(&mut self, local: &Definition) {
         self.visit_local(local);
     }
 
-    fn visit_local(&mut self, local: &Local) {
+    fn visit_local(&mut self, local: &Definition) {
         local.init.ptr.walk(self);
     }
 
-    fn visit_variable(&mut self, _ident: &Ident) {}
+    fn visit_variable(&mut self, _ident: &Ident) {
+    }
 }
 
 impl Walkable for Item {
@@ -102,10 +105,10 @@ impl Walkable for StmtKind {
                 }
             }
             StmtKind::Let(local) => {
-                visitor.visit_declaration(&local.ptr);
+                visitor.visit_declaration(local);
             }
             StmtKind::Assignment(local) => {
-                visitor.visit_assignment(&local.ptr);
+                visitor.visit_assignment(local);
             }
             StmtKind::Error => {}
         }
@@ -120,11 +123,11 @@ impl Walkable for Expr {
 
 impl Walkable for ExprKind {
     fn walk<V: Visitor>(&self, visitor: &mut V) {
-        match &self {
+        match self {
             ExprKind::Literal(value) => visitor.visit_literal(value),
             ExprKind::Binary(op, lhs, rhs) => visitor.visit_binary(op, &lhs.ptr, &rhs.ptr),
             ExprKind::Unary(op, expr) => visitor.visit_unary(op, &expr.ptr),
-            ExprKind::Variable(ident) => visitor.visit_variable(ident),
+            ExprKind::Variable(ident, ..) => visitor.visit_variable(ident),
             ExprKind::Error => {}
         }
     }

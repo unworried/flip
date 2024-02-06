@@ -1,3 +1,4 @@
+use crate::cache::DefinitionId;
 use crate::parser::ast::{BinOp, Expr, Ident, Literal, UnOp};
 use crate::parser::visitor::{Visitor, Walkable};
 

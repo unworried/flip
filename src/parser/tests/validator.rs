@@ -86,12 +86,12 @@ impl Visitor for AstValidator {
                 self.actual.push(ASTNode::Let);
                 self.actual
                     .push(ASTNode::Variable(local.pattern.0.to_owned()));
-                local.ptr.init.ptr.walk(self);
+                local.init.ptr.walk(self);
             }
             StmtKind::Assignment(local) => {
                 self.actual
                     .push(ASTNode::Variable(local.pattern.0.to_owned()));
-                local.ptr.init.ptr.walk(self);
+                local.init.ptr.walk(self);
             }
             StmtKind::Error => {}
         }
@@ -109,7 +109,9 @@ impl Visitor for AstValidator {
                 int.ptr.walk(self);
             }
             ExprKind::Literal(value) => self.visit_literal(value),
-            ExprKind::Variable(ident) => self.actual.push(ASTNode::Variable(ident.0.to_owned())),
+            ExprKind::Variable(ident, ..) => {
+                self.actual.push(ASTNode::Variable(ident.0.to_owned()))
+            }
             ExprKind::Error => {}
         }
     }
