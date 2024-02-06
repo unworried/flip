@@ -49,7 +49,7 @@ impl Cache {
     }
 
     pub fn push_definition(&self, definition: &Definition) -> DefinitionId {
-        let id  = self.definitions.borrow().len();
+        let id = self.definitions.borrow().len();
         self.definitions.borrow_mut().insert(id, definition.clone());
         id
     }

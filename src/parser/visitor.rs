@@ -65,8 +65,7 @@ pub trait Visitor: Sized {
         local.init.ptr.walk(self);
     }
 
-    fn visit_variable(&mut self, _ident: &Ident) {
-    }
+    fn visit_variable(&mut self, _ident: &Ident) {}
 }
 
 impl Walkable for Item {
