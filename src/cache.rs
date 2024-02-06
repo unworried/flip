@@ -55,6 +55,10 @@ impl Cache {
         self.diagnostics.borrow_mut()
     }
 
+    pub fn lookup(&self, id: &DefinitionId) -> Option<DefinitionInfo> {
+        self.definitions.borrow().get(id).cloned()
+    }
+
     pub fn push_declartion(&self, id: DefinitionId, info: &Local) {
         let info = DefinitionInfo {
             pattern: info.pattern.0.clone(),

@@ -14,11 +14,10 @@
 //! - undeclared_assignment: The symbol has not been declared before it was assigned.
 //! - undeclared_reference: The symbol has not been declared before it was referenced.
 //! - reference_before_assignment: The symbol was referenced before it was declared.
-use self::evaluator::evaluate_expression;
 use self::scope::Scope;
 use crate::cache::{Cache, DefinitionKind};
 use crate::parser::ast::statement::Local;
-use crate::parser::ast::{Ast, Expr, ExprKind, Ident, Literal};
+use crate::parser::ast::{Ast, Ident};
 use crate::parser::visitor::Visitor;
 
 mod evaluator;
@@ -40,11 +39,11 @@ impl<'a> Resolver<'a> {
     pub fn resolve(&mut self, ast: &Ast) {
         self.visit_ast(ast);
         self.check_references();
-        self.evaluate_parents();
+        //self.evaluate_parents();
     }
 
-    fn evaluate_parents(&mut self) {
-        for (_, info) in self.cache.definitions.borrow_mut().iter_mut() {
+    /*fn evaluate_parents(&self) {
+        for (_, info) in self.cache.definitions.iter_mut() {
             let expr = match &info.expr {
                 Some(expr) => {
                     if let ExprKind::Literal(_) = expr.kind {
@@ -67,17 +66,17 @@ impl<'a> Resolver<'a> {
                 }
             }
         }
-    }
+    }*/
 
     // TODO: Cleanup this code. This is terrible
-    fn check_references(&mut self) {
+    fn check_references(&self) {
         for (_, info) in self.cache.definitions.borrow().iter() {
             if info.kind != DefinitionKind::Reference {
                 continue;
             }
 
             let pattern = &info.pattern;
-            match self.scope.variables.borrow().get(pattern) {
+            match self.scope.variables.get(pattern) {
                 Some(parent_id) => {
                     if let Some(parent_info) = self.cache.definitions.borrow().get(parent_id) {
                         if parent_info.span > info.span {
@@ -98,7 +97,7 @@ impl<'a> Resolver<'a> {
     }
 
     fn push_child(&mut self, child_ident: &str) -> Result<(), ()> {
-        match self.scope.variables.borrow().get(child_ident) {
+        match self.scope.variables.get(child_ident) {
             Some(id) => {
                 self.cache.push_child(id, &self.scope.count);
                 Ok(())

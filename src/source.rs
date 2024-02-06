@@ -25,7 +25,7 @@ impl Source {
         self.text
             .lines()
             .nth(index)
-            .ok_or_else(|| CompilerError::ReadSource)
+            .ok_or(CompilerError::ReadSource)
     }
 
     pub fn line_start(&self, index: usize) -> usize {

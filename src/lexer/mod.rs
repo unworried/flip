@@ -50,6 +50,10 @@ impl Lexer {
         //self.skip_whitespace();
         self.skip_comment();
         let start_position = self.position - 1;
+        // Tmp Solution to ensure counting stops on Eof. TODO: Change this
+        if self.ch == EOF {
+            return (Token::Eof, Span::new(start_position, start_position));
+        }
 
         if Self::is_whitespace(self.ch) {
             // - 1 to get the last whitespace char not the next non whitespace char
