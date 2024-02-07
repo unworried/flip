@@ -83,12 +83,14 @@ impl Visitor for AstValidator {
 
     fn visit_definition(&mut self, def: &Definition) {
         self.actual.push(ASTNode::Let);
-        self.actual.push(ASTNode::Variable(def.pattern.to_owned()));
+        self.actual
+            .push(ASTNode::Variable(def.pattern.name.to_owned()));
         def.value.walk(self);
     }
 
     fn visit_assignment(&mut self, def: &Definition) {
-        self.actual.push(ASTNode::Variable(def.pattern.to_owned()));
+        self.actual
+            .push(ASTNode::Variable(def.pattern.name.to_owned()));
         def.value.walk(self);
     }
 
