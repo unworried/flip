@@ -86,7 +86,7 @@ impl DiagnosticBag {
         self.error("illegal token".to_owned(), span.clone());
     }
 
-    pub fn unexpected_statement(&mut self, token: &Token, span: &Span) {
+    pub fn unknown_statement(&mut self, token: &Token, span: &Span) {
         self.error(format!("unexpected statement '{}'", token), span.clone());
     }
 

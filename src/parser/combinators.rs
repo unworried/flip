@@ -24,14 +24,20 @@ pub fn parse_sequence(parser: &mut Parser, end_delim: Token) -> Ast {
 }
 
 pub fn parse_statement(parser: &mut Parser) -> Ast {
-    let (token, start_span) = parser.consume();
+    let (token, span) = parser.consume();
 
     let stmt = match &token {
         Token::Let => parse_let(parser),
-        Token::Ident(ident) => parse_assignment(parser, (ident.to_owned(), start_span.clone())),
+        Token::Ident(ident) => parse_assignment(parser, (ident.to_owned(), span.clone())),
         Token::If => parse_if(parser),
         Token::While => parse_while(parser),
-        _ => Ast::Error, // Handle Err
+        _ => {
+            parser
+                .diagnostics
+                .borrow_mut()
+                .unknown_statement(&token, &span);
+            Ast::Error
+        } // Handle Err
     };
 
     parser.expect(Token::SemiColon);
