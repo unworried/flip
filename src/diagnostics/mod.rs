@@ -87,7 +87,7 @@ impl DiagnosticBag {
     }
 
     pub fn unknown_statement(&mut self, token: &Token, span: &Span) {
-        self.error(format!("unexpected statement '{}'", token), span.clone());
+        self.error(format!("unknown statement '{}'", token), span.clone());
     }
 
     pub fn invalid_operator(&mut self, token: &Token, span: &Span) {

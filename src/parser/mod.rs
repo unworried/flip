@@ -43,6 +43,10 @@ impl<'a> Parser<'a> {
     }
 
     pub fn step(&mut self) {
+        if self.current_token_is(&Token::Eof) {
+            return;
+        }
+
         // Cheaper than cloning
         self.current_token = self.lexer.next_token();
         mem::swap(&mut self.current_token, &mut self.next_token);
@@ -50,11 +54,13 @@ impl<'a> Parser<'a> {
             self.step();
         }
 
-        /*if self.current_token.0 == Token::Illegal {
+        if self.current_token.0 == Token::Illegal {
             self.diagnostics
                 .borrow_mut()
                 .illegal_token(&self.current_token.1);
-        }*/
+
+            self.step();
+        }
     }
 
     pub fn consume(&mut self) -> (Token, Span) {
@@ -66,16 +72,26 @@ impl<'a> Parser<'a> {
         prev_token
     }
 
-    pub fn expect(&mut self, token: Token) {
-        if !self.current_token_is(&token) {
-            self.diagnostics.borrow_mut().unexpected_token(
-                &token,
-                &self.current_token.0,
-                &self.current_token.1,
-            );
+    pub fn expect(&mut self, expected: Token) {
+        self.expect_with_outcome(expected);
+    }
+
+    pub fn expect_with_outcome(&mut self, expected: Token) -> bool {
+        let (token, span) = self.consume();
+        if token != expected {
+            self.diagnostics
+                .borrow_mut()
+                .unexpected_token(&expected, &token, &span);
+
+            return false;
         }
 
-        if !self.current_token_is(&Token::Eof) {
+        true
+    }
+
+    fn step_until(&mut self, token: &Token) {
+        while !self.current_token_is(token) && !self.current_token_is(&Token::Eof) {
+            println!("{:?}", !self.current_token_is(&Token::Eof));
             self.step();
         }
     }

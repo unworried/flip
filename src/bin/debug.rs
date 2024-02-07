@@ -15,7 +15,7 @@ fn main() {
 
     //let line = r#"let x = 4; x = 5; let y = 6; x = y;"#;
     //let line = r#"djaindahbdjhbajhb dhjbajh bdjhbah bdhjab hjbdhjbah jbdjhab dhjbajh bdhabh jdbhja bdjhbajhdbajhdbjhdb"#;
-    let line = r#"let x = 45+41*(4+3); x = 5 + 2; let y = -x"#;
+    let line = r#"let x = 45+41*(4+3); x = 5 + 2; let y = -x;"#;
     match frontend::check(line) {
         Ok(_) => println!("No errors found"),
         Err(e) => println!("{}", e),

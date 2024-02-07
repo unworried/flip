@@ -78,7 +78,10 @@ pub fn parse_let(parser: &mut Parser) -> Ast {
 
 pub fn parse_assignment(parser: &mut Parser, pattern: Ident) -> Ast {
     let start_span = parser.current_span();
-    parser.expect(Token::Assign);
+    if !parser.expect_with_outcome(Token::Assign) {
+        parser.step_until(&Token::SemiColon);
+        return Ast::Error;
+    }
 
     let value = parse_expression(parser);
 
