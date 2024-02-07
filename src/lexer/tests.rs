@@ -85,11 +85,7 @@ fn tokenize_whitespace() {
     let mut lex = Lexer::new(input.to_string());
 
     let next_token = lex.next_token();
-    assert_eq!(next_token.0, Token::Whitespace);
-    let next_token = lex.next_token();
     assert_eq!(next_token.0, Token::Newline);
-    let next_token = lex.next_token();
-    assert_eq!(next_token.0, Token::Whitespace);
     let next_token = lex.next_token();
     assert_eq!(next_token.0, Token::Eof);
 }
@@ -115,7 +111,6 @@ fn tokenize_with_whitespace() {
     let expected = vec![
         Token::Plus,
         Token::Minus,
-        Token::Whitespace,
         Token::Asterisk,
         Token::ForwardSlash,
     ];
@@ -130,15 +125,11 @@ fn tokenize_operations() {
     let expected = vec![
         Token::Plus,
         Token::Minus,
-        Token::Whitespace,
         Token::Asterisk,
         Token::ForwardSlash,
-        Token::Whitespace,
         Token::GreaterThan,
         Token::GreaterThanEqual,
-        Token::Whitespace,
         Token::Assign,
-        Token::Whitespace,
         Token::NotEqual,
     ];
 
@@ -172,9 +163,7 @@ fn tokenize_with_comment() {
     let expected = vec![
         Token::Plus,
         Token::Minus,
-        Token::Whitespace,
         Token::Newline,
-        Token::Whitespace,
         Token::Asterisk,
         Token::ForwardSlash,
     ];
@@ -189,11 +178,8 @@ fn tokenize_string() {
     let expected = vec![
         Token::Plus,
         Token::Minus,
-        Token::Whitespace,
         Token::String(String::from("string12345")),
-        Token::Whitespace,
         Token::Newline,
-        Token::Whitespace,
         Token::Asterisk,
         Token::ForwardSlash,
     ];
@@ -209,7 +195,6 @@ fn tokenize_int() {
         Token::Plus,
         Token::Minus,
         Token::Int(123),
-        Token::Whitespace,
         Token::Int(98654),
         Token::Newline,
         Token::Asterisk,
@@ -228,19 +213,15 @@ fn tokenize_complete() {
         Token::Plus,
         Token::Minus,
         Token::Int(123),
-        Token::Whitespace,
         Token::Ident(String::from("foo")),
         Token::Asterisk,
-        Token::Whitespace,
         Token::LBrace,
-        Token::Whitespace,
         Token::Newline,
         Token::ForwardSlash,
         Token::Int(98654),
         Token::Newline,
         Token::Asterisk,
         Token::ForwardSlash,
-        Token::Whitespace,
         Token::RBrace,
         Token::SemiColon,
     ];

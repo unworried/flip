@@ -24,13 +24,6 @@ pub struct Parser<'a> {
     pub diagnostics: DiagnosticsCell,
 }
 
-pub trait Parse<'a>
-where
-    Self: Sized,
-{
-    fn parse(parser: &mut Parser<'a>) -> Self;
-}
-
 impl<'a> Parser<'a> {
     pub fn new(lexer: &'a mut Lexer, diagnostics: DiagnosticsCell) -> Self {
         // Need to handle case where these tokens may be illegal
@@ -73,7 +66,7 @@ impl<'a> Parser<'a> {
         prev_token
     }
 
-    pub fn expect_and_consume(&mut self, token: Token) {
+    pub fn expect(&mut self, token: Token) {
         if !self.current_token_is(&token) {
             self.diagnostics.borrow_mut().unexpected_token(
                 &token,
@@ -81,7 +74,10 @@ impl<'a> Parser<'a> {
                 &self.current_token.1,
             );
         }
-        self.step();
+
+        if !self.current_token_is(&Token::Eof) {
+            self.step();
+        }
     }
 
     fn expect_flush(&mut self) {
@@ -106,15 +102,8 @@ impl<'a> Parser<'a> {
         self.current_token.1.clone()
     }
 
+    #[cfg(test)]
     pub fn next_token(&self) -> &Token {
         &self.next_token.0
-    }
-
-    pub fn next_token_is(&self, token: &Token) -> bool {
-        &self.next_token.0 == token
-    }
-
-    pub fn next_span(&self) -> &Span {
-        &self.next_token.1
     }
 }
