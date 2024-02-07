@@ -34,7 +34,7 @@ pub fn parse_statement(parser: &mut Parser) -> Ast {
         _ => Ast::Error, // Handle Err
     };
 
-    parser.consume_and_check(Token::SemiColon);
+    parser.expect_and_consume(Token::SemiColon);
 
     stmt
 }
@@ -59,7 +59,7 @@ pub fn parse_let(parser: &mut Parser) -> Ast {
     };
     parser.step();
 
-    parser.consume_and_check(Token::Assign);
+    parser.expect_and_consume(Token::Assign);
 
     let value = parse_expression(parser);
 
@@ -72,7 +72,7 @@ pub fn parse_let(parser: &mut Parser) -> Ast {
 
 pub fn parse_assignment(parser: &mut Parser, pattern: Ident) -> Ast {
     let start_span = parser.current_span();
-    parser.consume_and_check(Token::Assign);
+    parser.expect_and_consume(Token::Assign);
 
     let value = parse_expression(parser);
 
@@ -87,7 +87,7 @@ pub fn parse_if(parser: &mut Parser) -> Ast {
     let start_span = parser.current_span();
     let condition = parse_expression(parser);
 
-    parser.consume_and_check(Token::LBrace);
+    parser.expect_and_consume(Token::LBrace);
 
     // Newline is optional May not need if allow newlines at start of file in ast root struct
     while parser.current_token_is(&Token::Newline) {
@@ -96,7 +96,7 @@ pub fn parse_if(parser: &mut Parser) -> Ast {
 
     let resolution = parse_sequence(parser, Token::RBrace);
 
-    parser.consume_and_check(Token::RBrace);
+    parser.expect_and_consume(Token::RBrace);
 
     Ast::if_expr(
         condition,
@@ -109,7 +109,7 @@ pub fn parse_while(parser: &mut Parser) -> Ast {
     let start_span = parser.current_span();
     let condition = parse_expression(parser);
 
-    parser.consume_and_check(Token::LBrace);
+    parser.expect_and_consume(Token::LBrace);
 
     // Newline is optional May not need if allow newlines at start of file in ast root struct
     while parser.current_token_is(&Token::Newline) {
@@ -118,7 +118,7 @@ pub fn parse_while(parser: &mut Parser) -> Ast {
 
     let resolution = parse_sequence(parser, Token::RBrace);
 
-    parser.consume_and_check(Token::RBrace);
+    parser.expect_and_consume(Token::RBrace);
 
     Ast::while_expr(
         condition,
@@ -139,7 +139,7 @@ pub fn parse_unary(parser: &mut Parser) -> Ast {
     let start_span = parser.current_span();
     let operator = match &parser.current_token() {
         Token::Minus => UnOp::Neg,
-        token => return Ast::Error,
+        _ => return Ast::Error,
     };
 
     /*
@@ -149,18 +149,9 @@ pub fn parse_unary(parser: &mut Parser) -> Ast {
      * instead of:
      * -1, let foo = -bar;
      */
-    if parser.next_token_is(&Token::Whitespace) {
-        parser.diagnostics.borrow_mut().unexpected_token(
-            parser.current_token(),
-            parser.next_token(),
-            parser.next_span(),
-        );
-    }
-
-    parser.step();
+    parser.expect_flush();
 
     let operand = parse_unary_or_primary(parser);
-
     Ast::unary(
         operator,
         operand,
@@ -169,7 +160,7 @@ pub fn parse_unary(parser: &mut Parser) -> Ast {
 }
 
 pub fn parse_primary(parser: &mut Parser) -> Ast {
-    let (mut token, mut span) = parser.consume();
+    let (token, span) = parser.consume();
 
     match &token {
         // Temp before i split into parse_int and parse string
@@ -184,7 +175,7 @@ pub fn parse_primary(parser: &mut Parser) -> Ast {
 
 pub fn parse_group(parser: &mut Parser) -> Ast {
     let expr = parse_expression(parser);
-    parser.consume_and_check(Token::RParen);
+    parser.expect_and_consume(Token::RParen);
 
     expr
 }

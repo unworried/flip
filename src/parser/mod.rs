@@ -73,7 +73,7 @@ impl<'a> Parser<'a> {
         prev_token
     }
 
-    pub fn consume_and_check(&mut self, token: Token) {
+    pub fn expect_and_consume(&mut self, token: Token) {
         if !self.current_token_is(&token) {
             self.diagnostics.borrow_mut().unexpected_token(
                 &token,
@@ -84,6 +84,16 @@ impl<'a> Parser<'a> {
         self.step();
     }
 
+    fn expect_flush(&mut self) {
+        if Span::difference(&self.current_token.1, &self.next_token.1) > 1 {
+            self.diagnostics.borrow_mut().unexpected_token(
+                self.current_token(),
+                &Token::Whitespace,
+                &Span::new(self.current_token.1.end + 1, self.next_token.1.start - 1),
+            );
+        }
+        self.step();
+    }
     pub fn current_token(&self) -> &Token {
         &self.current_token.0
     }

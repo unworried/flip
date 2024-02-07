@@ -22,7 +22,7 @@ pub trait Visitor: Sized {
     }
 
     fn visit_unary(&mut self, un: &Unary) {
-        un.oprand.walk(self);
+        un.operand.walk(self);
     }
 
     fn visit_literal(&mut self, lit: &Literal) {}

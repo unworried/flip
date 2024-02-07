@@ -78,7 +78,7 @@ impl Visitor for AstValidator {
 
     fn visit_unary(&mut self, un: &Unary) {
         self.actual.push(ASTNode::Unary);
-        un.oprand.walk(self);
+        un.operand.walk(self);
     }
 
     fn visit_definition(&mut self, def: &Definition) {

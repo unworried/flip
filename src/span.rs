@@ -1,3 +1,5 @@
+use std::ops::Sub;
+
 use alloc::vec::Vec;
 
 #[derive(Debug, PartialEq, Clone, Default, PartialOrd, Eq, Hash)]
@@ -19,6 +21,14 @@ impl Span {
         let end = spans.last().unwrap().end;
 
         Span::new(start, end)
+    }
+
+    pub fn difference(first: &Span, second: &Span) -> usize {
+        let result = second.start - first.end;
+        // earlier.end should always procede self.start as cannot have 2 tokens at same position.
+        // Cannot produce negative as tokenstream input does not have negative indices.
+        assert!(result > 0);
+        result
     }
 
     pub fn length(&self) -> usize {

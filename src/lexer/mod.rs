@@ -47,19 +47,12 @@ impl Lexer {
     /// Returns the next token and matching span.
     // May be able to change a bit to fix indexing properly
     pub fn next_token(&mut self) -> (Token, Span) {
-        //self.skip_whitespace();
+        self.skip_whitespace();
         self.skip_comment();
         let start_position = self.position - 1;
         // Tmp Solution to ensure counting stops on Eof. TODO: Change this
         if self.ch == EOF {
             return (Token::Eof, Span::new(start_position, start_position));
-        }
-
-        if Self::is_whitespace(self.ch) {
-            // - 1 to get the last whitespace char not the next non whitespace char
-            let span = Span::new(start_position, self.position - 1);
-            self.read_char();
-            return (self.whitespace(), span);
         }
 
         let token = match self.ch {
@@ -168,12 +161,10 @@ impl Lexer {
         matches!(ch, b'\t' | b'\x0C' | b'\r' | b' ')
     }
 
-    /// Combines multiple whitespace characters into a single Token/Span and returns it.
-    fn whitespace(&mut self) -> Token {
+    fn skip_whitespace(&mut self) {
         while Self::is_whitespace(self.ch) {
             self.read_char();
         }
-        Token::Whitespace
     }
 
     /// Skips all input after a comment character is found until a newline or EOF is found.

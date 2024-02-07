@@ -14,14 +14,14 @@ impl Display for Ast {
 }
 
 pub struct AstDisplay {
-    ident: usize,
+    indent: usize,
     result: String,
 }
 
 impl AstDisplay {
     pub fn new() -> Self {
         Self {
-            ident: 0,
+            indent: 0,
             result: String::new(),
         }
     }
@@ -36,96 +36,83 @@ impl AstDisplay {
     }
 
     fn add_padding(&mut self) {
-        for _ in 0..self.ident {
+        for _ in 0..self.indent {
             self.result.push_str("  ");
         }
     }
 
-    fn add_statement_header(&mut self) {
+    fn add_statement_header(&mut self, text: &str) {
+        self.add_newline();
+        self.add_padding();
         self.result
-            .push_str(&format!("{}Statement:{} ", Color::Magenta, Color::Reset));
+            .push_str(&format!("{}{}:{} ", Color::Magenta, text, Color::Reset));
     }
 
     fn add_expression_header(&mut self, text: &str) {
+        self.add_newline();
+        self.add_padding();
         self.result
             .push_str(&format!("{}{}:{} ", Color::Cyan, text, Color::Reset));
+    }
+
+    fn add_block_end(&mut self) {
+        self.indent -= 2;
+        self.add_newline();
+        self.add_padding();
+        self.result
+            .push_str(&format!("{}End{} ", Color::Magenta, Color::Reset));
+        self.add_newline();
+        self.add_padding();
     }
 }
 
 impl Visitor for AstDisplay {
     fn visit_definition(&mut self, def: &Definition) {
-        self.add_newline();
-        self.add_padding();
-        self.ident += 1;
-        self.add_statement_header();
-        self.result.push_str("Declare ");
+        self.add_statement_header("Declare");
         self.result.push_str(&def.pattern.0);
 
-        self.add_newline();
-        self.add_padding();
+        self.indent += 1;
         self.add_expression_header("Expression");
         def.value.walk(self);
 
-        self.ident -= 1;
-        self.add_newline();
-        self.add_padding();
+        self.indent -= 1;
     }
 
     fn visit_assignment(&mut self, def: &Definition) {
-        self.add_newline();
-        self.add_padding();
-        self.add_statement_header();
-        self.result.push_str("Assign ");
+        self.add_statement_header("Assign");
         self.result.push_str(&def.pattern.0);
 
-        self.ident += 1;
-        self.add_newline();
-        self.add_padding();
+        self.indent += 1;
         self.add_expression_header("Expression");
         def.value.walk(self);
 
-        self.ident -= 1;
-        self.add_newline();
-        self.add_padding();
+        self.indent -= 1;
     }
 
     fn visit_binary(&mut self, bin: &Binary) {
-        self.ident += 1;
-        self.add_newline();
-        self.add_padding();
+        self.indent += 1;
         self.add_expression_header("Left");
         bin.left.walk(self);
-        self.add_newline();
-        self.add_padding();
         self.add_expression_header("Op");
         self.result.push_str(&format!("{:?}", bin.op));
-        self.add_newline();
-        self.add_padding();
         self.add_expression_header("Right");
         bin.right.walk(self);
-        self.ident -= 1;
-        self.add_newline();
-        self.add_padding();
+        self.indent -= 1;
     }
 
     fn visit_unary(&mut self, un: &Unary) {
-        self.add_newline();
-        self.add_padding();
-        self.add_expression_header("Expression");
-        self.ident += 1;
-        self.add_newline();
-        self.add_padding();
-        self.result.push_str("Value: ");
-        un.oprand.walk(self);
-        self.ident -= 1;
-        self.add_newline();
-        self.add_padding();
+        self.indent += 1;
+        self.add_expression_header("Op");
+        self.result.push_str(&format!("{:?}", un.op));
+        self.add_expression_header("Operand");
+        un.operand.walk(self);
+        self.indent -= 1;
     }
 
     fn visit_literal(&mut self, lit: &Literal) {
         match &lit.kind {
             LiteralKind::Int(i) => self.result.push_str(&i.to_string()),
-            LiteralKind::String(s) => self.result.push_str(&s.to_string()),
+            LiteralKind::String(s) => self.result.push_str(&format!("\"{}\"", s)),
         }
     }
 
@@ -135,43 +122,35 @@ impl Visitor for AstDisplay {
 
     fn visit_while(&mut self, while_expr: &While) {
         self.add_newline();
-        self.add_padding();
-        self.add_statement_header();
-        self.result.push_str("While");
-        self.ident += 1;
-        self.add_newline();
-        self.add_padding();
+        self.add_statement_header("While");
+        self.indent += 1;
+        self.add_statement_header("Condition");
+        self.indent += 1;
         self.add_expression_header("Expression");
-
         while_expr.condition.walk(self);
+        self.indent -= 1;
 
         self.add_newline();
-        self.add_padding();
-        self.result
-            .push_str(&format!("{}Then:{} ", Color::Magenta, Color::Reset));
-        self.ident += 1;
+        self.add_statement_header("Then");
+        self.indent += 1;
         while_expr.then.walk(self);
-        self.ident -= 2;
+        self.add_block_end();
     }
 
     fn visit_if(&mut self, if_expr: &If) {
         self.add_newline();
-        self.add_padding();
-        self.add_statement_header();
-        self.result.push_str("If");
-        self.ident += 1;
-        self.add_newline();
-        self.add_padding();
+        self.add_statement_header("If");
+        self.indent += 1;
+        self.add_statement_header("Condition");
+        self.indent += 1;
         self.add_expression_header("Expression");
-
         if_expr.condition.walk(self);
+        self.indent -= 1;
 
         self.add_newline();
-        self.add_padding();
-        self.result
-            .push_str(&format!("{}Then:{} ", Color::Magenta, Color::Reset));
-        self.ident += 1;
+        self.add_statement_header("Then");
+        self.indent += 1;
         if_expr.then.walk(self);
-        self.ident -= 2;
+        self.add_block_end();
     }
 }

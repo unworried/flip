@@ -87,7 +87,7 @@ impl Ast {
     pub fn unary(op: UnOp, oprand: Ast, span: Span) -> Ast {
         Ast::Unary(Unary {
             op,
-            oprand: P(oprand),
+            operand: P(oprand),
             span,
         })
     }
@@ -180,7 +180,7 @@ impl BinOp {
 #[derive(Debug)]
 pub struct Unary {
     pub op: UnOp,
-    pub oprand: P<Ast>,
+    pub operand: P<Ast>,
     pub span: Span,
 }
 
