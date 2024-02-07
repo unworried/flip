@@ -1,10 +1,9 @@
 use std::cmp;
 
+use super::ast::{Ast, BinOp, Pattern, UnOp};
 use crate::lexer::Token;
 use crate::parser::Parser;
 use crate::span::Span;
-
-use super::ast::{Ast, BinOp, Pattern, UnOp};
 
 pub fn parse_sequence(parser: &mut Parser, end_delim: Token) -> Ast {
     let start_span = parser.current_span();

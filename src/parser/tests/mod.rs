@@ -131,7 +131,6 @@ fn while_statement_newline() {
     assert_ast(input, expected)
 }
 
-
 #[test]
 fn while_statement_nested_statements() {
     let input = "while \"TMP\" { \nlet x = \"hello, world!\"; \nlet y = \"hello, world 2!\"; \nlet z = \"hello, world 3!\"; \n };";

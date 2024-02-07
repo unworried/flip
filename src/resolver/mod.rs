@@ -14,10 +14,9 @@
 //! - undeclared_assignment: The symbol has not been declared before it was assigned.
 //! - undeclared_reference: The symbol has not been declared before it was referenced.
 //! - reference_before_assignment: The symbol was referenced before it was declared.
+use self::scope::Scope;
 use crate::diagnostics::DiagnosticsCell;
 use crate::parser::ast::{Ast, Definition, Variable};
-
-use self::scope::Scope;
 
 //pub mod evaluator;
 mod scope;

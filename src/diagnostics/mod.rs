@@ -114,10 +114,7 @@ impl DiagnosticBag {
     }
 
     pub fn undefined_reference(&mut self, ident: &String, span: &Span) {
-        self.error(
-            format!("symbol: `{}` is undefined", ident),
-            span.clone(),
-        );
+        self.error(format!("symbol: `{}` is undefined", ident), span.clone());
     }
 
     pub fn reference_before_assignment(&mut self, ident: &String, span: &Span) {

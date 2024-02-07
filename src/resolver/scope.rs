@@ -1,5 +1,6 @@
-use crate::resolver::DefinitionId;
 use std::collections::HashMap;
+
+use crate::resolver::DefinitionId;
 
 #[derive(Debug, Default)]
 pub struct Scope {
