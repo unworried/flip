@@ -1,6 +1,3 @@
-use crate::parser::ast::{BinOp, Expr, Ident, Literal, UnOp};
-use crate::parser::visitor::{Visitor, Walkable};
-
 // Currently any operation that yields a float is floored.
 #[derive(Default)]
 pub struct Evaluator {

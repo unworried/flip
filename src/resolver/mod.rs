@@ -14,142 +14,153 @@
 //! - undeclared_assignment: The symbol has not been declared before it was assigned.
 //! - undeclared_reference: The symbol has not been declared before it was referenced.
 //! - reference_before_assignment: The symbol was referenced before it was declared.
-use self::scope::Scope;
-use crate::cache::Cache;
-use crate::parser::ast::statement::Local;
-use crate::parser::ast::{Ast, Ident};
-use crate::parser::visitor::Visitor;
+use crate::diagnostics::DiagnosticsCell;
+use crate::parser::ast::{Ast, Definition, Variable};
 
-pub mod evaluator;
+use self::scope::Scope;
+
+//pub mod evaluator;
 mod scope;
 
-pub struct Resolver<'a> {
-    cache: &'a Cache,
-    scope: Scope,
+pub trait ResolveVisitor {
+    fn define(&mut self, resolver: &mut NameResolver);
 }
 
-impl<'a> Resolver<'a> {
-    pub fn new(cache: &'a Cache) -> Self {
+pub type DefinitionId = usize;
+
+#[derive(Debug)]
+pub struct DefinitionInfo {
+    pub definition: Definition,
+    pub uses: u32,
+}
+
+pub struct NameResolver {
+    diagnostics: DiagnosticsCell,
+    definitions: Vec<DefinitionInfo>,
+    scopes: Vec<Scope>,
+}
+
+impl NameResolver {
+    pub fn new(diagnostics: DiagnosticsCell) -> Self {
         Self {
-            cache,
-            scope: Scope::new(),
+            diagnostics,
+            definitions: Vec::new(),
+            scopes: Vec::new(),
         }
     }
 
-    pub fn resolve(&mut self, ast: &Ast) {
-        self.visit_ast(ast);
-        println!("{:#?}", self.cache.definitions.borrow());
-        //self.check_references();
-        //self.evaluate_parents();
+    pub fn resolve(&mut self, ast: &mut Ast) {
+        ast.define(self);
+        self.check_references();
     }
 
-    /*fn evaluate_parents(&self) {
-        for (_, info) in self.cache.definitions.iter_mut() {
-            let expr = match &info.expr {
-                Some(expr) => {
-                    if let ExprKind::Literal(_) = expr.kind {
-                        continue;
-                    }
-                    expr
-                }
-                None => continue,
-            };
-
-            match evaluate_expression(expr) {
-                Some(value) => {
-                    info.expr = Some(Expr {
-                        kind: ExprKind::Literal(Literal::Integer(value)),
-                        span: expr.span.clone(),
-                    });
-                }
-                None => {
-                    continue;
-                }
+    fn check_references(&self) {
+        for def in self.definitions.iter() {
+            if def.uses == 0 {
+                // TODO: Fix so only pattern is underlined
+                self.diagnostics
+                    .borrow_mut()
+                    .unused_variable(&def.definition.pattern.name, &def.definition.pattern.span);
             }
         }
-    }*/
+    }
 
-    // TODO: Cleanup this code. This is terrible
-    /*fn check_references(&self) {
-        for (_, info) in self.cache.definitions.borrow().iter() {
-            if info.kind != DefinitionKind::Reference {
-                continue;
-            }
+    pub fn push_definition(&mut self, def: &Definition) {
+        let info = DefinitionInfo {
+            definition: def.clone(),
+            uses: 0,
+        };
 
-            let pattern = &info.pattern;
-            match self.scope.variables.get(pattern) {
-                Some(parent_id) => {
-                    if let Some(parent_info) = self.cache.definitions.borrow().get(parent_id) {
-                        if parent_info.span > info.span {
-                            self.cache
-                                .diagnostics()
-                                .reference_before_assignment(pattern, &info.span);
-                        }
-                    }
-                }
+        self.definitions.push(info);
+    }
 
-                None => {
-                    self.cache
-                        .diagnostics()
-                        .undeclared_reference(pattern, &info.span);
-                }
-            }
-        }
-    }*/
+    pub fn push_scope(&mut self) {
+        self.scopes.push(Scope::default());
+    }
 
-    /*fn push_child(&mut self, child_ident: &str) -> Result<(), ()> {
-        match self.scope.variables.get(child_ident) {
-            Some(id) => {
-                self.cache.push_child(id, &self.scope.count);
-                Ok(())
-            }
-
-            None => Err(()),
-        }
-    }*/
+    pub fn pop_scope(&mut self) {
+        self.scopes.pop();
+    }
 }
 
-impl Visitor for Resolver<'_> {
-    fn visit_declaration(&mut self, local: &Local) {
-        let pattern = &local.pattern.0;
+impl ResolveVisitor for Ast {
+    fn define(&mut self, resolver: &mut NameResolver) {
+        match self {
+            Ast::Sequence(seq) => {
+                resolver.push_scope();
+                for node in seq.statements.iter_mut() {
+                    node.define(resolver);
+                }
+                resolver.pop_scope();
+            }
+            Ast::Let(def) => {
+                def.define(resolver);
+            }
+            Ast::Assignment(def) => {
+                def.define(resolver);
+            }
+            Ast::Variable(var) => {
+                var.define(resolver);
+            }
+            Ast::Binary(bin) => {
+                bin.left.define(resolver);
+                bin.right.define(resolver);
+            }
+            Ast::Unary(un) => {
+                un.operand.define(resolver);
+            }
+            Ast::If(if_expr) => {
+                if_expr.condition.define(resolver);
+                if_expr.then.define(resolver);
+            }
+            Ast::While(while_expr) => {
+                while_expr.condition.define(resolver);
+                while_expr.then.define(resolver);
+            }
+            Ast::Literal(_) => {}
+            Ast::Error => {}
+        }
+    }
+}
 
-        if self.scope.check_variable(pattern) {
-            self.cache
-                .diagnostics()
-                .symbol_already_declared(pattern, &local.pattern.1);
-            self.visit_local(local);
-            return;
+impl ResolveVisitor for Definition {
+    fn define(&mut self, resolver: &mut NameResolver) {
+        let id = resolver.definitions.len();
+        self.id = Some(id);
+        resolver.push_definition(self);
+        resolver
+            .scopes
+            .last_mut()
+            .expect("callstack should not be empty")
+            .define_symbol(&self.pattern.name.clone(), id);
+
+        self.value.define(resolver);
+    }
+}
+
+impl ResolveVisitor for Variable {
+    fn define(&mut self, resolver: &mut NameResolver) {
+        // Default var definition is None, no ast passes have been made therefore it can be assumed this
+        // is still true.
+        assert!(self.definition.is_none());
+        assert!(!resolver.scopes.is_empty());
+
+        for scope in resolver.scopes.iter().rev() {
+            if let Some(id) = scope.lookup_symbol(&self.pattern) {
+                self.definition = Some(*id);
+
+                let def = &mut resolver
+                    .definitions
+                    .get_mut(*id)
+                    .expect("scope lookup already checked");
+                def.uses += 1;
+                return;
+            }
         }
 
-        let id = self.scope.declare_variable(pattern.to_owned());
-
-        self.cache.push_declartion(id, local);
-        self.visit_local(local);
-    }
-
-    fn visit_assignment(&mut self, local: &Local) {
-        match self.scope.variables.get(&local.pattern.0) {
-            Some(id) => {
-                self.cache.push_assignment(id, local);
-            }
-            None => {
-                self.cache
-                    .diagnostics()
-                    .undeclared_assignment(&local.pattern.0, &local.pattern.1);
-            }
-        }
-
-        self.visit_local(local);
-    }
-
-    fn visit_variable(&mut self, ident: &Ident) {
-        if !self.scope.check_variable(&ident.0) {
-            self.cache
-                .diagnostics()
-                .undeclared_reference(&ident.0, &ident.1);
-        };
-        /*let id = self.scope.count;
-        self.scope.count += 1;
-        self.cache.push_reference(id, ident);*/
+        resolver
+            .diagnostics
+            .borrow_mut()
+            .undefined_reference(&self.pattern, &self.span);
     }
 }
