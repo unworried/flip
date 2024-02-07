@@ -68,16 +68,20 @@ impl DiagnosticBag {
         self.report(DiagnosticKind::Warning, message, span);
     }
 
-    pub fn unexpected_token(&mut self, expected: &Token, actual: &Token, span: &Span) {
+    pub fn expected_token(&mut self, expected: &Token, actual: &Token, span: &Span) {
         self.error(
-            format!("expected: '{}', found: '{}'", expected, actual),
+            format!("expected: '{}', found: `{}`", expected, actual),
             span.clone(),
         );
     }
 
+    pub fn unexpected_token(&mut self, token: &Token, span: &Span) {
+        self.error(format!("unexpected token: `{}`", token), span.clone());
+    }
+
     pub fn expected_expression(&mut self, expected: &Token, span: &Span) {
         self.error(
-            format!("expected expression, found '{}'", expected),
+            format!("expected expression, found: `{}`", expected),
             span.clone(),
         );
     }
@@ -87,39 +91,47 @@ impl DiagnosticBag {
     }
 
     pub fn unknown_statement(&mut self, token: &Token, span: &Span) {
-        self.error(format!("unknown statement '{}'", token), span.clone());
+        self.error(format!("unknown statement `{}`", token), span.clone());
     }
 
     pub fn invalid_operator(&mut self, token: &Token, span: &Span) {
-        self.error(format!("invalid operator '{}'", token), span.clone());
+        self.error(format!("invalid operator `{}`", token), span.clone());
     }
 
     pub fn unknown_expression(&mut self, token: &Token, span: &Span) {
-        self.error(format!("unknown expression '{}'", token), span.clone());
+        self.error(format!("unknown expression `{}`", token), span.clone());
     }
 
     pub fn symbol_already_declared(&mut self, pattern: &String, span: &Span) {
         self.error(
-            format!("symbol: '{}' already exists in scope", pattern),
+            format!("symbol: `{}` already exists in scope", pattern),
             span.clone(),
         );
     }
 
     pub fn undeclared_assignment(&mut self, ident: &String, span: &Span) {
-        self.error(format!("undeclared symbol: '{}'", ident), span.clone());
+        self.error(format!("undeclared symbol: `{}`", ident), span.clone());
     }
 
-    pub fn undeclared_reference(&mut self, ident: &String, span: &Span) {
+    pub fn undefined_reference(&mut self, ident: &String, span: &Span) {
         self.error(
-            format!("symbol: '{}' is never declared", ident),
+            format!("symbol: `{}` is undefined", ident),
             span.clone(),
         );
     }
 
     pub fn reference_before_assignment(&mut self, ident: &String, span: &Span) {
         self.error(
-            format!("symbol: '{}' referenced before assignment", ident),
+            format!("symbol: `{}` referenced before assignment", ident),
             span.clone(),
         );
+    }
+
+    pub fn unused_variable(&mut self, ident: &String, span: &Span) {
+        self.warning(format!("unused variable: `{}`", ident), span.clone());
+    }
+
+    pub fn empty_block(&mut self, span: &Span) {
+        self.warning("empty block found".to_owned(), span.clone());
     }
 }

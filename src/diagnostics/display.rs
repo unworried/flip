@@ -22,7 +22,6 @@ impl<'a> DiagnosticsDisplay<'a> {
 
     /// Formats diagnostic in desired format for user presentation
     pub fn stringify(&self, diagnostic: &Diagnostic) -> Result<String> {
-        println!("Diagnostic: {:?}", diagnostic);
         let line_index = self.text.line_index(diagnostic.span.start);
         let line = self.text.line(line_index)?;
         let line_start = self.text.line_start(line_index);
