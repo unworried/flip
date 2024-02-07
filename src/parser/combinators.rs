@@ -4,12 +4,16 @@ use crate::lexer::Token;
 use crate::parser::Parser;
 use crate::span::Span;
 
-use super::ast::{Ast, BinOp, Ident, UnOp};
+use super::ast::{Ast, BinOp, Pattern, UnOp};
 
 pub fn parse_sequence(parser: &mut Parser, end_delim: Token) -> Ast {
     let start_span = parser.current_span();
     let mut statements = Vec::new();
-    while !parser.current_token_is(&end_delim) {
+    while !parser.current_token_is(&end_delim) && !parser.current_token_is(&Token::Eof) {
+        while parser.current_token_is(&Token::Newline) {
+            parser.step();
+        }
+
         statements.push(parse_statement(parser));
 
         while parser.current_token_is(&Token::Newline) {
@@ -17,10 +21,12 @@ pub fn parse_sequence(parser: &mut Parser, end_delim: Token) -> Ast {
         }
     }
 
-    Ast::sequence(
-        statements,
-        Span::combine(vec![&start_span, &parser.current_span()]),
-    )
+    let span = Span::combine(vec![&start_span, &parser.current_span()]);
+    if statements.is_empty() {
+        parser.diagnostics.borrow_mut().empty_block(&span);
+    }
+
+    Ast::sequence(statements, span)
 }
 
 pub fn parse_statement(parser: &mut Parser) -> Ast {
@@ -28,7 +34,13 @@ pub fn parse_statement(parser: &mut Parser) -> Ast {
 
     let stmt = match &token {
         Token::Let => parse_let(parser),
-        Token::Ident(ident) => parse_assignment(parser, (ident.to_owned(), span.clone())),
+        Token::Ident(name) => {
+            let pattern = Pattern {
+                name: name.to_owned(),
+                span,
+            };
+            parse_assignment(parser, pattern)
+        }
         Token::If => parse_if(parser),
         Token::While => parse_while(parser),
         _ => {
@@ -59,13 +71,24 @@ pub fn parse_let(parser: &mut Parser) -> Ast {
     //let ident = Ident::parse(parser);
     // Temp solution to seperate assignment from refernece. do this properly later...
     let start_span = parser.current_span();
-    let pattern = match &parser.current_token() {
-        Token::Ident(value) => (value.to_owned(), start_span.to_owned()),
-        value => unimplemented!("Unexpected token {:?}", value),
+    let name = match &parser.current_token() {
+        Token::Ident(value) => value.to_owned(),
+        value => {
+            parser
+                .diagnostics
+                .borrow_mut()
+                .unexpected_token(value, &start_span);
+            return Ast::Error;
+        }
     };
     parser.step();
 
     parser.expect(Token::Assign);
+
+    let pattern = Pattern {
+        name,
+        span: start_span.clone(),
+    };
 
     let value = parse_expression(parser);
 
@@ -76,13 +99,14 @@ pub fn parse_let(parser: &mut Parser) -> Ast {
     )
 }
 
-pub fn parse_assignment(parser: &mut Parser, pattern: Ident) -> Ast {
+pub fn parse_assignment(parser: &mut Parser, pattern: Pattern) -> Ast {
     let start_span = parser.current_span();
     if !parser.expect_with_outcome(Token::Assign) {
         parser.step_until(&Token::SemiColon);
         return Ast::Error;
     }
 
+    println!("parse_let: {:?}", start_span);
     let value = parse_expression(parser);
 
     Ast::assignment(
@@ -177,7 +201,7 @@ pub fn parse_primary(parser: &mut Parser) -> Ast {
         Token::String(value) => Ast::string(value.to_owned(), span),
         Token::LParen => parse_group(parser),
         // Grammar: (identifier) => Token::Ident
-        Token::Ident(symbol) => Ast::variable((symbol.to_owned(), span.clone()), span),
+        Token::Ident(symbol) => Ast::variable(symbol.to_owned(), span),
         _ => panic!("Really shouldn't reach here, implement fatal error instead"),
     }
 }

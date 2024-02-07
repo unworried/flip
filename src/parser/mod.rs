@@ -81,7 +81,7 @@ impl<'a> Parser<'a> {
         if token != expected {
             self.diagnostics
                 .borrow_mut()
-                .unexpected_token(&expected, &token, &span);
+                .expected_token(&expected, &token, &span);
 
             return false;
         }
@@ -91,14 +91,13 @@ impl<'a> Parser<'a> {
 
     fn step_until(&mut self, token: &Token) {
         while !self.current_token_is(token) && !self.current_token_is(&Token::Eof) {
-            println!("{:?}", !self.current_token_is(&Token::Eof));
             self.step();
         }
     }
 
     fn expect_flush(&mut self) {
         if Span::difference(&self.current_token.1, &self.next_token.1) > 1 {
-            self.diagnostics.borrow_mut().unexpected_token(
+            self.diagnostics.borrow_mut().expected_token(
                 self.current_token(),
                 &Token::Whitespace,
                 &Span::new(self.current_token.1.end + 1, self.next_token.1.start - 1),

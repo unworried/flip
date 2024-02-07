@@ -1,13 +1,9 @@
 use crate::lexer::Token;
 use crate::parser::P;
+use crate::resolver::DefinitionId;
 use crate::span::Span;
 
-// For testing/debugging
-
-// TMp
-pub type DefinitionId = usize;
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Ast {
     Sequence(Sequence),
     Let(Definition), // Fix this
@@ -23,11 +19,10 @@ pub enum Ast {
 
 impl Ast {
     pub fn sequence(statements: Vec<Ast>, span: Span) -> Ast {
-        assert!(!statements.is_empty());
         Ast::Sequence(Sequence { statements, span })
     }
 
-    pub fn definition(pattern: Ident, value: Ast, span: Span) -> Ast {
+    pub fn definition(pattern: Pattern, value: Ast, span: Span) -> Ast {
         Ast::Let(Definition {
             id: None,
             pattern,
@@ -36,7 +31,7 @@ impl Ast {
         })
     }
 
-    pub fn assignment(pattern: Ident, value: Ast, span: Span) -> Ast {
+    pub fn assignment(pattern: Pattern, value: Ast, span: Span) -> Ast {
         Ast::Assignment(Definition {
             id: None,
             pattern,
@@ -100,35 +95,41 @@ impl Ast {
         })
     }
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Sequence {
     pub statements: Vec<Ast>,
     pub span: Span,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
+pub struct Pattern {
+    pub name: Ident,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone)]
 pub struct Definition {
     pub id: Option<DefinitionId>,
-    pub pattern: Ident,
+    pub pattern: Pattern,
     pub value: P<Ast>,
     pub span: Span,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct If {
     pub condition: P<Ast>,
     pub then: P<Ast>,
     pub span: Span,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct While {
     pub condition: P<Ast>,
     pub then: P<Ast>,
     pub span: Span,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Binary {
     pub op: BinOp,
     pub left: P<Ast>,
@@ -177,7 +178,7 @@ impl BinOp {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Unary {
     pub op: UnOp,
     pub operand: P<Ast>,
@@ -196,26 +197,26 @@ impl UnOp {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Literal {
     pub kind: LiteralKind,
     pub span: Span,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum LiteralKind {
     Int(u64),
     String(String),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Variable {
     pub pattern: Ident,
     pub definition: Option<DefinitionId>,
     pub span: Span,
 }
 
-pub type Ident = (String, Span);
+pub type Ident = String;
 
 /*#[derive(Debug)]
 pub struct Ast {

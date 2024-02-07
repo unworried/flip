@@ -69,7 +69,8 @@ impl AstDisplay {
 impl Visitor for AstDisplay {
     fn visit_definition(&mut self, def: &Definition) {
         self.add_statement_header("Declare");
-        self.result.push_str(&def.pattern.0);
+        //self.result.push_str(&format!("{}({:?})", def.pattern.name, def.id));
+        self.result.push_str(&def.pattern.name);
 
         self.indent += 1;
         self.add_expression_header("Expression");
@@ -80,7 +81,8 @@ impl Visitor for AstDisplay {
 
     fn visit_assignment(&mut self, def: &Definition) {
         self.add_statement_header("Assign");
-        self.result.push_str(&def.pattern.0);
+        //self.result.push_str(&format!("{}({:?})", def.pattern.name, def.id));
+        self.result.push_str(&def.pattern.name);
 
         self.indent += 1;
         self.add_expression_header("Expression");
@@ -117,7 +119,8 @@ impl Visitor for AstDisplay {
     }
 
     fn visit_variable(&mut self, var: &Variable) {
-        self.result.push_str(&var.pattern.0);
+        //self.result.push_str(&format!("{}({:?})", var.pattern, var.definition));
+        self.result.push_str(&var.pattern);
     }
 
     fn visit_while(&mut self, while_expr: &While) {
