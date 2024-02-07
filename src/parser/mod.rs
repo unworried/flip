@@ -1,12 +1,15 @@
 use core::mem;
 
 use self::ast::Ast;
+use self::combinators::parse_sequence;
 pub use self::ptr::*;
 use crate::diagnostics::DiagnosticsCell;
 use crate::lexer::{Lexer, Token};
 use crate::span::Span;
 
 pub mod ast;
+mod combinators;
+mod display;
 mod ptr;
 pub mod visitor;
 
@@ -43,7 +46,7 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse(&mut self) -> Ast {
-        Ast::parse(self, Token::Eof)
+        parse_sequence(self, Token::Eof)
     }
 
     pub fn step(&mut self) {
@@ -89,8 +92,8 @@ impl<'a> Parser<'a> {
         &self.current_token.0 == token
     }
 
-    pub fn current_span(&self) -> &Span {
-        &self.current_token.1
+    pub fn current_span(&self) -> Span {
+        self.current_token.1.clone()
     }
 
     pub fn next_token(&self) -> &Token {

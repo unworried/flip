@@ -14,7 +14,7 @@ pub enum Token {
     Whitespace,
 
     // Literals
-    Int(isize),
+    Int(u64),
     String(String),
 
     /// Operators

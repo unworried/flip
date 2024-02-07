@@ -1,6 +1,6 @@
-use super::ast::statement::Local;
 use super::ast::{
-    Ast, BinOp, Expr, ExprKind, Ident, Item, ItemKind, Literal, Stmt, StmtKind, UnOp,
+    Ast, BinOp, Binary, Definition, Ident, If, Literal, LiteralKind, Sequence, Unary, Variable,
+    While,
 };
 
 pub trait Walkable {
@@ -9,132 +9,66 @@ pub trait Walkable {
 
 pub trait Visitor: Sized {
     fn visit_ast(&mut self, ast: &Ast) {
-        for item in &ast.items {
-            item.walk(self);
-        }
+        ast.walk(self);
     }
 
-    fn visit_item(&mut self, item: &Item) {
-        item.walk(self);
+    fn visit_sequence(&mut self, seq: &Sequence) {
+        seq.statements.iter().for_each(|stmt| stmt.walk(self));
     }
 
-    fn visit_item_kind(&mut self, kind: &ItemKind) {
-        kind.walk(self);
+    fn visit_binary(&mut self, bin: &Binary) {
+        bin.left.walk(self);
+        bin.right.walk(self);
     }
 
-    fn visit_stmt(&mut self, stmt: &Stmt) {
-        stmt.walk(self);
+    fn visit_unary(&mut self, un: &Unary) {
+        un.oprand.walk(self);
     }
 
-    fn visit_stmt_kind(&mut self, stmt: &StmtKind) {
-        stmt.walk(self);
+    fn visit_literal(&mut self, lit: &Literal) {}
+
+    fn visit_definition(&mut self, def: &Definition) {
+        def.pattern.walk(self);
+        def.value.walk(self);
     }
 
-    fn visit_expr(&mut self, expr: &Expr) {
-        expr.walk(self);
+    fn visit_assignment(&mut self, def: &Definition) {
+        def.pattern.walk(self);
+        def.value.walk(self);
     }
 
-    fn visit_expr_kind(&mut self, expr: &ExprKind) {
-        expr.walk(self);
+    fn visit_if(&mut self, if_expr: &If) {
+        if_expr.condition.walk(self);
+        if_expr.then.walk(self);
     }
 
-    fn visit_binary(&mut self, _op: &BinOp, lhs: &Expr, rhs: &Expr) {
-        lhs.walk(self);
-        rhs.walk(self);
+    fn visit_while(&mut self, while_expr: &While) {
+        while_expr.condition.walk(self);
+        while_expr.then.walk(self);
     }
 
-    fn visit_unary(&mut self, _op: &UnOp, expr: &Expr) {
-        expr.walk(self);
-    }
-
-    fn visit_literal(&mut self, lit: &Literal) {
-        lit.walk(self);
-    }
-
-    fn visit_declaration(&mut self, local: &Local) {
-        self.visit_local(local);
-    }
-
-    fn visit_assignment(&mut self, local: &Local) {
-        self.visit_local(local);
-    }
-
-    fn visit_local(&mut self, local: &Local) {
-        local.init.ptr.walk(self);
-    }
-
-    fn visit_variable(&mut self, _ident: &Ident) {}
+    fn visit_variable(&mut self, _var: &Variable) {}
 }
 
-impl Walkable for Item {
-    fn walk<V: Visitor>(&self, visitor: &mut V) {
-        visitor.visit_item_kind(&self.kind);
-    }
-}
-
-impl Walkable for ItemKind {
+impl Walkable for Ast {
     fn walk<V: Visitor>(&self, visitor: &mut V) {
         match &self {
-            ItemKind::Statement(stmt) => visitor.visit_stmt(stmt),
+            Ast::Sequence(seq) => visitor.visit_sequence(seq),
+            Ast::Let(def) => visitor.visit_definition(def),
+            Ast::Assignment(def) => visitor.visit_assignment(def),
+            Ast::If(if_expr) => visitor.visit_if(if_expr),
+            Ast::While(while_expr) => visitor.visit_while(while_expr),
+            Ast::Literal(lit) => visitor.visit_literal(lit),
+            Ast::Binary(bin) => visitor.visit_binary(bin),
+            Ast::Unary(un) => visitor.visit_unary(un),
+            Ast::Variable(var) => visitor.visit_variable(var),
+            Ast::Error => {}
         }
     }
 }
 
-impl Walkable for Stmt {
-    fn walk<V: Visitor>(&self, visitor: &mut V) {
-        visitor.visit_stmt_kind(&self.kind);
-    }
-}
-
-impl Walkable for StmtKind {
-    fn walk<V: Visitor>(&self, visitor: &mut V) {
-        match &self {
-            StmtKind::If(cond, res) => {
-                visitor.visit_expr(cond);
-                for item in res {
-                    visitor.visit_item(item);
-                }
-            }
-            StmtKind::While(cond, res) => {
-                visitor.visit_expr(cond);
-                for item in res {
-                    visitor.visit_item(item);
-                }
-            }
-            StmtKind::Let(local) => {
-                visitor.visit_declaration(&local.ptr);
-            }
-            StmtKind::Assignment(local) => {
-                visitor.visit_assignment(&local.ptr);
-            }
-            StmtKind::Error => {}
-        }
-    }
-}
-
-impl Walkable for Expr {
-    fn walk<V: Visitor>(&self, visitor: &mut V) {
-        visitor.visit_expr_kind(&self.kind);
-    }
-}
-
-impl Walkable for ExprKind {
-    fn walk<V: Visitor>(&self, visitor: &mut V) {
-        match &self {
-            ExprKind::Literal(value) => visitor.visit_literal(value),
-            ExprKind::Binary(op, lhs, rhs) => visitor.visit_binary(op, &lhs.ptr, &rhs.ptr),
-            ExprKind::Unary(op, expr) => visitor.visit_unary(op, &expr.ptr),
-            ExprKind::Variable(ident) => visitor.visit_variable(ident),
-            ExprKind::Error => {}
-        }
-    }
-}
-
-impl Walkable for Literal {
+impl Walkable for Ident {
     fn walk<V: Visitor>(&self, _visitor: &mut V) {
-        match &self {
-            Literal::String(_string) => {}
-            Literal::Integer(_int) => {}
-        }
+        // Do nothing
     }
 }

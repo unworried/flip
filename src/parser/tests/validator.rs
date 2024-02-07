@@ -1,6 +1,8 @@
 use crate::diagnostics::DiagnosticBag;
 use crate::lexer::Lexer;
-use crate::parser::ast::{Ast, ExprKind, Literal, StmtKind};
+use crate::parser::ast::{
+    Ast, Binary, Definition, If, Literal, LiteralKind, Unary, Variable, While,
+};
 use crate::parser::visitor::{Visitor, Walkable};
 use crate::parser::Parser;
 
@@ -14,7 +16,7 @@ pub enum ASTNode {
     If,
     While,
     Let,
-    Integer(isize),
+    Integer(u64),
     String(String),
     Binary,
     Unary,
@@ -47,6 +49,8 @@ impl AstValidator {
     }
 
     pub fn validate(&self) {
+        println!("{:?}", self.actual);
+        println!("{:?}", self.expected);
         assert_eq!(
             self.expected.len(),
             self.actual.len(),
@@ -66,58 +70,51 @@ impl AstValidator {
 }
 
 impl Visitor for AstValidator {
-    fn visit_stmt_kind(&mut self, node: &StmtKind) {
-        match &node {
-            StmtKind::If(cond, res) => {
-                self.actual.push(ASTNode::If);
-                cond.walk(self);
-                for item in res {
-                    item.walk(self);
-                }
-            }
-            StmtKind::While(cond, res) => {
-                self.actual.push(ASTNode::While);
-                cond.walk(self);
-                for item in res {
-                    item.walk(self);
-                }
-            }
-            StmtKind::Let(local) => {
-                self.actual.push(ASTNode::Let);
-                self.actual
-                    .push(ASTNode::Variable(local.pattern.0.to_owned()));
-                local.ptr.init.ptr.walk(self);
-            }
-            StmtKind::Assignment(local) => {
-                self.actual
-                    .push(ASTNode::Variable(local.pattern.0.to_owned()));
-                local.ptr.init.ptr.walk(self);
-            }
-            StmtKind::Error => {}
-        }
+    fn visit_binary(&mut self, bin: &Binary) {
+        self.actual.push(ASTNode::Binary);
+        bin.left.walk(self);
+        bin.right.walk(self);
     }
 
-    fn visit_expr_kind(&mut self, node: &ExprKind) {
-        match &node {
-            ExprKind::Binary(.., lhs, rhs) => {
-                self.actual.push(ASTNode::Binary);
-                lhs.ptr.walk(self);
-                rhs.ptr.walk(self);
-            }
-            ExprKind::Unary(.., int) => {
-                self.actual.push(ASTNode::Unary);
-                int.ptr.walk(self);
-            }
-            ExprKind::Literal(value) => self.visit_literal(value),
-            ExprKind::Variable(ident) => self.actual.push(ASTNode::Variable(ident.0.to_owned())),
-            ExprKind::Error => {}
-        }
+    fn visit_unary(&mut self, un: &Unary) {
+        self.actual.push(ASTNode::Unary);
+        un.oprand.walk(self);
+    }
+
+    fn visit_definition(&mut self, def: &Definition) {
+        self.actual.push(ASTNode::Let);
+        self.actual
+            .push(ASTNode::Variable(def.pattern.0.to_owned()));
+        def.value.walk(self);
+    }
+
+    fn visit_assignment(&mut self, def: &Definition) {
+        self.actual
+            .push(ASTNode::Variable(def.pattern.0.to_owned()));
+        def.value.walk(self);
+    }
+
+    fn visit_variable(&mut self, var: &Variable) {
+        self.actual
+            .push(ASTNode::Variable(var.pattern.0.to_owned()));
+    }
+
+    fn visit_if(&mut self, if_expr: &If) {
+        self.actual.push(ASTNode::If);
+        if_expr.condition.walk(self);
+        if_expr.then.walk(self);
+    }
+
+    fn visit_while(&mut self, while_expr: &While) {
+        self.actual.push(ASTNode::While);
+        while_expr.condition.walk(self);
+        while_expr.then.walk(self);
     }
 
     fn visit_literal(&mut self, lit: &Literal) {
-        match &lit {
-            Literal::Integer(int) => self.actual.push(ASTNode::Integer(int.to_owned())),
-            Literal::String(string) => self.actual.push(ASTNode::String(string.to_owned())),
+        match &lit.kind {
+            LiteralKind::Int(int) => self.actual.push(ASTNode::Integer(int.to_owned())),
+            LiteralKind::String(string) => self.actual.push(ASTNode::String(string.to_owned())),
         }
     }
 }

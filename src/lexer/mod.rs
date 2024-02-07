@@ -128,7 +128,7 @@ impl Lexer {
     }
 
     /// Reads an integer input and returns it.
-    fn read_integer(&mut self) -> isize {
+    fn read_integer(&mut self) -> u64 {
         let mut integer = String::new();
 
         loop {
