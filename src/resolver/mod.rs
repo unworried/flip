@@ -19,6 +19,7 @@ use crate::diagnostics::DiagnosticsCell;
 use crate::parser::ast::{Ast, Definition, Variable};
 
 //pub mod evaluator;
+mod bound_ast;
 mod scope;
 
 pub trait ResolveVisitor {
@@ -133,7 +134,7 @@ impl ResolveVisitor for Definition {
             .expect("callstack should not be empty")
             .define_symbol(&self.pattern.name.clone(), id);
 
-        self.value.define(resolver);
+        //self.value.define(resolver);
     }
 }
 
