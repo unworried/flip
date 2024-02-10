@@ -16,8 +16,8 @@ fn main() {
     //let line = r#"let x = 4; x = 5; let y = 6; x = y;"#;
     //let line = r#"djaindahbdjhbajhb dhjbajh bdjhbah bdhjab hjbdhjbah jbdjhab dhjbajh bdhabh jdbhja bdjhbajhdbajhdbjhdb"#;
     //let line = r#"let x = 45+41*(4+3); x = 5 + 2; let y = -x;"#;
-    //let line = r#"let x = 4; let y=x; x = y; x = 7; y = x;"#;
-    let line = r#"let x = 1; x = x + 1;"#;
+    let line = r#"let x = 4; let y=x; x = y; x = 7; y = x;"#;
+    //let line = r#"let x = 1; x = x + 1;"#;
     //let line = "while \"TMP\" { \nlet x = \"hello, world!\"; \nlet y = \"hello, world 2!\"; \nlet z = \"hello, world 3!\"; \n };";
     match frontend::check(line) {
         Ok(_) => println!("No errors found"),

@@ -20,10 +20,12 @@ pub fn check(input: &str) -> Result<()> {
 
     let nameres = NameResolver::new(diagnostics.clone());
     let st = nameres.resolve(&mut root);
-    println!("{:#?}", st);
+    println!("{:?}", st);
 
     println!();
     println!("{}", root);
+    println!();
+
 
     #[cfg(test)]
     assert!(diagnostics.borrow().diagnostics.is_empty());

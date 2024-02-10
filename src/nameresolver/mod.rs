@@ -19,7 +19,6 @@ use crate::diagnostics::DiagnosticsCell;
 use crate::parser::ast::{Assignment, Ast, Definition, Pattern, Variable};
 use crate::parser::P;
 
-//pub mod evaluator;
 mod scope;
 
 pub trait ResolveVisitor {
