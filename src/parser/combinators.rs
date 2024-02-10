@@ -105,7 +105,6 @@ pub fn parse_assignment(parser: &mut Parser, pattern: Pattern) -> Ast {
         return Ast::Error;
     }
 
-    println!("parse_let: {:?}", start_span);
     let value = parse_expression(parser);
 
     Ast::assignment(

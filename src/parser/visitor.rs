@@ -1,4 +1,4 @@
-use super::ast::{Ast, Binary, Definition, Ident, If, Literal, Sequence, Unary, Variable, While};
+use super::ast::{Assignment, Ast, Binary, Definition, Ident, If, Literal, Sequence, Unary, Variable, While};
 
 pub trait Walkable {
     fn walk<V: Visitor>(&self, visitor: &mut V);
@@ -22,14 +22,14 @@ pub trait Visitor: Sized {
         un.operand.walk(self);
     }
 
-    fn visit_literal(&mut self, lit: &Literal) {}
+    fn visit_literal(&mut self, _lit: &Literal) {}
 
     fn visit_definition(&mut self, def: &Definition) {
         def.pattern.name.walk(self);
         def.value.walk(self);
     }
 
-    fn visit_assignment(&mut self, def: &Definition) {
+    fn visit_assignment(&mut self, def: &Assignment) {
         def.pattern.name.walk(self);
         def.value.walk(self);
     }
@@ -51,7 +51,7 @@ impl Walkable for Ast {
     fn walk<V: Visitor>(&self, visitor: &mut V) {
         match &self {
             Ast::Sequence(seq) => visitor.visit_sequence(seq),
-            Ast::Let(def) => visitor.visit_definition(def),
+            Ast::Definition(def) => visitor.visit_definition(def),
             Ast::Assignment(def) => visitor.visit_assignment(def),
             Ast::If(if_expr) => visitor.visit_if(if_expr),
             Ast::While(while_expr) => visitor.visit_while(while_expr),

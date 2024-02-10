@@ -4,8 +4,8 @@
 use crate::diagnostics::DiagnosticBag;
 use crate::error::Result;
 use crate::lexer::Lexer;
+use crate::nameresolver::NameResolver;
 use crate::parser::Parser;
-use crate::resolver::NameResolver;
 use crate::source::Source;
 
 pub fn check(input: &str) -> Result<()> {
@@ -18,8 +18,10 @@ pub fn check(input: &str) -> Result<()> {
 
     let mut root = parser.parse();
 
-    let mut resolver = NameResolver::new(diagnostics.clone());
-    resolver.resolve(&mut root);
+    let nameres = NameResolver::new(diagnostics.clone());
+    let st = nameres.resolve(&mut root);
+    println!("{:#?}", st);
+
     println!();
     println!("{}", root);
 

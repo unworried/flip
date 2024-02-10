@@ -31,6 +31,7 @@
 - [ ] Types
     - Should they be strict?
 - [ ] functions
+- [ ] Looking Into Alpha Conversion and Beta Reduction
 
 
 - [ ] Does ast need lifetimes for resolver?
@@ -38,3 +39,7 @@
 - [ ] Include global long lived cache??
 
 - [ ] Fix spans so they require less clones
+
+
+- Backtrack Ast to convert Ast => BoundAst
+    - Meaning do expr before batern on def

@@ -1,7 +1,7 @@
 use alloc::string::String;
 use core::fmt::{Display, Formatter, Result};
 
-use super::ast::{Ast, Binary, Definition, If, Literal, LiteralKind, Unary, Variable, While};
+use super::ast::{Assignment, Ast, Binary, Definition, If, Literal, LiteralKind, Unary, Variable, While};
 use super::visitor::{Visitor, Walkable};
 use crate::escape_codes::Color;
 
@@ -78,7 +78,7 @@ impl Visitor for AstDisplay {
         self.indent -= 1;
     }
 
-    fn visit_assignment(&mut self, def: &Definition) {
+    fn visit_assignment(&mut self, def: &Assignment) {
         self.add_statement_header("Assign");
         //self.result.push_str(&format!("{}({:?})", def.pattern.name, def.id));
         self.result.push_str(&def.pattern.name);

@@ -1,7 +1,7 @@
 use crate::diagnostics::DiagnosticBag;
 use crate::lexer::Lexer;
 use crate::parser::ast::{
-    Ast, Binary, Definition, If, Literal, LiteralKind, Unary, Variable, While,
+    Assignment, Ast, Binary, Definition, If, Literal, LiteralKind, Unary, Variable, While
 };
 use crate::parser::visitor::{Visitor, Walkable};
 use crate::parser::Parser;
@@ -88,7 +88,7 @@ impl Visitor for AstValidator {
         def.value.walk(self);
     }
 
-    fn visit_assignment(&mut self, def: &Definition) {
+    fn visit_assignment(&mut self, def: &Assignment) {
         self.actual
             .push(ASTNode::Variable(def.pattern.name.to_owned()));
         def.value.walk(self);

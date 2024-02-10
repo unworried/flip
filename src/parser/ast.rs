@@ -1,12 +1,13 @@
 use crate::lexer::Token;
+use crate::nameresolver::DefinitionId;
 use crate::parser::P;
 use crate::span::Span;
 
 #[derive(Debug, Clone)]
 pub enum Ast {
     Sequence(Sequence),
-    Let(Definition), // Fix this
-    Assignment(Definition),
+    Definition(Definition),
+    Assignment(Assignment),
     If(If), // WARN: When funcs are added. need to change this to only allow stmts
     While(While),
     Binary(Binary),
@@ -22,7 +23,7 @@ impl Ast {
     }
 
     pub fn definition(pattern: Pattern, value: Ast, span: Span) -> Ast {
-        Ast::Let(Definition {
+        Ast::Definition(Definition {
             pattern,
             value: P(value),
             span,
@@ -30,7 +31,7 @@ impl Ast {
     }
 
     pub fn assignment(pattern: Pattern, value: Ast, span: Span) -> Ast {
-        Ast::Assignment(Definition {
+        Ast::Assignment(Assignment {
             pattern,
             value: P(value),
             span,
@@ -86,6 +87,7 @@ impl Ast {
 
     pub fn variable(pattern: Ident, span: Span) -> Ast {
         Ast::Variable(Variable {
+            definition: None,
             pattern,
             span,
         })
@@ -105,6 +107,13 @@ pub struct Pattern {
 
 #[derive(Debug, Clone)]
 pub struct Definition {
+    pub pattern: Pattern,
+    pub value: P<Ast>,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone)]
+pub struct Assignment {
     pub pattern: Pattern,
     pub value: P<Ast>,
     pub span: Span,
@@ -206,9 +215,9 @@ pub enum LiteralKind {
 
 #[derive(Debug, Clone)]
 pub struct Variable {
+    pub definition: Option<DefinitionId>,
     pub pattern: Ident,
     pub span: Span,
 }
 
 pub type Ident = String;
-
