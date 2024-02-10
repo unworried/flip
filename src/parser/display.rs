@@ -1,7 +1,9 @@
 use alloc::string::String;
 use core::fmt::{Display, Formatter, Result};
 
-use super::ast::{Assignment, Ast, Binary, Definition, If, Literal, LiteralKind, Unary, Variable, While};
+use super::ast::{
+    Assignment, Ast, Binary, Definition, If, Literal, LiteralKind, Unary, Variable, While,
+};
 use super::visitor::{Visitor, Walkable};
 use crate::escape_codes::Color;
 

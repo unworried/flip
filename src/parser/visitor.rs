@@ -1,4 +1,6 @@
-use super::ast::{Assignment, Ast, Binary, Definition, Ident, If, Literal, Sequence, Unary, Variable, While};
+use super::ast::{
+    Assignment, Ast, Binary, Definition, Ident, If, Literal, Sequence, Unary, Variable, While,
+};
 
 pub trait Walkable {
     fn walk<V: Visitor>(&self, visitor: &mut V);

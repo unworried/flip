@@ -1,7 +1,7 @@
 use crate::diagnostics::DiagnosticBag;
 use crate::lexer::Lexer;
 use crate::parser::ast::{
-    Assignment, Ast, Binary, Definition, If, Literal, LiteralKind, Unary, Variable, While
+    Assignment, Ast, Binary, Definition, If, Literal, LiteralKind, Unary, Variable, While,
 };
 use crate::parser::visitor::{Visitor, Walkable};
 use crate::parser::Parser;
