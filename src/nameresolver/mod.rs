@@ -58,7 +58,6 @@ impl NameResolver {
     fn check_references(&self) {
         for def in self.symbol_table.iter() {
             if def.uses == 0 {
-                // TODO: Fix so only pattern is underlined
                 self.diagnostics
                     .borrow_mut()
                     .unused_variable(&def.pattern.name, &def.pattern.span);
