@@ -96,7 +96,7 @@ mod tests {
         assert_eq!(1 * 2, 2);
         assert_eval("let x = 1 * 2;", 2.0);
         assert_eq!(2 / 1, 2);
-        assert_eval("let x = 1 / 2;", 0.0);
+        assert_eval("let x = 1 / 2;", 0.5);
     }
 
     #[test]
@@ -146,16 +146,8 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn divide_by_zero() {
-        let input = "let x = 7 / (3 - 3);";
-        let mut lexer = crate::lexer::Lexer::new(input.to_string());
-        let diagnostics = DiagnosticBag::new();
-        let mut parser = Parser::new(&mut lexer, diagnostics);
-        let program = parser.parse();
-        let mut evaluator = Evaluator::default();
-        evaluator.visit_ast(&program);
-        println!("{}", program);
+        assert_eval("let x = 7 / (3 - 3);", std::f64::INFINITY);
     }
 
     #[test]
