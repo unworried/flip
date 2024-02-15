@@ -26,7 +26,6 @@ pub fn check(input: &str) -> Result<()> {
     println!("{}", root);
     println!();
 
-
     #[cfg(test)]
     assert!(diagnostics.borrow().diagnostics.is_empty());
 
