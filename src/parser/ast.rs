@@ -105,7 +105,7 @@ pub struct Pattern {
     pub span: Span,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone)] // Convert to unbound and bound trees instead
 pub struct Definition {
     pub pattern: Pattern,
     pub value: P<Ast>,
