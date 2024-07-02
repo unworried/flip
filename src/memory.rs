@@ -26,6 +26,16 @@ pub trait Addressable {
         }
         true
     }
+
+    fn load_from_vec(&mut self, from: &[u8], addr: u16) -> bool {
+        for (i, b) in from.iter().enumerate() {
+            if !self.write(addr + (i as u16), *b) {
+                return false;
+            }
+        }
+
+        true
+    }
 }
 
 pub struct LinearMemory {
