@@ -7,8 +7,21 @@ pub fn generate_vm_instruction_impl(input: TokenStream) -> TokenStream {
     impl_opcode(&ast)
 }
 
+fn get_type_name(ty: &syn::Type) -> String {
+    if let syn::Type::Path(p) = ty {
+        p.path
+            .segments
+            .iter()
+            .map(|s| s.ident.to_string())
+            .collect()
+    } else {
+        panic!("unsupported type");
+    }
+}
+
 fn impl_opcode(ast: &syn::ItemEnum) -> TokenStream {
     let field_names: Vec<_> = ast.variants.iter().map(|variant| &variant.ident).collect();
+
     let field_values = ast.variants.iter().map(|variant| {
         for attr in variant.attrs.iter() {
             if attr.path().is_ident("opcode") {
@@ -18,6 +31,40 @@ fn impl_opcode(ast: &syn::ItemEnum) -> TokenStream {
         }
         syn::parse(quote! { 0 }.into()).unwrap()
     });
+
+    let field_u16_encoding: Vec<_> = ast
+        .variants
+        .iter()
+        .map(|variant| {
+            let name = &variant.ident;
+
+            if let syn::Fields::Unit = &variant.fields {
+                return quote! { Self::#name => OpCode::#name as u16 };
+            }
+
+            if let syn::Fields::Unnamed(fields) = &variant.fields {
+                let types: Vec<_> = fields.unnamed.iter().map(|f| &f.ty).collect();
+                if types.len() == 1 && get_type_name(types[0]) == "u8" {
+                    quote! { Self::#name(u) => OpCode::#name as u16 | ((*u as u16) << 8) }
+                } else if types.len() == 1 && get_type_name(types[0]) == "Register" {
+                    quote! { Self::#name(r) => OpCode::#name as u16 | (((*r as u16) & 0xf) << 8) }
+                } else if types.len() == 2
+                    && get_type_name(types[0]) == "Register"
+                    && get_type_name(types[1]) == "Register"
+                {
+                    quote! {
+                        Self::#name(r1, r2) => OpCode::#name as u16 | (((*r1 as u16) & 0xf) << 8)
+                            | (((*r2 as u16) & 0xf) << 12)
+                    }
+                } else {
+                    panic!("oh oh");
+                }
+            } else {
+                panic!("fields must be unnamed in variant: {}", name);
+            }
+        })
+        .collect();
+
     quote! {
         #[repr(u8)]
         #[derive(Debug)]
@@ -43,6 +90,29 @@ fn impl_opcode(ast: &syn::ItemEnum) -> TokenStream {
                 match b {
                     #(x if x == Self::#field_names as u8 => Ok(Self::#field_names),)*
                     _ => Err(format!("unknown opcode: {:X}", b)),
+                }
+            }
+        }
+
+        impl Instruction {
+            fn encode_r1(r: Register) -> u16 {
+                (r as u16) & 0xf << 8
+            }
+            fn encode_r2(r: Register) -> u16 {
+                (r as u16) & 0xf << 12
+            }
+
+            fn encode_num(u: u8) -> u16 {
+                (u as u16) << 8
+            }
+
+            fn encode_rs(r1: Register, r2: Register) -> u16 {
+                Self::encode_r1(r1) | Self::encode_r2(r2)
+            }
+
+            pub fn encode_u16(&self) -> u16 {
+                match self {
+                    #(#field_u16_encoding,)*
                 }
             }
         }
