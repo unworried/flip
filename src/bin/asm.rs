@@ -23,6 +23,7 @@ fn main() -> Result<(), String> {
             output.push(b);
         }
     }
+
     let mut stdout = stdout().lock();
     stdout.write_all(&output).map_err(|e| format!("{}", e))?;
     Ok(())
