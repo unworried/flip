@@ -104,37 +104,3 @@ impl TryFrom<u16> for Instruction {
         }
     }
 }
-
-impl FromStr for OpCode {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "Nop" => Ok(OpCode::Nop),
-            "Push" => Ok(OpCode::Push),
-            "PopRegister" => Ok(OpCode::PopRegister),
-            "PushRegister" => Ok(OpCode::PushRegister),
-            "Signal" => Ok(OpCode::Signal),
-            "AddStack" => Ok(OpCode::AddStack),
-            "AddRegister" => Ok(OpCode::AddRegister),
-            _ => Err(format!("unknown opcode: {}", s)),
-        }
-    }
-}
-
-impl TryFrom<u8> for OpCode {
-    type Error = String;
-
-    fn try_from(b: u8) -> Result<Self, Self::Error> {
-        match b {
-            x if x == OpCode::Nop as u8 => Ok(OpCode::Nop),
-            x if x == OpCode::Push as u8 => Ok(OpCode::Push),
-            x if x == OpCode::PopRegister as u8 => Ok(OpCode::PopRegister),
-            x if x == OpCode::PushRegister as u8 => Ok(OpCode::PushRegister),
-            x if x == OpCode::Signal as u8 => Ok(OpCode::Signal),
-            x if x == OpCode::AddStack as u8 => Ok(OpCode::AddStack),
-            x if x == OpCode::AddRegister as u8 => Ok(OpCode::AddRegister),
-            _ => Err(format!("unknown opcode: {:X}", b)),
-        }
-    }
-}
