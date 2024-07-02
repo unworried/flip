@@ -1,4 +1,4 @@
-pub mod vm;
 mod memory;
+mod vm;
 
-pub use vm::Machine;
+pub use vm::{Machine, Register};
