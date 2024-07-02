@@ -1,4 +1,7 @@
 mod memory;
+pub mod op;
+mod register;
 mod vm;
 
-pub use vm::{Instruction, Machine, OpCode, Register};
+pub use register::Register;
+pub use vm::Machine;

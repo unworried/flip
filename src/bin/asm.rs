@@ -1,9 +1,11 @@
+use rust_vm::op::Instruction;
+use rust_vm::op::OpCode;
 use std::env;
 use std::fs::File;
 use std::io::{stdout, BufRead, BufReader, Write};
 use std::path::Path;
 
-use rust_vm::{Instruction, OpCode, Register};
+use rust_vm::Register;
 
 // ./asm <input>
 fn main() -> Result<(), String> {
