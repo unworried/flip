@@ -43,22 +43,30 @@ fn impl_opcode(ast: &syn::ItemEnum) -> TokenStream {
             }
 
             if let syn::Fields::Unnamed(fields) = &variant.fields {
-                let types: Vec<_> = fields.unnamed.iter().map(|f| &f.ty).collect();
-                if types.len() == 1 && get_type_name(types[0]) == "u8" {
-                    quote! { Self::#name(u) => OpCode::#name as u16 | ((*u as u16) << 8) }
-                } else if types.len() == 1 && get_type_name(types[0]) == "Register" {
-                    quote! { Self::#name(r) => OpCode::#name as u16 | (((*r as u16) & 0xf) << 8) }
-                } else if types.len() == 2
-                    && get_type_name(types[0]) == "Register"
-                    && get_type_name(types[1]) == "Register"
-                {
-                    quote! {
-                        Self::#name(r1, r2) => OpCode::#name as u16 | (((*r1 as u16) & 0xf) << 8)
-                            | (((*r2 as u16) & 0xf) << 12)
+                let types: Vec<_> = fields
+                    .unnamed
+                    .iter()
+                    .map(|f| get_type_name(&f.ty))
+                    .collect();
+                
+                let str_types: Vec<&str> = types.iter().map(AsRef::as_ref).collect();
+                match &str_types[..] {
+                    ["u8"] => {
+                        quote! { Self::#name(u) => OpCode::#name as u16 | ((*u as u16) << 8) }
                     }
-                } else {
-                    panic!("oh oh");
+                    ["Register"] => { 
+                        quote! { Self::#name(r) => OpCode::#name as u16 | (((*r as u16) & 0xf) << 8) }
+                    }
+                    
+                    ["Register", "Register"] => {
+                        quote! {
+                            Self::#name(r1, r2) => OpCode::#name as u16 | (((*r1 as u16) & 0xf) << 8)
+                                | (((*r2 as u16) & 0xf) << 12)
+                        }
+                    }
+                    _ => panic!("invalid types: {:?}", types),
                 }
+
             } else {
                 panic!("fields must be unnamed in variant: {}", name);
             }
