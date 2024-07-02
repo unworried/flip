@@ -26,6 +26,7 @@ impl Machine {
     pub fn step(&mut self) -> Result<(), String> {
         let pc = self.registers[Register::PC as usize];
         let instruction = self.memory.read2(pc).unwrap();
+        self.registers[Register::PC as usize] = pc + 2;
         println!("{} @ {}", instruction, pc);
         Ok(())
     }
