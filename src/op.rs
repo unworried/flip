@@ -1,19 +1,28 @@
 use std::str::FromStr;
 
+use macros::VmInstruction;
+
 use crate::Register;
 
 // 0 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 0
 // OPERATOR        | ARG/S
 //                 | 8bit literal
 //                 | REG1  | REG2
-#[derive(Debug)]
+#[derive(Debug, VmInstruction)]
 pub enum Instruction {
+    #[opcode(0x0)]
     Nop,
+    #[opcode(0x1)]
     Push(u8),
+    #[opcode(0x2)]
     PopRegister(Register),
+    #[opcode(0x3)]
     PushRegister(Register),
+    #[opcode(0x20)]
     AddStack,
+    #[opcode(0x21)]
     AddRegister(Register, Register),
+    #[opcode(0xf0)]
     Signal(u8),
 }
 
@@ -94,18 +103,6 @@ impl TryFrom<u16> for Instruction {
             }
         }
     }
-}
-
-#[repr(u8)]
-#[derive(Debug)]
-pub enum OpCode {
-    Nop = 0x0,
-    Push = 0x1,
-    PopRegister = 0x2,
-    PushRegister = 0x3,
-    Signal = 0x0f,
-    AddStack = 0x10,
-    AddRegister = 0x11,
 }
 
 impl FromStr for OpCode {

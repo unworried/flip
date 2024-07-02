@@ -29,13 +29,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rust-vm"
-version = "0.1.0"
-dependencies = [
- "macros",
-]
-
-[[package]]
 name = "syn"
 version = "2.0.68"
 source = "registry+https://github.com/rust-lang/crates.io-index"
