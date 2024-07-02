@@ -10,9 +10,15 @@ enum Register {
     Flags,
 }
 
+#[repr(u8)]
+enum Op {
+    Nop,
+}
+
 pub struct Machine {
     registers: [u16; 8],
-    memory: Box<dyn Addressable>,
+    // TODO: Change This
+    pub memory: Box<dyn Addressable>,
 }
 
 impl Machine {
@@ -27,7 +33,11 @@ impl Machine {
         let pc = self.registers[Register::PC as usize];
         let instruction = self.memory.read2(pc).unwrap();
         self.registers[Register::PC as usize] = pc + 2;
-        println!("{} @ {}", instruction, pc);
-        Ok(())
+
+        let op = (instruction & 0xff) as u8;
+        match op {
+            x if x == Op::Nop as u8 => Ok(()),
+            _ => Err(format!("unknown operator 0x{:X}", op)),
+        }
     }
 }
