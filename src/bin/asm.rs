@@ -4,6 +4,7 @@ use std::env;
 use std::fs::File;
 use std::io::{stdout, BufRead, BufReader, Write};
 use std::path::Path;
+use std::str::FromStr;
 
 use rust_vm::Register;
 
@@ -43,8 +44,12 @@ fn main() -> Result<(), String> {
 }
 
 fn handle_line(parts: Vec<&str>) -> Result<Instruction, String> {
-    let opcode = OpCode::from_str(parts[0]).ok_or(format!("unknown opcode: {}", parts[0]))?;
+    let opcode = OpCode::from_str(parts[0])?;
     match opcode {
+        OpCode::Nop => {
+            assert_length(&parts, 1)?;
+            Ok(Instruction::Nop)
+        }
         OpCode::Push => {
             assert_length(&parts, 2)?;
             Ok(Instruction::Push(parse_numeric(parts[1])?))
@@ -52,6 +57,10 @@ fn handle_line(parts: Vec<&str>) -> Result<Instruction, String> {
         OpCode::PopRegister => {
             assert_length(&parts, 2)?;
             Ok(Instruction::PopRegister(parse_register(parts[1])?))
+        }
+        OpCode::PushRegister => {
+            assert_length(&parts, 2)?;
+            Ok(Instruction::PushRegister(parse_register(parts[1])?))
         }
         OpCode::Signal => {
             assert_length(&parts, 2)?;
@@ -61,7 +70,13 @@ fn handle_line(parts: Vec<&str>) -> Result<Instruction, String> {
             assert_length(&parts, 1)?;
             Ok(Instruction::AddStack)
         }
-        _ => Err(format!("unimplemented opcode: {}", parts[0])),
+        OpCode::AddRegister => {
+            assert_length(&parts, 3)?;
+            Ok(Instruction::AddRegister(
+                parse_register(parts[1])?,
+                parse_register(parts[2])?,
+            ))
+        }
     }
 }
 
