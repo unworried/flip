@@ -30,26 +30,15 @@ fn variant_opcode_value(v: &syn::Variant) -> u8 {
 }
 
 fn impl_opcode(ast: &syn::ItemEnum) -> TokenStream {
-    let field_names: Vec<_> = ast.variants.iter().map(|variant| &variant.ident).collect();
-
-    let field_values = ast.variants.iter().map(|variant| {
-        for attr in variant.attrs.iter() {
-            if attr.path().is_ident("opcode") {
-                let value: syn::LitInt = attr.parse_args().unwrap();
-                return value;
-            }
-        }
-        syn::parse(quote! { 0 }.into()).unwrap()
-    });
-
     let field_u16_encodings: Vec<_> = ast
         .variants
         .iter()
         .map(|variant| {
             let name = &variant.ident;
+            let opcode = variant_opcode_value(variant);
 
             if let syn::Fields::Unit = &variant.fields {
-                return quote! { Self::#name => OpCode::#name as u16 };
+                return quote! { Self::#name => #opcode as u16 };
             }
 
             if let syn::Fields::Unnamed(fields) = &variant.fields {
@@ -58,19 +47,19 @@ fn impl_opcode(ast: &syn::ItemEnum) -> TokenStream {
                     .iter()
                     .map(|f| get_type_name(&f.ty))
                     .collect();
-                
+
                 let str_types: Vec<_> = types.iter().map(AsRef::as_ref).collect();
                 match &str_types[..] {
                     ["u8"] => {
-                        quote! { Self::#name(u) => OpCode::#name as u16 | ((*u as u16) << 8) }
+                        quote! { Self::#name(u) => #opcode as u16 | ((*u as u16) << 8) }
                     }
-                    ["Register"] => { 
-                        quote! { Self::#name(r) => OpCode::#name as u16 | (((*r as u16) & 0xf) << 8) }
+                    ["Register"] => {
+                        quote! { Self::#name(r) => #opcode as u16 | (((*r as u16) & 0xf) << 8) }
                     }
-                    
+
                     ["Register", "Register"] => {
                         quote! {
-                            Self::#name(r1, r2) => OpCode::#name as u16 | (((*r1 as u16) & 0xf) << 8)
+                            Self::#name(r1, r2) => #opcode as u16 | (((*r1 as u16) & 0xf) << 8)
                                 | (((*r2 as u16) & 0xf) << 12)
                         }
                     }
@@ -99,23 +88,23 @@ fn impl_opcode(ast: &syn::ItemEnum) -> TokenStream {
                     .iter()
                     .map(|f| get_type_name(&f.ty))
                     .collect();
-                
+
                 let str_types: Vec<_> = types.iter().map(AsRef::as_ref).collect();
                 match &str_types[..] {
                     ["u8"] => {
                         quote! { #opcode => Ok(Self::#name(((ins&0xff00)>>8) as u8)) }
                     }
-                    ["Register"] => { 
-                        quote! { 
+                    ["Register"] => {
+                        quote! {
                             #opcode => {
-                                let reg = (ins & 0xf00) >> 8; 
+                                let reg = (ins & 0xf00) >> 8;
                                 Register::from_u8(reg as u8)
                                     .ok_or(format!("unknown register 0x{:X}", reg))
                                     .map(Self::#name)
                             }
                         }
                     }
-                    
+
                     ["Register", "Register"] => {
                         quote! {
                             #opcode => {
@@ -155,21 +144,76 @@ fn impl_opcode(ast: &syn::ItemEnum) -> TokenStream {
                     .iter()
                     .map(|f| get_type_name(&f.ty))
                     .collect();
-                
+
                 let str_types: Vec<_> = types.iter().map(AsRef::as_ref).collect();
                 match &str_types[..] {
                     ["u8"] => {
-                        quote! { Self::#name(b) => write!(f, "{}({})", stringify!(#name), b) }
+                        quote! { Self::#name(b) => write!(f, "{} {}", stringify!(#name), b) }
                     }
-                    ["Register"] => { 
-                        quote! { 
-                            Self::#name(r) => write!(f, "{}({})", stringify!(#name), r)
+                    ["Register"] => {
+                        quote! {
+                            Self::#name(r) => write!(f, "{} {}", stringify!(#name), r)
                         }
                     }
-                    
+
                     ["Register", "Register"] => {
                         quote! {
-                            Self::#name(r1, r2) => write!(f, "{}({}, {})", stringify!(#name), r1, r2)
+                            Self::#name(r1, r2) => write!(f, "{} {} {}", stringify!(#name), r1, r2)
+                        }
+                    }
+                    _ => panic!("invalid types: {:?}", types),
+                }
+            } else {
+                panic!("fields must be unnamed in variant: {}", name);
+            }
+        })
+        .collect();
+
+    let field_from_str: Vec<_> = ast
+        .variants
+        .iter()
+        .map(|variant| {
+            let name = &variant.ident;
+
+            if let syn::Fields::Unit = &variant.fields {
+                return quote! { stringify!(#name) => Ok(Self::#name) };
+            }
+
+            if let syn::Fields::Unnamed(fields) = &variant.fields {
+                let types: Vec<_> = fields
+                    .unnamed
+                    .iter()
+                    .map(|f| get_type_name(&f.ty))
+                    .collect();
+
+                let str_types: Vec<_> = types.iter().map(AsRef::as_ref).collect();
+                match &str_types[..] {
+                    ["u8"] => {
+                        quote! {
+                            stringify!(#name) => {
+                                assert_length(&parts, 2)?;
+                                Ok(Self::#name(Self::parse_numeric(parts[1])?))
+                            }
+                        }
+                    }
+                    ["Register"] => {
+                        quote! {
+                            stringify!(#name) => {
+                                assert_length(&parts, 2)?;
+                                Ok(Self::#name(Register::from_str(parts[1])?))
+                            }
+                        }
+                    }
+
+                    ["Register", "Register"] => {
+                        quote! {
+                            stringify!(#name) => {
+                                assert_length(&parts, 3)?;
+                                Ok(Self::#name(
+                                        Register::from_str(parts[1])?, 
+                                        Register::from_str(parts[2])?
+                                ))
+                            }
                         }
                     }
                     _ => panic!("invalid types: {:?}", types),
@@ -181,39 +225,26 @@ fn impl_opcode(ast: &syn::ItemEnum) -> TokenStream {
         .collect();
 
     quote! {
-        #[repr(u8)]
-        #[derive(Debug)]
-        pub enum OpCode {
-            #(#field_names = #field_values,)*
-        }
-
-        impl FromStr for OpCode {
-            type Err = String;
-
-            fn from_str(s: &str) -> Result<Self, Self::Err> {
-                match s {
-                    #(stringify!(#field_names) => Ok(Self::#field_names),)*
-                    _ => Err(format!("unknown opcode: {}", s)),
-                }
-            }
-        }
-
-        impl TryFrom<u8> for OpCode {
-            type Error = String;
-
-            fn try_from(b: u8) -> Result<Self, Self::Error> {
-                match b {
-                    #(x if x == Self::#field_names as u8 => Ok(Self::#field_names),)*
-                    _ => Err(format!("unknown opcode: {:X}", b)),
-                }
-            }
-        }
-
         impl Instruction {
             pub fn encode_u16(&self) -> u16 {
                 match self {
                     #(#field_u16_encodings,)*
                 }
+            }
+
+            fn parse_numeric(s: &str) -> Result<u8, String> {
+                if s.is_empty() {
+                    return Err("empty numeric".to_string());
+                }
+
+                let fst = s.chars().next().unwrap();
+                let (num, radix) = match fst {
+                    '$' => (&s[1..], 16),
+                    '%' => (&s[1..], 2),
+                    _ => (s, 10),
+                };
+
+                u8::from_str_radix(num, radix).map_err(|e| format!("{}", e))
             }
         }
 
@@ -234,6 +265,29 @@ fn impl_opcode(ast: &syn::ItemEnum) -> TokenStream {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 match self {
                     #(#field_to_string,)*
+                }
+            }
+        }
+
+        fn assert_length(parts: &[&str], len: usize) -> Result<(), String> {
+            if parts.len() != len {
+                return Err(format!("expected {} parts, found {}", len, parts.len()));
+            }
+            Ok(())
+        }
+
+        impl FromStr for Instruction {
+            type Err = InstructionParseError;
+
+            fn from_str(s: &str) -> Result<Self, Self::Err> {
+                let parts: Vec<_> = s.split(' ').filter(|x| !x.is_empty()).collect();
+                if parts.is_empty() {
+                    return Err(Self::Err::NoContent);
+                }
+
+                match parts[0] {
+                    #(#field_from_str,)*
+                    _ => Err(Self::Err::Fail(format!("unknown instruction: {}", parts[0]))),
                 }
             }
         }

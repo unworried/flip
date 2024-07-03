@@ -26,3 +26,14 @@ pub enum Instruction {
     #[opcode(0xf0)]
     Signal(u8),
 }
+
+pub enum InstructionParseError {
+    NoContent,
+    Fail(String),
+}
+
+impl From<String> for InstructionParseError {
+    fn from(s: String) -> Self {
+        Self::Fail(s)
+    }
+}

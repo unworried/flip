@@ -1,4 +1,5 @@
-use std::fmt::{self, Display, Formatter};
+use std::fmt;
+use std::str::FromStr;
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy)]
@@ -29,8 +30,8 @@ impl Register {
     }
 }
 
-impl Display for Register {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+impl fmt::Display for Register {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::A => write!(f, "A"),
             Self::B => write!(f, "B"),
@@ -40,6 +41,24 @@ impl Display for Register {
             Self::PC => write!(f, "PC"),
             Self::BP => write!(f, "BP"),
             Self::Flags => write!(f, "Flags"),
+        }
+    }
+}
+
+impl FromStr for Register {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "A" => Ok(Self::A),
+            "B" => Ok(Self::B),
+            "C" => Ok(Self::A),
+            "M" => Ok(Self::B),
+            "SP" => Ok(Self::SP),
+            "PC" => Ok(Self::PC),
+            "BP" => Ok(Self::BP),
+            "Flags" => Ok(Self::Flags),
+            _ => Err(format!("unknown register: {}", s)),
         }
     }
 }
