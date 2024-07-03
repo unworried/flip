@@ -78,6 +78,7 @@ impl Machine {
         self.registers[Register::PC as usize] = pc + 2;
 
         let op = Instruction::try_from(instruction)?;
+        println!("executing: {}", op);
         match op {
             Instruction::Nop => Ok(()),
             Instruction::Push(v) => self.push(v.into()),

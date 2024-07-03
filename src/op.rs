@@ -1,3 +1,4 @@
+use std::fmt;
 use std::str::FromStr;
 
 use macros::VmInstruction;
@@ -24,52 +25,4 @@ pub enum Instruction {
     AddRegister(Register, Register),
     #[opcode(0xf0)]
     Signal(u8),
-}
-
-fn parse_instruction_arg(instruction: u16) -> u8 {
-    ((instruction & 0xff00) >> 8) as u8
-}
-
-impl TryFrom<u16> for Instruction {
-    type Error = String;
-
-    fn try_from(ins: u16) -> Result<Self, Self::Error> {
-        let op = (ins & 0xff) as u8;
-        //match OpCode::from_u8(op).ok_or(format!("unknown op: {:X}", op))? {
-        match OpCode::try_from(op)? {
-            OpCode::Nop => Ok(Instruction::Nop),
-            OpCode::Push => {
-                let arg = parse_instruction_arg(ins);
-                Ok(Instruction::Push(arg))
-            }
-            OpCode::PopRegister => {
-                let reg = (ins & 0xf00) >> 8;
-                Register::from_u8(reg as u8)
-                    .ok_or(format!("unknown register 0x{:X}", reg))
-                    .map(Instruction::PopRegister)
-            }
-            OpCode::PushRegister => {
-                let reg = (ins & 0xf00) >> 8;
-                Register::from_u8(reg as u8)
-                    .ok_or(format!("unknown register 0x{:X}", reg))
-                    .map(Instruction::PushRegister)
-            }
-            OpCode::AddStack => Ok(Instruction::AddStack),
-            OpCode::AddRegister => {
-                let reg1_raw = (ins & 0xf00) >> 8;
-                let reg2_raw = (ins & 0xf000) >> 12;
-
-                let reg1 = Register::from_u8(reg1_raw as u8)
-                    .ok_or(format!("unknown register 0x{:X}", reg1_raw))?;
-                let reg2 = Register::from_u8(reg2_raw as u8)
-                    .ok_or(format!("unknown register 0x{:X}", reg2_raw))?;
-
-                Ok(Instruction::AddRegister(reg1, reg2))
-            }
-            OpCode::Signal => {
-                let arg = parse_instruction_arg(ins);
-                Ok(Instruction::Signal(arg))
-            }
-        }
-    }
 }
