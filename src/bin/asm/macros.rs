@@ -31,3 +31,28 @@ pub fn include(_pp: &mut PreProcessor, input: Vec<&str>) -> Result<Vec<String>, 
     }
     Ok(output)
 }
+
+pub fn defmacro(pp: &mut PreProcessor, input: Vec<&str>) -> Result<Vec<String>, Error> {
+    if input.is_empty() {
+        return Err(Error::BadMacroFormat(".defmacro <name> <body>".to_string()));
+    }
+
+    let name = input.first().unwrap();
+    let mut lines: Vec<String> = Vec::new();
+    let mut current_line: Vec<String> = Vec::new();
+
+    for &token in input.iter().skip(1) {
+        if token != "/" {
+            current_line.push(token.to_string());
+        } else {
+            lines.push(current_line.join(" "));
+            current_line.clear();
+        }
+    }
+    if !current_line.is_empty() {
+        lines.push(current_line.join(" "));
+    }
+
+    pp.define_subst_macro(name, lines);
+    Ok(Vec::new())
+}

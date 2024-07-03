@@ -1,11 +1,12 @@
-use rust_vm::op::{Instruction, InstructionParseError};
 use std::env;
 use std::fs::File;
 use std::io::{stdout, BufRead, BufReader, Write};
 use std::path::Path;
 use std::str::FromStr;
 
-use self::macros::{defvar, include};
+use flipvm::op::{Instruction, InstructionParseError};
+
+use self::macros::{defmacro, defvar, include};
 use self::pp::PreProcessor;
 
 mod macros;
@@ -24,6 +25,7 @@ fn main() -> Result<(), String> {
     let mut processor = PreProcessor::new();
     processor.define_macro("defvar", defvar);
     processor.define_macro("include", include);
+    processor.define_macro("defmacro", defmacro);
 
     for (i, line) in BufReader::new(file).lines().enumerate() {
         let line_inner = line.map_err(|e| format!("{}", e))?;
@@ -36,7 +38,7 @@ fn main() -> Result<(), String> {
 
         let processed = match processor.resolve(&line_inner) {
             Ok(s) => s,
-            Err(e) => panic!("line {} : {}", i+1, e),
+            Err(e) => panic!("line {} : {}", i + 1, e),
         };
 
         if true && !processed.is_empty() {
@@ -53,7 +55,7 @@ fn main() -> Result<(), String> {
                     output.push((raw_instruction >> 8) as u8);
                 }
                 Err(InstructionParseError::Fail(s)) => {
-                    panic!("line {} : {}", i+1, s);
+                    panic!("line {} : {}", i + 1, s);
                 }
                 _ => continue,
             }
