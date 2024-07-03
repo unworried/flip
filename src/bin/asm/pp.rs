@@ -32,6 +32,7 @@ type MacroFn = fn(&mut PreProcessor, input: Vec<&str>) -> Result<Vec<String>, Er
 pub struct PreProcessor {
     variables: HashMap<String, String>,
     macros: HashMap<String, MacroFn>,
+    instruction_count: u32,
 }
 
 impl PreProcessor {
@@ -39,6 +40,7 @@ impl PreProcessor {
         Self {
             variables: HashMap::new(),
             macros: HashMap::new(),
+            instruction_count: 0,
         }
     }
 
@@ -55,31 +57,38 @@ impl PreProcessor {
                     let macro_name = &head[1..];
                     let func = self
                         .get_macro(macro_name)
-                        .ok_or(Error::UnknownMacro(format!("macro: {}", head)))?;
+                        .ok_or_else(|| Error::UnknownMacro(format!("macro: {}", head)))?;
                     let res = func(self, parts[1..].to_vec())
                         .map_err(|e| Error::MacroEval(macro_name.to_string(), Box::new(e)))?;
                     return Ok(res.join(" "));
+                }
+                Some(':') => {
+                    let label = &head[1..];
+                    let offset = self.instruction_count * 2;
+                    self.define_variable(label, &offset.to_string());
+                    return Ok(String::new());
                 }
                 _ => (),
             }
         }
 
         let resolved = parts.into_iter().map(|p| {
-            match p.chars().nth(0) {
+            /*match p.chars().nth(0) {
                 Some('!') => self
                     .get_variable(&p[1..])
-                    .ok_or(Error::UnknownToken((&p[1..]).to_string())),
+                    .ok_or_else(|| Error::UnknownToken((p[1..]).to_string())),
                 _ => Ok(p.to_string()),
-            }
-            /*if p.starts_with('!') {
-                self.get_variable(&p[1..])
-                    .ok_or(Error::Unknown(format!("token: {}", p)))
+            }*/
+            if let Some(var) = p.strip_prefix('!') {
+                self.get_variable(var)
+                    .ok_or_else(|| Error::UnknownToken(var.to_string()))
             } else {
                 Ok(p.to_string())
-            }*/
+            }
         });
 
         let st: Result<Vec<String>, Error> = resolved.collect();
+        self.instruction_count += 1;
         Ok(st?.join(" "))
     }
 

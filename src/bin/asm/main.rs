@@ -22,11 +22,9 @@ fn main() -> Result<(), String> {
 
     let mut output: Vec<u8> = Vec::new();
     let mut processor = PreProcessor::new();
-    processor.define_variable("foo", "5");
-    processor.define_variable("bar", "B");
     processor.define_macro("defvar", macro_defvar);
 
-    for line in BufReader::new(file).lines() {
+    for (i, line) in BufReader::new(file).lines().enumerate() {
         let line_inner = line.map_err(|e| format!("{}", e))?;
         if line_inner.is_empty() {
             continue;
@@ -35,8 +33,10 @@ fn main() -> Result<(), String> {
             continue;
         }
 
-        let processed = processor.resolve(&line_inner)?;
-        if true {
+        let processed = processor
+            .resolve(&line_inner)
+            .map_err(|e| format!("line {} : {}", i + 1, e))?;
+        if true && !processed.is_empty() {
             for &b in processed.as_bytes() {
                 output.push(b);
             }
@@ -50,7 +50,7 @@ fn main() -> Result<(), String> {
                     output.push((raw_instruction >> 8) as u8);
                 }
                 Err(InstructionParseError::Fail(s)) => {
-                    return Err(format!("failed to parse instruction: {}", s));
+                    return Err(format!("line {} : {}", i, s));
                 }
                 _ => continue,
             }
