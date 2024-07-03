@@ -5,7 +5,7 @@ use std::io::{stdout, BufRead, BufReader, Write};
 use std::path::Path;
 use std::str::FromStr;
 
-use self::macros::macro_defvar;
+use self::macros::{defvar, include};
 use self::pp::PreProcessor;
 
 mod macros;
@@ -22,7 +22,8 @@ fn main() -> Result<(), String> {
 
     let mut output: Vec<u8> = Vec::new();
     let mut processor = PreProcessor::new();
-    processor.define_macro("defvar", macro_defvar);
+    processor.define_macro("defvar", defvar);
+    processor.define_macro("include", include);
 
     for (i, line) in BufReader::new(file).lines().enumerate() {
         let line_inner = line.map_err(|e| format!("{}", e))?;
@@ -33,9 +34,11 @@ fn main() -> Result<(), String> {
             continue;
         }
 
-        let processed = processor
-            .resolve(&line_inner)
-            .map_err(|e| format!("line {} : {}", i + 1, e))?;
+        let processed = match processor.resolve(&line_inner) {
+            Ok(s) => s,
+            Err(e) => panic!("line {} : {}", i, e),
+        };
+
         if true && !processed.is_empty() {
             for &b in processed.as_bytes() {
                 output.push(b);
@@ -50,7 +53,7 @@ fn main() -> Result<(), String> {
                     output.push((raw_instruction >> 8) as u8);
                 }
                 Err(InstructionParseError::Fail(s)) => {
-                    return Err(format!("line {} : {}", i, s));
+                    panic!("line {} : {}", i, s);
                 }
                 _ => continue,
             }

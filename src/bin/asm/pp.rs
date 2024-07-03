@@ -5,7 +5,8 @@ pub enum Error {
     UnknownToken(String),
     UnknownMacro(String),
     MacroEval(String, Box<Error>),
-    BadMacroFormat,
+    BadMacroFormat(String),
+    Io(String),
     Unexpected(String),
 }
 
@@ -15,7 +16,8 @@ impl fmt::Display for Error {
             Error::UnknownToken(t) => write!(f, "unknown token: {}", t),
             Error::UnknownMacro(m) => write!(f, "unknown macro: {}", m),
             Error::MacroEval(name, e) => write!(f, "eval macro {}: {}", name, e),
-            Error::BadMacroFormat => write!(f, "format <name> <value>"),
+            Error::BadMacroFormat(u) => write!(f, "usage: {}", u),
+            Error::Io(e) => write!(f, "{}", e),
             Error::Unexpected(e) => write!(f, "{}", e),
         }
     }
@@ -24,6 +26,12 @@ impl fmt::Display for Error {
 impl From<Error> for String {
     fn from(value: Error) -> Self {
         format!("{}", value)
+    }
+}
+
+impl From<std::io::Error> for Error {
+    fn from(value: std::io::Error) -> Self {
+        Error::Io(value.to_string())
     }
 }
 
@@ -58,9 +66,13 @@ impl PreProcessor {
                     let func = self
                         .get_macro(macro_name)
                         .ok_or_else(|| Error::UnknownMacro(format!("macro: {}", head)))?;
-                    let res = func(self, parts[1..].to_vec())
+                    let result = func(self, parts[1..].to_vec())
                         .map_err(|e| Error::MacroEval(macro_name.to_string(), Box::new(e)))?;
-                    return Ok(res.join(" "));
+
+                    let resolved: Result<Vec<String>, Error> =
+                        result.into_iter().map(|line| self.resolve(&line)).collect();
+
+                    return Ok(resolved?.join("\n"));
                 }
                 Some(':') => {
                     let label = &head[1..];
