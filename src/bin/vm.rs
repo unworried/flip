@@ -22,7 +22,7 @@ pub fn main() -> Result<(), String> {
     let mut program: Vec<u8> = Vec::new();
     reader
         .read_to_end(&mut program)
-        .map_err(|e| format!("{}", e))?;
+        .map_err(|e| format!("read: {}", e))?;
 
     let mut vm = Machine::new();
     vm.set_register(Register::SP, 0x1000);

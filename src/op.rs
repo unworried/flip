@@ -43,3 +43,19 @@ impl From<String> for InstructionParseError {
         Self::Fail(s)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::Instruction::*;
+    use super::*;
+
+    #[test]
+    fn test_encodings() {
+        assert_eq!(SubStack.encode_u16(), 0x22);
+        assert_eq!(Push(0x5).encode_u16(), 0x0501);
+        assert_eq!(AddRegister(Register::B, Register::BP).encode_u16(), 0x6121);
+        assert_eq!(Signal(0x05).encode_u16(), 0x05f0);
+        assert_eq!(Nop.encode_u16(), 0x00);
+        assert_eq!(PushRegister(Register::A).encode_u16(), 0x03);
+    }
+}

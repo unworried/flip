@@ -11,3 +11,6 @@ name = "vm"
 
 [[bin]]
 name = "asm"
+
+[[bin]]
+name = "dis"

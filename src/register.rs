@@ -52,13 +52,30 @@ impl FromStr for Register {
         match s {
             "A" => Ok(Self::A),
             "B" => Ok(Self::B),
-            "C" => Ok(Self::A),
-            "M" => Ok(Self::B),
+            "C" => Ok(Self::C),
+            "M" => Ok(Self::M),
             "SP" => Ok(Self::SP),
             "PC" => Ok(Self::PC),
             "BP" => Ok(Self::BP),
             "Flags" => Ok(Self::Flags),
             _ => Err(format!("unknown register: {}", s)),
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_encoding() {
+        assert_eq!(Register::A as u16, 0);
+        assert_eq!(Register::B as u16, 1);
+        assert_eq!(Register::C as u16, 2);
+        assert_eq!(Register::M as u16, 3);
+        assert_eq!(Register::SP as u16, 4);
+        assert_eq!(Register::PC as u16, 5);
+        assert_eq!(Register::BP as u16, 6);
+        assert_eq!(Register::Flags as u16, 7);
     }
 }

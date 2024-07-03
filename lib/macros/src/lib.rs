@@ -210,7 +210,7 @@ fn impl_opcode(ast: &syn::ItemEnum) -> TokenStream {
                             stringify!(#name) => {
                                 assert_length(&parts, 3)?;
                                 Ok(Self::#name(
-                                        Register::from_str(parts[1])?, 
+                                        Register::from_str(parts[1])?,
                                         Register::from_str(parts[2])?
                                 ))
                             }
