@@ -3,7 +3,6 @@ use std::fmt;
 
 pub enum Error {
     UnknownToken(String),
-    UnknownMacro(String),
     MacroEval(String, Box<Error>),
     BadMacroFormat(String),
     Io(String),
@@ -14,7 +13,6 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Error::UnknownToken(t) => write!(f, "unknown token: {}", t),
-            Error::UnknownMacro(m) => write!(f, "unknown macro: {}", m),
             Error::MacroEval(name, e) => write!(f, "eval macro {}: {}", name, e),
             Error::BadMacroFormat(u) => write!(f, "usage: {}", u),
             Error::Io(e) => write!(f, "{}", e),
@@ -65,7 +63,7 @@ impl PreProcessor {
                     let macro_name = &head[1..];
                     let func = self
                         .get_macro(macro_name)
-                        .ok_or_else(|| Error::UnknownMacro(format!("macro: {}", head)))?;
+                        .ok_or_else(|| Error::UnknownToken(macro_name.to_string()))?;
                     let result = func(self, parts[1..].to_vec())
                         .map_err(|e| Error::MacroEval(macro_name.to_string(), Box::new(e)))?;
 

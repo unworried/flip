@@ -36,7 +36,7 @@ fn main() -> Result<(), String> {
 
         let processed = match processor.resolve(&line_inner) {
             Ok(s) => s,
-            Err(e) => panic!("line {} : {}", i, e),
+            Err(e) => panic!("line {} : {}", i+1, e),
         };
 
         if true && !processed.is_empty() {
@@ -53,7 +53,7 @@ fn main() -> Result<(), String> {
                     output.push((raw_instruction >> 8) as u8);
                 }
                 Err(InstructionParseError::Fail(s)) => {
-                    panic!("line {} : {}", i, s);
+                    panic!("line {} : {}", i+1, s);
                 }
                 _ => continue,
             }
