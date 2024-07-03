@@ -101,6 +101,57 @@ impl Machine {
                 self.registers[r1 as usize] = self.registers[r2 as usize];
                 Ok(())
             }
+            Instruction::LoadARegister(r) => {
+                let addr = self.registers[r as usize];
+                match self.memory.read2(addr) {
+                    Some(v) => {
+                        self.registers[Register::A as usize] = v;
+                        Ok(())
+                    }
+                    None => Err(format!("failed to read {:X}", addr)),
+                }
+            }
+            Instruction::LoadAImm(b) => match self.memory.read2(b as u16) {
+                Some(v) => {
+                    self.registers[Register::A as usize] = v;
+                    Ok(())
+                }
+                None => Err(format!("failed to read {:X}", b)),
+            },
+            Instruction::LoadBRegister(r) => {
+                let addr = self.registers[r as usize];
+                match self.memory.read2(addr) {
+                    Some(v) => {
+                        self.registers[Register::B as usize] = v;
+                        Ok(())
+                    }
+                    None => Err(format!("failed to read {:X}", addr)),
+                }
+            }
+            Instruction::LoadBImm(b) => match self.memory.read2(b as u16) {
+                Some(v) => {
+                    self.registers[Register::B as usize] = v;
+                    Ok(())
+                }
+                None => Err(format!("failed to read {:X}", b)),
+            },
+            Instruction::LoadCRegister(r) => {
+                let addr = self.registers[r as usize];
+                match self.memory.read2(addr) {
+                    Some(v) => {
+                        self.registers[Register::C as usize] = v;
+                        Ok(())
+                    }
+                    None => Err(format!("failed to read {:X}", addr)),
+                }
+            }
+            Instruction::LoadCImm(b) => match self.memory.read2(b as u16) {
+                Some(v) => {
+                    self.registers[Register::C as usize] = v;
+                    Ok(())
+                }
+                None => Err(format!("failed to read {:X}", b)),
+            },
             Instruction::AddStack => {
                 let a = self.pop()?;
                 let b = self.pop()?;
