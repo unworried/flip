@@ -29,6 +29,14 @@ pub enum Instruction {
     #[opcode(0x23)]
     SubRegister(Register, Register),
 
+    #[opcode(0x40)]
+    BranchImm(i8), // Branch Relative (PC += x if FLAGS[c])
+    #[opcode(0x41)]
+    BranchRegister(Register), // Branch Absolute (PC = Registers[r] if FLAGS[c])
+
+    #[opcode(0x50)]
+    IfZero(Register),
+
     #[opcode(0xf0)]
     Signal(u8),
 }

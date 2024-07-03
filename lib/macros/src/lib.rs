@@ -53,6 +53,14 @@ fn impl_opcode(ast: &syn::ItemEnum) -> TokenStream {
                     ["u8"] => {
                         quote! { Self::#name(u) => #opcode as u16 | ((*u as u16) << 8) }
                     }
+                    ["i8"] => {
+                        quote! {
+                            Self::#name(u) => {
+                                let raw_value = u.to_le_bytes();
+                                #opcode as u16 | ((raw_value[0] as u16) << 8)
+                            }
+                        }
+                    }
                     ["Register"] => {
                         quote! { Self::#name(r) => #opcode as u16 | (((*r as u16) & 0xf) << 8) }
                     }
@@ -93,6 +101,14 @@ fn impl_opcode(ast: &syn::ItemEnum) -> TokenStream {
                 match &str_types[..] {
                     ["u8"] => {
                         quote! { #opcode => Ok(Self::#name(((ins&0xff00)>>8) as u8)) }
+                    }
+                    ["i8"] => {
+                        quote! {
+                            #opcode => {
+                                let raw_value = i8::from_le_bytes([((ins&0xff00)>>8) as u8]);
+                                Ok(Self::#name(raw_value))
+                            }
+                        }
                     }
                     ["Register"] => {
                         quote! {
@@ -150,6 +166,9 @@ fn impl_opcode(ast: &syn::ItemEnum) -> TokenStream {
                     ["u8"] => {
                         quote! { Self::#name(b) => write!(f, "{} {}", stringify!(#name), b) }
                     }
+                    ["i8"] => {
+                        quote! { Self::#name(b) => write!(f, "{} {}", stringify!(#name), b) }
+                    }
                     ["Register"] => {
                         quote! {
                             Self::#name(r) => write!(f, "{} {}", stringify!(#name), r)
@@ -193,6 +212,15 @@ fn impl_opcode(ast: &syn::ItemEnum) -> TokenStream {
                             stringify!(#name) => {
                                 assert_length(&parts, 2)?;
                                 Ok(Self::#name(Self::parse_numeric(parts[1])?))
+                            }
+                        }
+                    }
+                    ["i8"] => {
+                        // TODO: Broken atm
+                        quote! {
+                            stringify!(#name) => {
+                                assert_length(&parts, 2)?;
+                                Ok(Self::#name(Self::parse_numeric_signed(parts[1])?))
                             }
                         }
                     }
@@ -245,6 +273,21 @@ fn impl_opcode(ast: &syn::ItemEnum) -> TokenStream {
                 };
 
                 u8::from_str_radix(num, radix).map_err(|e| format!("{}", e))
+            }
+
+            fn parse_numeric_signed(s: &str) -> Result<i8, String> {
+                if s.is_empty() {
+                    return Err("empty numeric".to_string());
+                }
+
+                let fst = s.chars().next().unwrap();
+                let (num, radix) = match fst {
+                    '$' => (&s[1..], 16),
+                    '%' => (&s[1..], 2),
+                    _ => (s, 10),
+                };
+
+                i8::from_str_radix(num, radix).map_err(|e| format!("{}", e))
             }
         }
 
