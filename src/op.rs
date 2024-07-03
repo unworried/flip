@@ -19,6 +19,8 @@ pub enum Instruction {
     PopRegister(Register),
     #[opcode(0x3)]
     PushRegister(Register),
+    #[opcode(0x4)]
+    SetRegister(Register, Register),
 
     #[opcode(0x20)]
     AddStack,

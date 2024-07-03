@@ -97,6 +97,10 @@ impl Machine {
                 Ok(())
             }
             Instruction::PushRegister(r) => self.push(self.registers[r as usize]),
+            Instruction::SetRegister(r1, r2) => {
+                self.registers[r1 as usize] = self.registers[r2 as usize];
+                Ok(())
+            }
             Instruction::AddStack => {
                 let a = self.pop()?;
                 let b = self.pop()?;
