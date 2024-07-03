@@ -2,7 +2,7 @@ use crate::pp::{Error, PreProcessor};
 
 pub fn macro_defvar(pp: &mut PreProcessor, input: Vec<&str>) -> Result<Vec<String>, Error> {
     if input.len() != 2 {
-        return Err(Error::Unknown("format <name> <value>".to_string()));
+        return Err(Error::BadMacroFormat);
     }
 
     let name = input.first().unwrap();

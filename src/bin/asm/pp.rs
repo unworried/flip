@@ -1,15 +1,22 @@
 use std::collections::HashMap;
 use std::fmt;
-use std::str::FromStr;
 
 pub enum Error {
-    Unknown(String),
+    UnknownToken(String),
+    UnknownMacro(String),
+    MacroEval(String, Box<Error>),
+    BadMacroFormat,
+    Unexpected(String),
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Error::Unknown(s) => write!(f, "unknown: {}", s),
+            Error::UnknownToken(t) => write!(f, "unknown token: {}", t),
+            Error::UnknownMacro(m) => write!(f, "unknown macro: {}", m),
+            Error::MacroEval(name, e) => write!(f, "eval macro {}: {}", name, e),
+            Error::BadMacroFormat => write!(f, "format <name> <value>"),
+            Error::Unexpected(e) => write!(f, "{}", e),
         }
     }
 }
@@ -48,9 +55,10 @@ impl PreProcessor {
                     let macro_name = &head[1..];
                     let func = self
                         .get_macro(macro_name)
-                        .ok_or(Error::Unknown(format!("macro: {}", head)))?;
-                    let res = func(self, parts[1..].to_vec());
-                    return Ok(res?.join(" "));
+                        .ok_or(Error::UnknownMacro(format!("macro: {}", head)))?;
+                    let res = func(self, parts[1..].to_vec())
+                        .map_err(|e| Error::MacroEval(macro_name.to_string(), Box::new(e)))?;
+                    return Ok(res.join(" "));
                 }
                 _ => (),
             }
@@ -60,7 +68,7 @@ impl PreProcessor {
             match p.chars().nth(0) {
                 Some('!') => self
                     .get_variable(&p[1..])
-                    .ok_or(Error::Unknown(format!("token: {}", p))),
+                    .ok_or(Error::UnknownToken((&p[1..]).to_string())),
                 _ => Ok(p.to_string()),
             }
             /*if p.starts_with('!') {
