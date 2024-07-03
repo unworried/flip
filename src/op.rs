@@ -19,10 +19,16 @@ pub enum Instruction {
     PopRegister(Register),
     #[opcode(0x3)]
     PushRegister(Register),
+
     #[opcode(0x20)]
     AddStack,
     #[opcode(0x21)]
     AddRegister(Register, Register),
+    #[opcode(0x22)]
+    SubStack,
+    #[opcode(0x23)]
+    SubRegister(Register, Register),
+
     #[opcode(0xf0)]
     Signal(u8),
 }
