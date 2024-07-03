@@ -30,227 +30,138 @@ fn variant_opcode_value(v: &syn::Variant) -> u8 {
 }
 
 fn impl_opcode(ast: &syn::ItemEnum) -> TokenStream {
-    let field_u16_encodings: Vec<_> = ast
-        .variants
-        .iter()
-        .map(|variant| {
-            let name = &variant.ident;
-            let opcode = variant_opcode_value(variant);
+    let mut field_u16_encodings: Vec<_> = Vec::new();
+    let mut field_u16_decodings: Vec<_> = Vec::new();
+    let mut field_to_string: Vec<_> = Vec::new();
+    let mut field_from_str: Vec<_> = Vec::new();
 
-            if let syn::Fields::Unit = &variant.fields {
-                return quote! { Self::#name => #opcode as u16 };
-            }
+    ast.variants.iter().for_each(|variant| {
+        let name = &variant.ident;
+        let opcode = variant_opcode_value(variant);
 
-            if let syn::Fields::Unnamed(fields) = &variant.fields {
-                let types: Vec<_> = fields
-                    .unnamed
-                    .iter()
-                    .map(|f| get_type_name(&f.ty))
-                    .collect();
-
-                let str_types: Vec<_> = types.iter().map(AsRef::as_ref).collect();
-                match &str_types[..] {
-                    ["u8"] => {
-                        quote! { Self::#name(u) => #opcode as u16 | ((*u as u16) << 8) }
-                    }
-                    ["i8"] => {
-                        quote! {
-                            Self::#name(u) => {
-                                let raw_value = u.to_le_bytes();
-                                #opcode as u16 | ((raw_value[0] as u16) << 8)
-                            }
-                        }
-                    }
-                    ["Register"] => {
-                        quote! { Self::#name(r) => #opcode as u16 | (((*r as u16) & 0xf) << 8) }
-                    }
-
-                    ["Register", "Register"] => {
-                        quote! {
-                            Self::#name(r1, r2) => #opcode as u16 | (((*r1 as u16) & 0xf) << 8)
-                                | (((*r2 as u16) & 0xf) << 12)
-                        }
-                    }
-                    _ => panic!("invalid types: {:?}", types),
+        if let syn::Fields::Unit = &variant.fields {
+            field_u16_encodings.push(quote! { Self::#name => #opcode as u16 });
+            field_u16_decodings.push(quote! { #opcode => Ok(Self::#name) });
+            field_to_string.push(quote! { Self::#name => write!(f, stringify!(#name)) });
+            field_from_str.push(quote! {
+                stringify!(#name) => {
+                    assert_length(&parts, 1)?;
+                    Ok(Self::#name)
                 }
-            } else {
-                panic!("fields must be unnamed in variant: {}", name);
-            }
-        })
-        .collect();
+            });
+            return;
+        }
 
-    let field_u16_decodings: Vec<_> = ast
-        .variants
-        .iter()
-        .map(|variant| {
-            let name = &variant.ident;
-            let opcode = variant_opcode_value(variant);
+        if let syn::Fields::Unnamed(fields) = &variant.fields {
+            let types: Vec<_> = fields
+                .unnamed
+                .iter()
+                .map(|f| get_type_name(&f.ty))
+                .collect();
 
-            if let syn::Fields::Unit = &variant.fields {
-                return quote! { #opcode => Ok(Self::#name) };
-            }
-
-            if let syn::Fields::Unnamed(fields) = &variant.fields {
-                let types: Vec<_> = fields
-                    .unnamed
-                    .iter()
-                    .map(|f| get_type_name(&f.ty))
-                    .collect();
-
-                let str_types: Vec<_> = types.iter().map(AsRef::as_ref).collect();
-                match &str_types[..] {
-                    ["u8"] => {
-                        quote! { #opcode => Ok(Self::#name(((ins&0xff00)>>8) as u8)) }
-                    }
-                    ["i8"] => {
-                        quote! {
-                            #opcode => {
-                                let raw_value = i8::from_le_bytes([((ins&0xff00)>>8) as u8]);
-                                Ok(Self::#name(raw_value))
-                            }
+            let str_types: Vec<_> = types.iter().map(AsRef::as_ref).collect();
+            match &str_types[..] {
+                ["u8"] => {
+                    field_u16_encodings.push(quote! {
+                        Self::#name(u) => #opcode as u16 | ((*u as u16) << 8)
+                    });
+                    field_u16_decodings.push(quote! {
+                        #opcode => Ok(Self::#name(((ins&0xff00)>>8) as u8))
+                    });
+                    field_to_string.push(quote! {
+                        Self::#name(b) => write!(f, "{} {}", stringify!(#name), b)
+                    });
+                    field_from_str.push(quote! {
+                        stringify!(#name) => {
+                            assert_length(&parts, 2)?;
+                            Ok(Self::#name(Self::parse_numeric(parts[1])?))
                         }
-                    }
-                    ["Register"] => {
-                        quote! {
-                            #opcode => {
-                                let reg = (ins & 0xf00) >> 8;
-                                Register::from_u8(reg as u8)
-                                    .ok_or(format!("unknown register 0x{:X}", reg))
-                                    .map(Self::#name)
-                            }
-                        }
-                    }
-
-                    ["Register", "Register"] => {
-                        quote! {
-                            #opcode => {
-                                let reg1_raw = (ins & 0xf00) >> 8;
-                                let reg2_raw = (ins & 0xf000) >> 12;
-
-                                let reg1 = Register::from_u8(reg1_raw as u8)
-                                    .ok_or(format!("unknown register 0x{:X}", reg1_raw)).unwrap();
-                                let reg2 = Register::from_u8(reg2_raw as u8)
-                                    .ok_or(format!("unknown register 0x{:X}", reg2_raw)).unwrap();
-
-                                Ok(Self::#name(reg1, reg2))
-                            }
-                        }
-                    }
-                    _ => panic!("invalid types: {:?}", types),
+                    });
                 }
-            } else {
-                panic!("fields must be unnamed in variant: {}", name);
-            }
-        })
-        .collect();
-
-    let field_to_string: Vec<_> = ast
-        .variants
-        .iter()
-        .map(|variant| {
-            let name = &variant.ident;
-
-            if let syn::Fields::Unit = &variant.fields {
-                return quote! { Self::#name => write!(f, stringify!(#name)) };
-            }
-
-            if let syn::Fields::Unnamed(fields) = &variant.fields {
-                let types: Vec<_> = fields
-                    .unnamed
-                    .iter()
-                    .map(|f| get_type_name(&f.ty))
-                    .collect();
-
-                let str_types: Vec<_> = types.iter().map(AsRef::as_ref).collect();
-                match &str_types[..] {
-                    ["u8"] => {
-                        quote! { Self::#name(b) => write!(f, "{} {}", stringify!(#name), b) }
-                    }
-                    ["i8"] => {
-                        quote! { Self::#name(b) => write!(f, "{} {}", stringify!(#name), b) }
-                    }
-                    ["Register"] => {
-                        quote! {
-                            Self::#name(r) => write!(f, "{} {}", stringify!(#name), r)
+                ["i8"] => {
+                    field_u16_encodings.push(quote! {
+                        Self::#name(u) => {
+                            let raw_value = u.to_le_bytes();
+                            #opcode as u16 | ((raw_value[0] as u16) << 8)
                         }
-                    }
-
-                    ["Register", "Register"] => {
-                        quote! {
-                            Self::#name(r1, r2) => write!(f, "{} {} {}", stringify!(#name), r1, r2)
+                    });
+                    field_u16_decodings.push(quote! {
+                        #opcode => {
+                            let raw_value = i8::from_le_bytes([((ins&0xff00)>>8) as u8]);
+                            Ok(Self::#name(raw_value))
                         }
-                    }
-                    _ => panic!("invalid types: {:?}", types),
+                    });
+                    field_to_string.push(quote! {
+                        Self::#name(b) => write!(f, "{} {}", stringify!(#name), b)
+                    });
+                    // TODO: Broken atm
+                    field_from_str.push(quote! {
+                        stringify!(#name) => {
+                            assert_length(&parts, 2)?;
+                            Ok(Self::#name(Self::parse_numeric_signed(parts[1])?))
+                        }
+                    });
                 }
-            } else {
-                panic!("fields must be unnamed in variant: {}", name);
-            }
-        })
-        .collect();
-
-    let field_from_str: Vec<_> = ast
-        .variants
-        .iter()
-        .map(|variant| {
-            let name = &variant.ident;
-
-            if let syn::Fields::Unit = &variant.fields {
-                return quote! { stringify!(#name) => Ok(Self::#name) };
-            }
-
-            if let syn::Fields::Unnamed(fields) = &variant.fields {
-                let types: Vec<_> = fields
-                    .unnamed
-                    .iter()
-                    .map(|f| get_type_name(&f.ty))
-                    .collect();
-
-                let str_types: Vec<_> = types.iter().map(AsRef::as_ref).collect();
-                match &str_types[..] {
-                    ["u8"] => {
-                        quote! {
-                            stringify!(#name) => {
-                                assert_length(&parts, 2)?;
-                                Ok(Self::#name(Self::parse_numeric(parts[1])?))
-                            }
+                ["Register"] => {
+                    field_u16_encodings.push(quote! {
+                        Self::#name(r) => #opcode as u16 | (((*r as u16) & 0xf) << 8)
+                    });
+                    field_u16_decodings.push(quote! {
+                        #opcode => {
+                            let reg = (ins & 0xf00) >> 8;
+                            Register::from_u8(reg as u8)
+                                .ok_or(format!("unknown register 0x{:X}", reg))
+                                .map(Self::#name)
                         }
-                    }
-                    ["i8"] => {
-                        // TODO: Broken atm
-                        quote! {
-                            stringify!(#name) => {
-                                assert_length(&parts, 2)?;
-                                Ok(Self::#name(Self::parse_numeric_signed(parts[1])?))
-                            }
+                    });
+                    field_to_string.push(quote! {
+                        Self::#name(r) => write!(f, "{} {}", stringify!(#name), r)
+                    });
+                    field_from_str.push(quote! {
+                        stringify!(#name) => {
+                            assert_length(&parts, 2)?;
+                            Ok(Self::#name(Register::from_str(parts[1])?))
                         }
-                    }
-                    ["Register"] => {
-                        quote! {
-                            stringify!(#name) => {
-                                assert_length(&parts, 2)?;
-                                Ok(Self::#name(Register::from_str(parts[1])?))
-                            }
-                        }
-                    }
-
-                    ["Register", "Register"] => {
-                        quote! {
-                            stringify!(#name) => {
-                                assert_length(&parts, 3)?;
-                                Ok(Self::#name(
-                                        Register::from_str(parts[1])?,
-                                        Register::from_str(parts[2])?
-                                ))
-                            }
-                        }
-                    }
-                    _ => panic!("invalid types: {:?}", types),
+                    });
                 }
-            } else {
-                panic!("fields must be unnamed in variant: {}", name);
+
+                ["Register", "Register"] => {
+                    field_u16_encodings.push(quote! {
+                        Self::#name(r1, r2) => #opcode as u16 | (((*r1 as u16) & 0xf) << 8)
+                            | (((*r2 as u16) & 0xf) << 12)
+                    });
+                    field_u16_decodings.push(quote! {
+                        #opcode => {
+                            let reg1_raw = (ins & 0xf00) >> 8;
+                            let reg2_raw = (ins & 0xf000) >> 12;
+
+                            let reg1 = Register::from_u8(reg1_raw as u8)
+                                .ok_or(format!("unknown register 0x{:X}", reg1_raw)).unwrap();
+                            let reg2 = Register::from_u8(reg2_raw as u8)
+                                .ok_or(format!("unknown register 0x{:X}", reg2_raw)).unwrap();
+
+                            Ok(Self::#name(reg1, reg2))
+                        }
+                    });
+                    field_to_string.push(quote! {
+                        Self::#name(r1, r2) => write!(f, "{} {} {}", stringify!(#name), r1, r2)
+                    });
+                    field_from_str.push(quote! {
+                        stringify!(#name) => {
+                            assert_length(&parts, 3)?;
+                            Ok(Self::#name(
+                                    Register::from_str(parts[1])?,
+                                    Register::from_str(parts[2])?
+                            ))
+                        }
+                    });
+                }
+                _ => panic!("invalid types: {:?}", types),
             }
-        })
-        .collect();
+        } else {
+            panic!("fields must be unnamed in variant: {}", name);
+        }
+    });
 
     quote! {
         impl Instruction {
