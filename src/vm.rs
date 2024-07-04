@@ -43,7 +43,7 @@ impl Machine {
     }
 
     pub fn reset(&mut self) {
-        self.memory.zero_all();
+        let _ = self.memory.zero_all();
         self.registers = [0; 8];
         self.halt = false;
         self.flags = 0;
@@ -313,7 +313,7 @@ impl Machine {
         if !self.test_flag(Flag::HasJumped) {
             self.set_register(Register::PC, pc + 2);
             // TODO: Check. Shouldnt need this
-            // self.set_flag(Flag::HasJumped, false);
+            self.set_flag(Flag::HasJumped, false);
         }
 
         Ok(())

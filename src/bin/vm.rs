@@ -33,7 +33,7 @@ pub fn main() -> Result<(), String> {
     vm.map(0x0, 1024 * 5, Box::new(LinearMemory::new(1024 * 5)))?;
     vm.set_register(Register::SP, 0x1000);
     vm.define_handler(0xf0, signal_halt);
-    vm.memory.load_from_vec(&program, 0);
+    let _ = vm.memory.load_from_vec(&program, 0);
     while !vm.halt {
         println!("{}", vm.state());
         vm.step()?;
