@@ -1,4 +1,5 @@
 use flipvm::op::Instruction;
+use flipvm::Addressable;
 use flipvm::{Machine, Register};
 
 pub const SIGHALT: u8 = 0x01;

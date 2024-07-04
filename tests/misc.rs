@@ -1,4 +1,4 @@
-use flipvm::op::{Instruction::*, Literal7Bit, Nibble, TestOp};
+use flipvm::op::{Instruction::*, Literal12Bit, Literal7Bit, Nibble, TestOp};
 use flipvm::Machine;
 use flipvm::Register::*;
 
@@ -10,14 +10,14 @@ mod common;
 fn loop_control() {
     let mut vm = Machine::new(1024 * 4);
     let program = vec![
-        Imm(A, 5),
+        Imm(A, Literal12Bit::new_checked(5).unwrap()),
         // Start = 2
         Test(A, Zero, TestOp::Neq),
         AddIf(PC, PC, Nibble::new(2)),
-        Imm(PC, 14),
-        AddImmSigned(A, Literal7Bit::from_signed(-1)),
+        Imm(PC, Literal12Bit::new_checked(14).unwrap()),
+        AddImmSigned(A, Literal7Bit::from_signed(-1).unwrap()),
         AddImm(B, Literal7Bit::new(1)),
-        Imm(PC, 2),
+        Imm(PC, Literal12Bit::new_checked(2).unwrap()),
         // End = 14
         System(Zero, Zero, Nibble::new(SIGHALT)),
     ];

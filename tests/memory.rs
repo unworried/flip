@@ -1,6 +1,6 @@
-use flipvm::op::Instruction::*;
+use flipvm::op::{Instruction::*, Literal12Bit};
 use flipvm::op::Nibble;
-use flipvm::{Machine, Register::*};
+use flipvm::{Addressable, Machine, Register::*};
 
 use self::common::{run, SIGHALT};
 
@@ -13,8 +13,8 @@ fn load() {
     vm.memory.write2(0x1000, 0x999);
 
     let program = vec![
-        Imm(B, 0x100),
-        Imm(C, 0x100),
+        Imm(B, Literal12Bit::new_checked(0x100).unwrap()),
+        Imm(C, Literal12Bit::new_checked(0x100).unwrap()),
         ShiftLeft(C, C, Nibble::new(4)),
         Load(A, B, Zero),
         Load(M, C, Zero),
@@ -30,10 +30,10 @@ fn store() {
     let mut vm = Machine::new(1024 * 4);
 
     let program = vec![
-        Imm(A, 0x99),
-        Imm(B, 0x11),
+        Imm(A, Literal12Bit::new_checked(0x99).unwrap()),
+        Imm(B, Literal12Bit::new_checked(0x11).unwrap()),
         Store(B, Zero, A),
-        Imm(B, 0x22),
+        Imm(B, Literal12Bit::new_checked(0x22).unwrap()),
         Store(B, Zero, A),
         System(Zero, Zero, Nibble::new(SIGHALT)),
     ];

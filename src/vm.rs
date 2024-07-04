@@ -138,7 +138,7 @@ impl Machine {
         match op {
             Instruction::Invalid(_) => Err("0 instruction".to_string()),
             Instruction::Imm(r, v) => {
-                self.set_register(r, v);
+                self.set_register(r, v.value);
                 Ok(())
             }
             Instruction::Add(r0, r1, dst) => {

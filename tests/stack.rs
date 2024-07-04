@@ -1,4 +1,4 @@
-use flipvm::op::{Instruction::*, Nibble, StackOp};
+use flipvm::op::{Instruction::*, Literal12Bit, Nibble, StackOp};
 use flipvm::Machine;
 use flipvm::Register::*;
 
@@ -10,11 +10,11 @@ mod common;
 fn push() {
     let mut vm = Machine::new(1024 * 4);
     let program = vec![
-        Imm(A, 123),
+        Imm(A, Literal12Bit::new_checked(123).unwrap()),
         Stack(A, SP, StackOp::Push),
-        Imm(A, 301),
+        Imm(A, Literal12Bit::new_checked(301).unwrap()),
         Stack(A, SP, StackOp::Push),
-        Imm(A, 12),
+        Imm(A, Literal12Bit::new_checked(12).unwrap()),
         Stack(A, SP, StackOp::Push),
         System(Zero, Zero, Nibble::new(SIGHALT)),
     ];
@@ -28,9 +28,9 @@ fn push() {
 fn pop() {
     let mut vm = Machine::new(1024 * 4);
     let program = vec![
-        Imm(A, 1),
+        Imm(A, Literal12Bit::new_checked(1).unwrap()),
         Stack(A, SP, StackOp::Push),
-        Imm(A, 552),
+        Imm(A, Literal12Bit::new_checked(552).unwrap()),
         Stack(A, SP, StackOp::Push),
         Stack(B, SP, StackOp::Pop),
         System(Zero, Zero, Nibble::new(SIGHALT)),
@@ -44,8 +44,8 @@ fn pop() {
 fn swap() {
     let mut vm = Machine::new(1024 * 4);
     let program = vec![
-        Imm(A, 231),
-        Imm(B, 537),
+        Imm(A, Literal12Bit::new_checked(231).unwrap()),
+        Imm(B, Literal12Bit::new_checked(537).unwrap()),
         Stack(A, SP, StackOp::Push),
         Stack(B, SP, StackOp::Push),
         Stack(Zero, SP, StackOp::Swap),
@@ -60,9 +60,9 @@ fn swap() {
 fn peek() {
     let mut vm = Machine::new(1024 * 4);
     let program = vec![
-        Imm(A, 1),
+        Imm(A, Literal12Bit::new_checked(1).unwrap()),
         Stack(A, SP, StackOp::Push),
-        Imm(A, 552),
+        Imm(A, Literal12Bit::new_checked(552).unwrap()),
         Stack(A, SP, StackOp::Push),
         Stack(B, SP, StackOp::Peek),
         System(Zero, Zero, Nibble::new(SIGHALT)),
@@ -76,7 +76,7 @@ fn peek() {
 fn dup() {
     let mut vm = Machine::new(1024 * 4);
     let program = vec![
-        Imm(A, 98),
+        Imm(A, Literal12Bit::new_checked(98).unwrap()),
         Stack(A, SP, StackOp::Push),
         Stack(Zero, SP, StackOp::Dup),
         Stack(Zero, SP, StackOp::Dup),
@@ -92,11 +92,11 @@ fn dup() {
 fn rotate() {
     let mut vm = Machine::new(1024 * 4);
     let program = vec![
-        Imm(A, 1),
+        Imm(A, Literal12Bit::new_checked(1).unwrap()),
         Stack(A, SP, StackOp::Push),
-        Imm(A, 2),
+        Imm(A, Literal12Bit::new_checked(2).unwrap()),
         Stack(A, SP, StackOp::Push),
-        Imm(A, 3),
+        Imm(A, Literal12Bit::new_checked(3).unwrap()),
         Stack(A, SP, StackOp::Push),
         Stack(Zero, SP, StackOp::Rotate),
         System(Zero, Zero, Nibble::new(SIGHALT)),
@@ -111,9 +111,9 @@ fn rotate() {
 fn add() {
     let mut vm = Machine::new(1024 * 4);
     let program = vec![
-        Imm(A, 5),
+        Imm(A, Literal12Bit::new_checked(5).unwrap()),
         Stack(A, SP, StackOp::Push),
-        Imm(A, 10),
+        Imm(A, Literal12Bit::new_checked(10).unwrap()),
         Stack(A, SP, StackOp::Push),
         Stack(Zero, SP, StackOp::Add),
         System(Zero, Zero, Nibble::new(SIGHALT)),
@@ -126,9 +126,9 @@ fn add() {
 fn sub() {
     let mut vm = Machine::new(1024 * 4);
     let program = vec![
-        Imm(A, 5),
+        Imm(A, Literal12Bit::new_checked(5).unwrap()),
         Stack(A, SP, StackOp::Push),
-        Imm(A, 20),
+        Imm(A, Literal12Bit::new_checked(20).unwrap()),
         Stack(A, SP, StackOp::Push),
         Stack(Zero, SP, StackOp::Sub),
         System(Zero, Zero, Nibble::new(SIGHALT)),
@@ -141,11 +141,11 @@ fn sub() {
 fn load_offset() {
     let mut vm = Machine::new(1024 * 4);
     let program = vec![
-        Imm(A, 105),
+        Imm(A, Literal12Bit::new_checked(105).unwrap()),
         Stack(A, SP, StackOp::Push),
-        Imm(A, 210),
+        Imm(A, Literal12Bit::new_checked(210).unwrap()),
         Stack(A, SP, StackOp::Push),
-        Imm(A, 315),
+        Imm(A, Literal12Bit::new_checked(315).unwrap()),
         Stack(A, SP, StackOp::Push),
         LoadStackOffset(C, SP, Nibble::new(3)),
         LoadStackOffset(B, SP, Nibble::new(2)),
