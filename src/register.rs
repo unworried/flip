@@ -2,6 +2,7 @@ use std::fmt;
 use std::str::FromStr;
 
 #[repr(u16)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Flag {
     Compare = 0b1,
     HasJumped = 0b10,
