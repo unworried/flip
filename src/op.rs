@@ -18,6 +18,8 @@ pub enum Instruction {
     #[opcode(0xff)]
     //TODO: Conv. to restrictive type
     Imm(Register, u16), // Doesnt use an opcode
+    #[opcode(0x0)]
+    Invalid(u16),
     #[opcode(0x1)]
     Add(Register, Register, Register),
     #[opcode(0x2)]
@@ -32,17 +34,21 @@ pub enum Instruction {
     ShiftRightLogical(Register, Register, Nibble),
     #[opcode(0x7)]
     ShiftRightArithmetic(Register, Register, Nibble),
-
+    // TODO: Impl AND, OR, XOR, NOT
     #[opcode(0x8)]
     Load(Register, Register, Register), // R0 = RAM[R1 | (R2 << 16)]
     #[opcode(0x9)]
     Store(Register, Register, Register), // RAM[R1 | (R2 << 16)] = R0
     #[opcode(0xa)]
-    Test(Register, Register, TestOp),
+    JumpOffset(Literal10Bit),
+    #[opcode(0x10)]
+    SetAndSave(Register, Register, Register), // R0 = R1, R2 = R0
+    #[opcode(0x11)]
+    AddAndSave(Register, Register, Register), // R0 = R1 + R0, R2 = R0
     #[opcode(0xb)]
-    AddIf(Register, Nibble),
+    Test(Register, Register, TestOp),
     #[opcode(0xc)]
-    Jump(Literal10Bit),
+    AddIf(Register, Nibble),
     #[opcode(0xd)]
     Stack(Register, Register, StackOp),
     #[opcode(0xe)]
@@ -210,7 +216,9 @@ mod test {
             ShiftRightArithmetic(M, BP, Nibble::new(0xe)),
             Load(A, C, M),
             Store(C, A, M),
-            Jump(Literal10Bit::new(1000)),
+            JumpOffset(Literal10Bit::new(1000)),
+            SetAndSave(A, B, C),
+            AddAndSave(PC, B, C),
             Test(BP, A, TestOp::Gte),
             AddIf(PC, Nibble::new(0x0)),
             Stack(B, SP, StackOp::Dup),

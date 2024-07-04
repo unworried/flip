@@ -65,9 +65,13 @@ impl Machine {
     }
 
     pub fn set_register(&mut self, r: Register, v: u16) {
-        match r {
-            Register::Zero => {}
-            _ => self.registers[r as usize] = v,
+        if r == Register::Zero {
+            return;
+        }
+
+        self.registers[r as usize] = v;
+        if r == Register::PC {
+            self.set_flag(Flag::HasJumped, true);
         }
     }
 
@@ -121,11 +125,12 @@ impl Machine {
             .memory
             .read2(pc as u32)
             .ok_or_else(|| format!("pc read fail @ 0x{:X}", pc))?;
-        self.set_register(Register::PC, pc + 2);
 
+        self.set_flag(Flag::HasJumped, false);
         let op = Instruction::try_from(instruction)?;
         println!("executing: {}", op);
         match op {
+            Instruction::Invalid(_) => Err("0 instruction".to_string()),
             Instruction::Imm(r, v) => {
                 self.set_register(r, v);
                 Ok(())
@@ -203,8 +208,19 @@ impl Machine {
                     )),
                 }
             }
-            Instruction::Jump(b) => {
+            Instruction::JumpOffset(b) => {
                 self.set_register(Register::PC, self.get_register(Register::PC) + b.value);
+                Ok(())
+            }
+            Instruction::SetAndSave(r0, r1, save) => {
+                self.set_register(save, self.get_register(r0));
+                self.set_register(r0, self.get_register(r1));
+                Ok(())
+            }
+            Instruction::AddAndSave(r0, r1, save) => {
+                let v = self.get_register(r0);
+                self.set_register(save, v);
+                self.set_register(r0, v + self.get_register(r1));
                 Ok(())
             }
             Instruction::Test(r0, r1, op) => {
@@ -227,6 +243,7 @@ impl Machine {
             Instruction::AddIf(r, offset) => {
                 if self.test_flag(Flag::Compare) {
                     self.set_register(r, self.get_register(r) + 2 * (offset.value as u16));
+                    self.set_flag(Flag::Compare, false);
                 }
                 Ok(())
             }
@@ -309,6 +326,14 @@ impl Machine {
                     sigfn(self, arg.value as u16)
                 }
             }
+        }?;
+
+        if !self.test_flag(Flag::HasJumped) {
+            self.set_register(Register::PC, pc + 2);
+            // TODO: Check. Shouldnt need this
+            // self.set_flag(Flag::HasJumped, false);
         }
+
+        Ok(())
     }
 }
