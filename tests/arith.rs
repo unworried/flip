@@ -1,33 +1,13 @@
-use flipvm::op::Instruction::{self, *};
 use flipvm::op::Nibble;
-use flipvm::{
-    Machine,
-    Register::{self, *},
-};
+use flipvm::op::{Instruction::*, Literal7Bit};
+use flipvm::{Machine, Register::*};
 
-const SIGHALT: u8 = 0x01;
+use self::common::{run, SIGHALT};
 
-fn signal_halt(vm: &mut Machine, _: u16) -> Result<(), String> {
-    vm.halt = true;
-    Ok(())
-}
-
-fn run(vm: &mut Machine, program: &[Instruction]) -> Result<(), String> {
-    let program_words: Vec<_> = program.iter().map(|x| x.encode_u16()).collect();
-    unsafe {
-        let program_bytes = program_words.align_to::<u8>().1;
-        vm.memory.load_from_vec(program_bytes, 0);
-    }
-    vm.set_register(Register::SP, 0x1000);
-    vm.define_handler(SIGHALT, signal_halt);
-    while !vm.halt {
-        vm.step()?;
-    }
-    Ok(())
-}
+mod common;
 
 #[test]
-fn test_add() {
+fn add() {
     let mut vm = Machine::new(1024 * 4);
     vm.reset();
     let program = vec![
@@ -37,11 +17,11 @@ fn test_add() {
         System(Zero, Zero, Nibble::new(SIGHALT)),
     ];
     run(&mut vm, &program).unwrap();
-    assert_eq!(vm.get_register(C), 26);
+    assert_reg_eq!(vm, C, 26);
 }
 
 #[test]
-fn test_sub() {
+fn sub() {
     let mut vm = Machine::new(1024 * 4);
     vm.reset();
     let program = vec![
@@ -51,11 +31,11 @@ fn test_sub() {
         System(Zero, Zero, Nibble::new(SIGHALT)),
     ];
     run(&mut vm, &program).unwrap();
-    assert_eq!(vm.get_register(C), 5);
+    assert_reg_eq!(vm, C, 5);
 }
 
 #[test]
-fn test_sub_overflow() {
+fn sub_overflow() {
     let mut vm = Machine::new(1024 * 4);
     vm.reset();
     let program = vec![
@@ -65,5 +45,63 @@ fn test_sub_overflow() {
         System(Zero, Zero, Nibble::new(SIGHALT)),
     ];
     run(&mut vm, &program).unwrap();
-    assert_eq!(vm.get_register(C), u16::MAX - 55);
+    assert_reg_eq!(vm, C, u16::MAX - 55);
+}
+
+#[test]
+fn add_imm() {
+    let mut vm = Machine::new(1024 * 4);
+    vm.reset();
+    let program = vec![
+        Imm(A, 11),
+        AddImm(A, Literal7Bit::new(4)),
+        System(Zero, Zero, Nibble::new(SIGHALT)),
+    ];
+    run(&mut vm, &program).unwrap();
+    assert_reg_eq!(vm, A, 15);
+}
+
+#[test]
+fn shift_left() {
+    let mut vm = Machine::new(1024 * 4);
+    vm.reset();
+    let program = vec![
+        Imm(C, 0xff),
+        ShiftLeft(C, B, Nibble::new(4)),
+        System(Zero, Zero, Nibble::new(SIGHALT)),
+    ];
+    run(&mut vm, &program).unwrap();
+    assert_reg_eq!(vm, B, 0xff0);
+}
+
+#[test]
+fn shift_right_logical() {
+    let mut vm = Machine::new(1024 * 4);
+    vm.reset();
+    let program = vec![
+        Imm(B, 0x8fc),
+        ShiftLeft(B, B, Nibble::new(4)),
+        AddImm(B, Literal7Bit::new(0x7)),
+        // 0x8fc7
+        ShiftRightLogical(B, A, Nibble::new(3)),
+        System(Zero, Zero, Nibble::new(SIGHALT)),
+    ];
+    run(&mut vm, &program).unwrap();
+    assert_reg_eq!(vm, A, 0x11f8);
+}
+
+#[test]
+fn shift_right_arithmetic() {
+    let mut vm = Machine::new(1024 * 4);
+    vm.reset();
+    let program = vec![
+        Imm(A, 0xff0),
+        ShiftLeft(A, A, Nibble::new(4)),
+        AddImm(A, Literal7Bit::new(0x70)),
+        // 0xff70
+        ShiftRightArithmetic(A, C, Nibble::new(2)),
+        System(Zero, Zero, Nibble::new(SIGHALT)),
+    ];
+    run(&mut vm, &program).unwrap();
+    assert_reg_eq!(vm, C, 0xffdc);
 }
