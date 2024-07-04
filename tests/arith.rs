@@ -58,6 +58,30 @@ fn add_imm() {
 }
 
 #[test]
+fn add_imm_signed() {
+    let mut vm = Machine::new(1024 * 4);
+    let program = vec![
+        Imm(A, 21),
+        AddImmSigned(A, Literal7Bit::from_signed(-4)),
+        System(Zero, Zero, Nibble::new(SIGHALT)),
+    ];
+    run(&mut vm, &program).unwrap();
+    assert_reg_eq!(vm, A, 17);
+}
+
+#[test]
+fn add_imm_signed_to_zero() {
+    let mut vm = Machine::new(1024 * 4);
+    let program = vec![
+        Imm(C, 21),
+        AddImmSigned(C, Literal7Bit::from_signed(-21)),
+        System(Zero, Zero, Nibble::new(SIGHALT)),
+    ];
+    run(&mut vm, &program).unwrap();
+    assert_reg_eq!(vm, C, 0);
+}
+
+#[test]
 fn shift_left() {
     let mut vm = Machine::new(1024 * 4);
     let program = vec![
