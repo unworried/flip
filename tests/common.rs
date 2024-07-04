@@ -9,7 +9,6 @@ fn signal_halt(vm: &mut Machine, _: u16) -> Result<(), String> {
 }
 
 pub fn run(vm: &mut Machine, program: &[Instruction]) -> Result<(), String> {
-    vm.reset();
     let program_words: Vec<_> = program.iter().map(|x| x.encode_u16()).collect();
     unsafe {
         let program_bytes = program_words.align_to::<u8>().1;
@@ -46,6 +45,37 @@ macro_rules! assert_mem_eq {
             result, $val,
             "expected 0x{:X} @ {:X}, got 0x{:X}",
             $val, addr, result
+        );
+    };
+
+    ($vm:expr, $addr:expr, $val:expr) => {
+        let result = $vm.memory.read2(($addr) as u32).unwrap();
+        assert_eq!(
+            result, $val,
+            "expected 0x{:X} @ {:X}, got 0x{:X}",
+            $val, $addr, result
+        );
+    };
+}
+
+#[macro_export]
+macro_rules! assert_flag_set {
+    ($vm:expr, $flag:expr) => {
+        assert!(
+            $vm.test_flag($flag),
+            "expected flag {} to be set",
+            stringify!($flag)
+        );
+    };
+}
+
+#[macro_export]
+macro_rules! assert_flag_unset {
+    ($vm:expr, $flag:expr) => {
+        assert!(
+            !$vm.test_flag($flag),
+            "expected flag {} to be unset",
+            stringify!($flag)
         );
     };
 }
