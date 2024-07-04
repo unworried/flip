@@ -49,6 +49,117 @@ pub trait Addressable {
     fn zero_all(&mut self) -> bool;
 }
 
+pub struct MemoryMapper {
+    mapped: Vec<(usize, usize, Box<dyn Addressable>)>,
+}
+
+impl MemoryMapper {
+    pub fn new() -> MemoryMapper {
+        MemoryMapper { mapped: Vec::new() }
+    }
+
+    pub fn map(
+        &mut self,
+        start: usize,
+        size: usize,
+        a: Box<dyn Addressable>,
+    ) -> Result<(), String> {
+        self.mapped.push((start, size, a));
+        Ok(())
+    }
+
+    pub fn lookup_mapping(&self, addr: u32) -> Option<usize> {
+        self.mapped
+            .iter()
+            .enumerate()
+            .filter(|&(_, &(start, _, _))| start <= addr as usize)
+            .max_by_key(|&(_, &(start, _, _))| start)
+            .map(|(index, _)| index)
+    }
+}
+
+impl Addressable for MemoryMapper {
+    fn read(&self, addr: u32) -> Option<u8> {
+        self.lookup_mapping(addr).and_then(|index| {
+            let (start, size, ref a) = &self.mapped[index];
+            let addr_local = addr - (*start as u32);
+            if addr_local < (*size as u32) {
+                a.read(addr_local)
+            } else {
+                None
+            }
+        })
+        /*let mut candidate: Option<&(usize, usize, Box<dyn Addressable>)> = None;
+        for entry in &self.mapped {
+            let (start, _, _) = entry;
+            if *start < addr as usize {
+                if let Some((c, _, _)) = candidate {
+                    if *start > *c {
+                        candidate = Some(entry);
+                    }
+                } else {
+                    candidate = Some(entry);
+                }
+            }
+        }
+        match candidate {
+            Some((start, size, a)) => {
+                let addr_local = addr - (*start as u32);
+                if addr_local >= (*size as u32) {
+                    None
+                } else {
+                    a.read(addr_local)
+                }
+            }
+            None => None,
+        }*/
+    }
+
+    fn write(&mut self, addr: u32, value: u8) -> bool {
+        match self.lookup_mapping(addr) {
+            Some(index) => {
+                let (start, size, ref mut a) = &mut self.mapped[index];
+                let addr_local = addr - (*start as u32);
+                if addr_local < (*size as u32) {
+                    a.write(addr_local, value)
+                } else {
+                    false
+                }
+            }
+            None => false,
+        }
+        /*let mut candidate: Option<&mut (usize, usize, Box<dyn Addressable>)> = None;
+        for entry in &mut self.mapped {
+            let (start, _, _) = entry;
+            if *start < addr as usize {
+                if let Some((c, _, _)) = candidate {
+                    if *start > *c {
+                        candidate = Some(entry);
+                    }
+                } else {
+                    candidate = Some(entry);
+                }
+            }
+        }
+        match candidate {
+            Some((start, size, a)) => {
+                let addr_local = addr - (*start as u32);
+                if addr_local >= (*size as u32) {
+                    false
+                } else {
+                    a.write(addr_local, value)
+                }
+            }
+            None => false,
+        }*/
+    }
+
+    fn zero_all(&mut self) -> bool {
+        // TODO: Change
+        true
+    }
+}
+
 pub struct LinearMemory {
     bytes: Vec<u8>,
     size: usize,

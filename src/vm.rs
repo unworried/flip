@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::memory::{Addressable, LinearMemory};
+use crate::memory::{Addressable, MemoryMapper};
 use crate::op::{Instruction, StackOp, TestOp};
 use crate::register::Flag;
 use crate::Register;
@@ -13,7 +13,7 @@ pub struct Machine {
     flags: u16,
     pub halt: bool,
     // TODO: Change This
-    pub memory: Box<dyn Addressable>,
+    pub memory: MemoryMapper,
 }
 
 impl Default for Machine {
@@ -23,17 +23,23 @@ impl Default for Machine {
             signal_handlers: HashMap::new(),
             flags: 0,
             halt: false,
-            memory: Box::new(LinearMemory::new(8 * 1024)),
+            memory: MemoryMapper::new(),
         }
     }
 }
 
 impl Machine {
-    pub fn new(mem_words: usize) -> Machine {
-        Machine {
-            memory: Box::new(LinearMemory::new(2 * mem_words)),
-            ..Self::default()
-        }
+    pub fn new() -> Machine {
+        Machine { ..Self::default() }
+    }
+
+    pub fn map(
+        &mut self,
+        start: usize,
+        size: usize,
+        a: Box<dyn Addressable>,
+    ) -> Result<(), String> {
+        self.memory.map(start, size, a)
     }
 
     pub fn reset(&mut self) {
