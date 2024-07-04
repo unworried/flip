@@ -36,3 +36,16 @@ macro_rules! assert_reg_eq {
         );
     };
 }
+
+#[macro_export]
+macro_rules! assert_mem_eq {
+    ($vm:expr, $reg:ident - $ptr:literal, $val:expr) => {
+        let addr = ($vm.get_register($reg) - $ptr) as u32;
+        let result = $vm.memory.read2(addr).unwrap();
+        assert_eq!(
+            result, $val,
+            "expected 0x{:X} @ {:X}, got 0x{:X}",
+            $val, addr, result
+        );
+    };
+}
