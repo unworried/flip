@@ -60,7 +60,7 @@ impl ProcessedLinePart {
             ProcessedLinePart::Line(s) => Ok(s.to_string()),
             ProcessedLinePart::Unresolved(varname, pre, post) => {
                 let value = pp
-                    .get_variable(&varname)
+                    .get_variable(varname)
                     .ok_or(Error::UnknownToken(varname.to_string()))?;
                 Ok(format!(
                     "{} {} {}",
@@ -108,8 +108,8 @@ impl PreProcessor {
     pub fn resolve(&mut self, input: &str) -> Result<Vec<ProcessedLine>, Error> {
         let mut res: Vec<ProcessedLine> = Vec::new();
 
-        for (i, line) in input.lines().enumerate() {
-            let parts: Vec<_> = input.split(' ').collect();
+        for line in input.lines() {
+            let parts: Vec<_> = line.split_whitespace().collect();
             if parts.is_empty() {
                 continue;
             }
@@ -174,7 +174,7 @@ impl PreProcessor {
                 }
             }
             res.push(ProcessedLine {
-                source_line_number: i,
+                source_line_number: self.instruction_count as usize,
                 line: self.build_parts(parts),
             });
             self.instruction_count += 1;

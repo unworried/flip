@@ -40,12 +40,12 @@ fn main() -> Result<(), String> {
             .resolve(&processor)
             .map_err(|_| format!("failed to resolve line: {}", line.get_line_number()))?;
         if args.preprocess_only {
-            for &b in resolved.as_bytes() {
+            for &b in format!("{}: {}", line.get_line_number(), resolved).as_bytes() {
                 output.push(b);
             }
             output.push(b'\n');
         } else {
-            if resolved.len() == 0 {
+            if resolved.is_empty() {
                 continue;
             }
             if let Some(';') = resolved.chars().nth(0) {
