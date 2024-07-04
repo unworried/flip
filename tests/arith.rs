@@ -9,7 +9,6 @@ mod common;
 #[test]
 fn add() {
     let mut vm = Machine::new(1024 * 4);
-    vm.reset();
     let program = vec![
         Imm(A, 11),
         Imm(B, 15),
@@ -23,7 +22,6 @@ fn add() {
 #[test]
 fn sub() {
     let mut vm = Machine::new(1024 * 4);
-    vm.reset();
     let program = vec![
         Imm(A, 20),
         Imm(B, 15),
@@ -37,7 +35,6 @@ fn sub() {
 #[test]
 fn sub_overflow() {
     let mut vm = Machine::new(1024 * 4);
-    vm.reset();
     let program = vec![
         Imm(A, 1),
         Imm(B, 57),
@@ -51,7 +48,6 @@ fn sub_overflow() {
 #[test]
 fn add_imm() {
     let mut vm = Machine::new(1024 * 4);
-    vm.reset();
     let program = vec![
         Imm(A, 11),
         AddImm(A, Literal7Bit::new(4)),
@@ -64,7 +60,6 @@ fn add_imm() {
 #[test]
 fn shift_left() {
     let mut vm = Machine::new(1024 * 4);
-    vm.reset();
     let program = vec![
         Imm(C, 0xff),
         ShiftLeft(C, B, Nibble::new(4)),
@@ -77,7 +72,6 @@ fn shift_left() {
 #[test]
 fn shift_right_logical() {
     let mut vm = Machine::new(1024 * 4);
-    vm.reset();
     let program = vec![
         Imm(B, 0x8fc),
         ShiftLeft(B, B, Nibble::new(4)),
@@ -93,7 +87,6 @@ fn shift_right_logical() {
 #[test]
 fn shift_right_arithmetic() {
     let mut vm = Machine::new(1024 * 4);
-    vm.reset();
     let program = vec![
         Imm(A, 0xff0),
         ShiftLeft(A, A, Nibble::new(4)),
