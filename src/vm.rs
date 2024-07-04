@@ -115,7 +115,7 @@ impl Machine {
         }
     }
 
-    fn test_flag(&self, flag: Flag) -> bool {
+    pub fn test_flag(&self, flag: Flag) -> bool {
         self.flags & (flag as u16) != 0
     }
 
