@@ -16,6 +16,7 @@ use crate::Register;
 #[derive(Debug, VmInstruction, PartialEq, Eq)]
 pub enum Instruction {
     #[opcode(0xff)]
+    //TODO: Conv. to restrictive type
     Imm(Register, u16), // Doesnt use an opcode
     #[opcode(0x1)]
     Add(Register, Register, Register),

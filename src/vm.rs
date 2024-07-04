@@ -160,17 +160,23 @@ impl Machine {
             }
             Instruction::ShiftLeft(r0, r1, offset) => {
                 let base = self.get_register(r0);
-                self.set_register(r1, base << offset.value);
+                self.set_register(r1, base << (offset.value as u16));
                 Ok(())
             }
             Instruction::ShiftRightLogical(r0, r1, offset) => {
                 let base = self.get_register(r0);
-                self.set_register(r1, base >> offset.value);
+                self.set_register(r1, base >> (offset.value as u16));
                 Ok(())
             }
             Instruction::ShiftRightArithmetic(r0, r1, offset) => {
                 let base = self.get_register(r0);
-                self.set_register(r1, base >> offset.value);
+
+                let res: u16 = unsafe {
+                    let signed: i16 = std::mem::transmute(base);
+                    std::mem::transmute(signed >> (offset.value as u32))
+                };
+
+                self.set_register(r1, res);
                 Ok(())
             }
             Instruction::Load(r0, r1, r2) => {
