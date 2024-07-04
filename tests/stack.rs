@@ -136,3 +136,20 @@ fn sub() {
     run(&mut vm, &program).unwrap();
     assert_mem_eq!(vm, SP - 2, 15);
 }
+
+#[test]
+fn load_offset() {
+    let mut vm = Machine::new(1024 * 4);
+    let program = vec![
+        Imm(A, 105),
+        Stack(A, SP, StackOp::Push),
+        Imm(A, 210),
+        Stack(A, SP, StackOp::Push),
+        Imm(A, 315),
+        Stack(A, SP, StackOp::Push),
+        LoadStackOffset(C, SP, Nibble::new(3)),
+        System(Zero, Zero, Nibble::new(SIGHALT)),
+    ];
+    run(&mut vm, &program).unwrap();
+    assert_reg_eq!(vm, C, 105);
+}
