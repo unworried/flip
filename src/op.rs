@@ -73,11 +73,21 @@ impl Literal7Bit {
     }
 
     pub fn as_signed(&self) -> i8 {
-        let sign = (self.value & 0x40) >> 7;
+        let sign = (self.value & 0x40) >> 6;
         if sign == 0 {
-            (self.value & 0x3f) as i8
+            (self.value & 0x7f) as i8
         } else {
-            -((self.value & 0x3f) as i8)
+            unsafe { std::mem::transmute(self.value | 0x80) }
+        }
+    }
+
+    pub fn from_signed(value: i8) -> Self {
+        let abs: u8 = value.unsigned_abs();
+        if value >= 0 {
+            Self::new(abs)
+        } else {
+            let inv = !(abs & 0x7f);
+            Self::new((inv + 1) & 0x7f)
         }
     }
 }
@@ -230,5 +240,15 @@ mod test {
             assert_eq!(*l, Instruction::try_from(*r)?);
         }
         Ok(())
+    }
+
+    #[test]
+    fn test_literal_7b() {
+        assert!(Literal7Bit::from_signed(-1).value == 0b111_1111);
+        assert!(Literal7Bit::from_signed(-5).value == 0b111_1011);
+        assert!(Literal7Bit::from_signed(-30).value == 0b110_0010);
+        assert!(Literal7Bit::from_signed(-10).as_signed() == -10);
+        assert!(Literal7Bit::from_signed(-30).as_signed() == -30);
+        assert!(Literal7Bit::from_signed(-29).as_signed() == -29);
     }
 }
