@@ -46,7 +46,7 @@ fn branch() {
         Imm(A, 12),
         Imm(B, 13),
         Test(A, B, TestOp::Neq),
-        AddIf(PC, Nibble::new(0x4)),
+        AddIf(PC, PC, Nibble::new(0x4)),
         Invalid(0),
         Invalid(0),
         Invalid(0),
@@ -62,10 +62,10 @@ fn branch_without_test() {
         Imm(A, 12),
         Imm(B, 13),
         Test(A, B, TestOp::Neq),
-        AddIf(PC, Nibble::new(0x3)),
+        AddIf(PC, PC, Nibble::new(0x3)),
         Invalid(0),
         Invalid(0),
-        AddIf(PC, Nibble::new(0xf)),
+        AddIf(PC, PC, Nibble::new(0xf)),
         System(Zero, Zero, Nibble::new(SIGHALT)),
     ];
     run(&mut vm, &program).unwrap();

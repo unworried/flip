@@ -148,8 +148,10 @@ fn load_offset() {
         Imm(A, 315),
         Stack(A, SP, StackOp::Push),
         LoadStackOffset(C, SP, Nibble::new(3)),
+        LoadStackOffset(B, SP, Nibble::new(2)),
         System(Zero, Zero, Nibble::new(SIGHALT)),
     ];
     run(&mut vm, &program).unwrap();
     assert_reg_eq!(vm, C, 105);
+    assert_reg_eq!(vm, C, 210);
 }

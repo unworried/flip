@@ -219,8 +219,10 @@ impl Machine {
                 Ok(())
             }
             Instruction::SetAndSave(r0, r1, save) => {
+                let v = self.get_register(r1);
+
                 self.set_register(save, self.get_register(r0));
-                self.set_register(r0, self.get_register(r1));
+                self.set_register(r0, v);
                 Ok(())
             }
             Instruction::AddAndSave(r0, r1, save) => {
@@ -246,9 +248,9 @@ impl Machine {
                 self.set_flag(Flag::Compare, res);
                 Ok(())
             }
-            Instruction::AddIf(r, offset) => {
+            Instruction::AddIf(r0, r1, offset) => {
                 if self.test_flag(Flag::Compare) {
-                    self.set_register(r, self.get_register(r) + 2 * (offset.value as u16));
+                    self.set_register(r0, self.get_register(r1) + 2 * (offset.value as u16));
                     self.set_flag(Flag::Compare, false);
                 }
                 Ok(())

@@ -13,7 +13,7 @@ fn loop_control() {
         Imm(A, 5),
         // Start = 2
         Test(A, Zero, TestOp::Neq),
-        AddIf(PC, Nibble::new(2)),
+        AddIf(PC, PC, Nibble::new(2)),
         Imm(PC, 14),
         AddImmSigned(A, Literal7Bit::from_signed(-1)),
         AddImm(B, Literal7Bit::new(1)),
