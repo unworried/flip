@@ -28,7 +28,7 @@ fn jump_offset() {
         Add(Zero, Zero, Zero),
         Add(Zero, Zero, Zero),
         Add(Zero, Zero, Zero),
-        JumpOffset(Literal10Bit::new(10)),
+        JumpOffset(Literal10Bit::new_checked(10).unwrap()),
         Invalid(0),
         Invalid(0),
         Invalid(0),
