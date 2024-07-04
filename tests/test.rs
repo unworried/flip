@@ -8,7 +8,7 @@ use self::common::{run, SIGHALT};
 mod common;
 macro_rules! test_set {
     ($vm:ident, $($prog:expr),+) => {
-        let program = &[$($prog),*, System(Zero, Zero, Nibble::new(SIGHALT))];
+        let program = &[$($prog),*, System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap())];
         run(&mut $vm, program).unwrap();
         assert_flag_set!($vm, Flag::Compare);
     }
@@ -16,7 +16,7 @@ macro_rules! test_set {
 
 macro_rules! test_unset {
     ($vm:ident, $($prog:expr),+) => {
-        let program = &[$($prog),*, System(Zero, Zero, Nibble::new(SIGHALT))];
+        let program = &[$($prog),*, System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap())];
         run(&mut $vm, program).unwrap();
         assert_flag_unset!($vm, Flag::Compare);
     }

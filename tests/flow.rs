@@ -15,7 +15,7 @@ fn jump() {
         Invalid(0),
         Invalid(0),
         Invalid(0),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
     assert_reg_eq!(vm, PC, 12);
@@ -33,7 +33,7 @@ fn jump_offset() {
         Invalid(0),
         Invalid(0),
         Invalid(0),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
     assert_reg_eq!(vm, PC, 18);
@@ -46,11 +46,11 @@ fn branch() {
         Imm(A, Literal12Bit::new_checked(12).unwrap()),
         Imm(B, Literal12Bit::new_checked(13).unwrap()),
         Test(A, B, TestOp::Neq),
-        AddIf(PC, PC, Nibble::new(0x4)),
+        AddIf(PC, PC, Nibble::new_checked(0x4).unwrap()),
         Invalid(0),
         Invalid(0),
         Invalid(0),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
 }
@@ -62,11 +62,11 @@ fn branch_without_test() {
         Imm(A, Literal12Bit::new_checked(12).unwrap()),
         Imm(B, Literal12Bit::new_checked(13).unwrap()),
         Test(A, B, TestOp::Neq),
-        AddIf(PC, PC, Nibble::new(0x3)),
+        AddIf(PC, PC, Nibble::new_checked(0x3).unwrap()),
         Invalid(0),
         Invalid(0),
-        AddIf(PC, PC, Nibble::new(0xf)),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        AddIf(PC, PC, Nibble::new_checked(0xf).unwrap()),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
 }
@@ -77,7 +77,7 @@ fn jump_and_link_set() {
     let program = vec![
         Imm(B, Literal12Bit::new_checked(4).unwrap()),
         SetAndSave(PC, B, C),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
     assert_reg_eq!(vm, C, 2);
@@ -92,7 +92,7 @@ fn jump_and_link_add() {
         Invalid(0),
         Invalid(0),
         Invalid(0),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
     assert_reg_eq!(vm, B, 2);

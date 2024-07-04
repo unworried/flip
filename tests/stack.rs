@@ -16,7 +16,7 @@ fn push() {
         Stack(A, SP, StackOp::Push),
         Imm(A, Literal12Bit::new_checked(12).unwrap()),
         Stack(A, SP, StackOp::Push),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
     assert_mem_eq!(vm, SP - 2, 12);
@@ -33,7 +33,7 @@ fn pop() {
         Imm(A, Literal12Bit::new_checked(552).unwrap()),
         Stack(A, SP, StackOp::Push),
         Stack(B, SP, StackOp::Pop),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
     assert_reg_eq!(vm, B, 552);
@@ -49,7 +49,7 @@ fn swap() {
         Stack(A, SP, StackOp::Push),
         Stack(B, SP, StackOp::Push),
         Stack(Zero, SP, StackOp::Swap),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
     assert_mem_eq!(vm, SP - 2, 231);
@@ -65,7 +65,7 @@ fn peek() {
         Imm(A, Literal12Bit::new_checked(552).unwrap()),
         Stack(A, SP, StackOp::Push),
         Stack(B, SP, StackOp::Peek),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
     assert_reg_eq!(vm, B, 552);
@@ -80,7 +80,7 @@ fn dup() {
         Stack(A, SP, StackOp::Push),
         Stack(Zero, SP, StackOp::Dup),
         Stack(Zero, SP, StackOp::Dup),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
     assert_mem_eq!(vm, SP - 2, 98);
@@ -99,7 +99,7 @@ fn rotate() {
         Imm(A, Literal12Bit::new_checked(3).unwrap()),
         Stack(A, SP, StackOp::Push),
         Stack(Zero, SP, StackOp::Rotate),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
     assert_mem_eq!(vm, SP - 2, 2);
@@ -116,7 +116,7 @@ fn add() {
         Imm(A, Literal12Bit::new_checked(10).unwrap()),
         Stack(A, SP, StackOp::Push),
         Stack(Zero, SP, StackOp::Add),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
     assert_mem_eq!(vm, SP - 2, 15);
@@ -131,7 +131,7 @@ fn sub() {
         Imm(A, Literal12Bit::new_checked(20).unwrap()),
         Stack(A, SP, StackOp::Push),
         Stack(Zero, SP, StackOp::Sub),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
     assert_mem_eq!(vm, SP - 2, 15);
@@ -147,9 +147,9 @@ fn load_offset() {
         Stack(A, SP, StackOp::Push),
         Imm(A, Literal12Bit::new_checked(315).unwrap()),
         Stack(A, SP, StackOp::Push),
-        LoadStackOffset(C, SP, Nibble::new(3)),
-        LoadStackOffset(B, SP, Nibble::new(2)),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        LoadStackOffset(C, SP, Nibble::new_checked(3).unwrap()),
+        LoadStackOffset(B, SP, Nibble::new_checked(2).unwrap()),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
     assert_reg_eq!(vm, C, 105);

@@ -1,5 +1,5 @@
-use flipvm::op::{Instruction::*, Literal12Bit};
 use flipvm::op::Nibble;
+use flipvm::op::{Instruction::*, Literal12Bit};
 use flipvm::{Addressable, Machine, Register::*};
 
 use self::common::{run, SIGHALT};
@@ -15,10 +15,10 @@ fn load() {
     let program = vec![
         Imm(B, Literal12Bit::new_checked(0x100).unwrap()),
         Imm(C, Literal12Bit::new_checked(0x100).unwrap()),
-        ShiftLeft(C, C, Nibble::new(4)),
+        ShiftLeft(C, C, Nibble::new_checked(4).unwrap()),
         Load(A, B, Zero),
         Load(M, C, Zero),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
     assert_reg_eq!(vm, A, 0x77);
@@ -35,7 +35,7 @@ fn store() {
         Store(B, Zero, A),
         Imm(B, Literal12Bit::new_checked(0x22).unwrap()),
         Store(B, Zero, A),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
     assert_mem_eq!(vm, 0x11, 0x99);

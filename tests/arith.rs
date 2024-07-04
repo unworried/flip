@@ -13,7 +13,7 @@ fn add() {
         Imm(A, Literal12Bit::new_checked(11).unwrap()),
         Imm(B, Literal12Bit::new_checked(15).unwrap()),
         Add(A, B, C),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
     assert_reg_eq!(vm, C, 26);
@@ -26,7 +26,7 @@ fn sub() {
         Imm(A, Literal12Bit::new_checked(20).unwrap()),
         Imm(B, Literal12Bit::new_checked(15).unwrap()),
         Sub(A, B, C),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
     assert_reg_eq!(vm, C, 5);
@@ -39,7 +39,7 @@ fn sub_overflow() {
         Imm(A, Literal12Bit::new_checked(1).unwrap()),
         Imm(B, Literal12Bit::new_checked(57).unwrap()),
         Sub(A, B, C),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
     assert_reg_eq!(vm, C, u16::MAX - 55);
@@ -51,7 +51,7 @@ fn add_imm() {
     let program = vec![
         Imm(A, Literal12Bit::new_checked(11).unwrap()),
         AddImm(A, Literal7Bit::new_checked(4).unwrap()),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
     assert_reg_eq!(vm, A, 15);
@@ -63,7 +63,7 @@ fn add_imm_signed() {
     let program = vec![
         Imm(A, Literal12Bit::new_checked(21).unwrap()),
         AddImmSigned(A, Literal7Bit::from_signed(-4).unwrap()),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
     assert_reg_eq!(vm, A, 17);
@@ -75,7 +75,7 @@ fn add_imm_signed_to_zero() {
     let program = vec![
         Imm(C, Literal12Bit::new_checked(21).unwrap()),
         AddImmSigned(C, Literal7Bit::from_signed(-21).unwrap()),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
     assert_reg_eq!(vm, C, 0);
@@ -86,8 +86,8 @@ fn shift_left() {
     let mut vm = Machine::new(1024 * 4);
     let program = vec![
         Imm(C, Literal12Bit::new_checked(0xff).unwrap()),
-        ShiftLeft(C, B, Nibble::new(4)),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        ShiftLeft(C, B, Nibble::new_checked(4).unwrap()),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
     assert_reg_eq!(vm, B, 0xff0);
@@ -98,11 +98,11 @@ fn shift_right_logical() {
     let mut vm = Machine::new(1024 * 4);
     let program = vec![
         Imm(B, Literal12Bit::new_checked(0x8fc).unwrap()),
-        ShiftLeft(B, B, Nibble::new(4)),
+        ShiftLeft(B, B, Nibble::new_checked(4).unwrap()),
         AddImm(B, Literal7Bit::new_checked(0x7).unwrap()),
         // 0x8fc7
-        ShiftRightLogical(B, A, Nibble::new(3)),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        ShiftRightLogical(B, A, Nibble::new_checked(3).unwrap()),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
     assert_reg_eq!(vm, A, 0x11f8);
@@ -113,11 +113,11 @@ fn shift_right_arithmetic() {
     let mut vm = Machine::new(1024 * 4);
     let program = vec![
         Imm(A, Literal12Bit::new_checked(0xff0).unwrap()),
-        ShiftLeft(A, A, Nibble::new(4)),
+        ShiftLeft(A, A, Nibble::new_checked(4).unwrap()),
         AddImm(A, Literal7Bit::new_checked(0x70).unwrap()),
         // 0xff70
-        ShiftRightArithmetic(A, C, Nibble::new(2)),
-        System(Zero, Zero, Nibble::new(SIGHALT)),
+        ShiftRightArithmetic(A, C, Nibble::new_checked(2).unwrap()),
+        System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
     assert_reg_eq!(vm, C, 0xffdc);
