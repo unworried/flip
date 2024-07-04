@@ -1,5 +1,6 @@
 mod memory;
 pub mod op;
+pub mod pp;
 mod register;
 mod vm;
 
