@@ -136,7 +136,7 @@ impl Machine {
         let op = Instruction::try_from(instruction)?;
         println!("executing: {}", op);
         match op {
-            Instruction::Invalid(_) => Err("0 instruction".to_string()),
+            Instruction::Invalid => Err("0 instruction".to_string()),
             Instruction::Imm(r, v) => {
                 self.set_register(r, v.value);
                 Ok(())

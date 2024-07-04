@@ -23,7 +23,7 @@ pub enum Instruction {
     //TODO: Conv. to restrictive type
     Imm(Register, Literal12Bit), // Doesnt use an opcode
     #[opcode(0x0)]
-    Invalid(u16),
+    Invalid,
     #[opcode(0x1)]
     Add(Register, Register, Register),
     #[opcode(0x2)]

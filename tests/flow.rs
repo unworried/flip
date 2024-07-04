@@ -11,10 +11,10 @@ fn jump() {
     let mut vm = Machine::new(1024 * 4);
     let program = vec![
         Imm(PC, Literal12Bit::new_checked(10).unwrap()),
-        Invalid(0),
-        Invalid(0),
-        Invalid(0),
-        Invalid(0),
+        Invalid,
+        Invalid,
+        Invalid,
+        Invalid,
         System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
@@ -29,10 +29,10 @@ fn jump_offset() {
         Add(Zero, Zero, Zero),
         Add(Zero, Zero, Zero),
         JumpOffset(Literal10Bit::new_checked(10).unwrap()),
-        Invalid(0),
-        Invalid(0),
-        Invalid(0),
-        Invalid(0),
+        Invalid,
+        Invalid,
+        Invalid,
+        Invalid,
         System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
@@ -47,9 +47,9 @@ fn branch() {
         Imm(B, Literal12Bit::new_checked(13).unwrap()),
         Test(A, B, TestOp::Neq),
         AddIf(PC, PC, Nibble::new_checked(0x4).unwrap()),
-        Invalid(0),
-        Invalid(0),
-        Invalid(0),
+        Invalid,
+        Invalid,
+        Invalid,
         System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
@@ -63,8 +63,8 @@ fn branch_without_test() {
         Imm(B, Literal12Bit::new_checked(13).unwrap()),
         Test(A, B, TestOp::Neq),
         AddIf(PC, PC, Nibble::new_checked(0x3).unwrap()),
-        Invalid(0),
-        Invalid(0),
+        Invalid,
+        Invalid,
         AddIf(PC, PC, Nibble::new_checked(0xf).unwrap()),
         System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
@@ -89,9 +89,9 @@ fn jump_and_link_add() {
     let program = vec![
         Imm(A, Literal12Bit::new_checked(8).unwrap()),
         AddAndSave(PC, A, B),
-        Invalid(0),
-        Invalid(0),
-        Invalid(0),
+        Invalid,
+        Invalid,
+        Invalid,
         System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
     run(&mut vm, &program).unwrap();
