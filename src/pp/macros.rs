@@ -5,6 +5,12 @@ use std::path::Path;
 
 use crate::pp::{Error, PreProcessor};
 
+pub fn setup_std_macros(pp: &mut PreProcessor) {
+    pp.define_macro("defvar", defvar);
+    pp.define_macro("include", include);
+    pp.define_macro("defmacro", defmacro);
+}
+
 pub fn defvar(pp: &mut PreProcessor, input: Vec<&str>) -> Result<Vec<String>, Error> {
     if input.len() != 2 {
         return Err(Error::BadMacroFormat(".defvar <name> <value>".to_string()));
