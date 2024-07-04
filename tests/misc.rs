@@ -16,7 +16,7 @@ fn loop_control() {
         AddIf(PC, PC, Nibble::new(2)),
         Imm(PC, Literal12Bit::new_checked(14).unwrap()),
         AddImmSigned(A, Literal7Bit::from_signed(-1).unwrap()),
-        AddImm(B, Literal7Bit::new(1)),
+        AddImm(B, Literal7Bit::new_checked(1).unwrap()),
         Imm(PC, Literal12Bit::new_checked(2).unwrap()),
         // End = 14
         System(Zero, Zero, Nibble::new(SIGHALT)),
