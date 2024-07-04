@@ -75,12 +75,12 @@ impl PreProcessor {
                         Macro::Func(f) => f(self, parts[1..].to_vec())
                             .map_err(|e| Error::MacroEval(macro_name.to_string(), Box::new(e)))?,
                         Macro::Subst(lines) => lines
-                            .into_iter()
+                            .iter()
                             .map(|line| {
                                 let mp: Result<Vec<String>, String> = line
                                     .split(' ')
                                     .map(|p| match p.chars().nth(0) {
-                                        Some('!') => match u32::from_str_radix(&p[1..], 10) {
+                                        Some('!') => match p[1..].parse::<u32>() {
                                             Ok(n) => parts
                                                 .get((n + 1) as usize)
                                                 .ok_or_else(|| "failed to get".to_string())

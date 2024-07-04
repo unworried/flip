@@ -1,8 +1,9 @@
-use rust_vm::op::Instruction;
 use std::env;
 use std::fs::File;
 use std::io::{BufReader, Read};
 use std::path::Path;
+
+use flipvm::op::Instruction;
 
 // ./asm <input>
 fn main() -> Result<(), String> {
