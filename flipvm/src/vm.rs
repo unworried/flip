@@ -5,32 +5,84 @@ use crate::op::{Instruction, StackOp, TestOp};
 use crate::register::Flag;
 use crate::Register;
 
-type SignalFunction = fn(&mut Machine, arg: u16) -> Result<(), String>;
+pub trait SignalHandler {
+    fn handle(&self, m: &mut VM, arg: u16) -> Result<(), String>;
+}
 
-pub struct Machine {
+impl<F> SignalHandler for F
+where
+    F: Fn(&mut VM, u16) -> Result<(), String>,
+{
+    fn handle(&self, m: &mut VM, arg: u16) -> Result<(), String> {
+        self(m, arg)
+    }
+}
+
+#[derive(Default)]
+pub struct VM {
     registers: [u16; 8],
-    signal_handlers: HashMap<u8, SignalFunction>,
     flags: u16,
     pub halt: bool,
     // TODO: Change This
     pub memory: MemoryMapper,
 }
 
-impl Default for Machine {
-    fn default() -> Self {
-        Machine {
-            registers: [0; 8],
-            signal_handlers: HashMap::new(),
-            flags: 0,
-            halt: false,
-            memory: MemoryMapper::new(),
-        }
-    }
+#[derive(Default)]
+pub struct Machine {
+    signal_handlers: HashMap<u8, Box<dyn SignalHandler>>,
+    pub vm: VM,
 }
 
 impl Machine {
-    pub fn new() -> Machine {
-        Machine { ..Self::default() }
+    pub fn is_halted(&self) -> bool {
+        self.vm.halt
+    }
+
+    pub fn define_handler(&mut self, index: u8, f: impl SignalHandler + 'static) {
+        self.signal_handlers.insert(index, Box::new(f));
+    }
+
+    pub fn step(&mut self) -> Result<(), String> {
+        self.vm.step(&self.signal_handlers)
+    }
+
+    pub fn map(
+        &mut self,
+        start: usize,
+        size: usize,
+        a: Box<dyn Addressable>,
+    ) -> Result<(), String> {
+        self.vm.map(start, size, a)
+    }
+
+    pub fn reset(&mut self) {
+        self.vm.reset()
+    }
+
+    pub fn state(&self) -> String {
+        self.vm.state()
+    }
+
+    pub fn get_register(&self, r: Register) -> u16 {
+        self.vm.get_register(r)
+    }
+
+    pub fn set_register(&mut self, r: Register, v: u16) {
+        self.vm.set_register(r, v)
+    }
+
+    pub fn set_flag(&mut self, flag: Flag, state: bool) {
+        self.vm.set_flag(flag, state)
+    }
+
+    pub fn test_flag(&self, flag: Flag) -> bool {
+        self.vm.test_flag(flag)
+    }
+}
+
+impl VM {
+    pub fn new() -> VM {
+        VM { ..Self::default() }
     }
 
     pub fn map(
@@ -81,10 +133,6 @@ impl Machine {
         }
     }
 
-    pub fn define_handler(&mut self, index: u8, f: SignalFunction) {
-        self.signal_handlers.insert(index, f);
-    }
-
     fn pop(&mut self, stack_pointer_register: Register) -> Result<u16, String> {
         let sp = self.get_register(stack_pointer_register) - 2;
         let v = self.memory.read2(sp as u32).map_err(|x| x.to_string())?;
@@ -115,7 +163,10 @@ impl Machine {
         self.flags & (flag as u16) != 0
     }
 
-    pub fn step(&mut self) -> Result<(), String> {
+    pub fn step(
+        &mut self,
+        signal_handlers: &HashMap<u8, Box<dyn SignalHandler>>,
+    ) -> Result<(), String> {
         let pc = self.get_register(Register::PC);
         let instruction = self.memory.read2(pc as u32).map_err(|x| x.to_string())?;
 
@@ -177,7 +228,7 @@ impl Machine {
                 self.set_register(r1, res);
                 Ok(())
             }
-            Instruction::Load(r0, r1, r2) => {
+            Instruction::LoadWord(r0, r1, r2) => {
                 let base = self.get_register(r1);
                 let page = self.get_register(r2);
                 let addr = (base as u32) + ((page as u32) << 16);
@@ -185,12 +236,28 @@ impl Machine {
                 self.set_register(r0, w);
                 Ok(())
             }
-            Instruction::Store(r0, r1, r2) => {
+            Instruction::LoadByte(r0, r1, r2) => {
+                let base = self.get_register(r1);
+                let page = self.get_register(r2);
+                let addr = (base as u32) + ((page as u32) << 16);
+                let w = self.memory.read(addr).map_err(|x| x.to_string())?;
+                self.set_register(r0, w as u16);
+                Ok(())
+            }
+            Instruction::StoreWord(r0, r1, r2) => {
                 let base = self.get_register(r0);
                 let page = self.get_register(r1);
                 let addr = (base as u32) + ((page as u32) << 16);
                 self.memory
                     .write2(addr, self.get_register(r2))
+                    .map_err(|x| x.to_string())
+            }
+            Instruction::StoreByte(r0, r1, r2) => {
+                let base = self.get_register(r0);
+                let page = self.get_register(r1);
+                let addr = (base as u32) + ((page as u32) << 16);
+                self.memory
+                    .write(addr, (self.get_register(r2) & 0xff) as u8)
                     .map_err(|x| x.to_string())
             }
             Instruction::JumpOffset(b) => {
@@ -274,7 +341,7 @@ impl Machine {
                     StackOp::Sub => {
                         let a = self.pop(sp)?;
                         let b = self.pop(sp)?;
-                        self.push(sp, a - b)?;
+                        self.push(sp, a.wrapping_sub(b))?;
                     }
                 };
                 Ok(())
@@ -289,23 +356,21 @@ impl Machine {
                 Ok(())
             }
             Instruction::System(Register::Zero, arg_register, signal) => {
-                let sigfn = self
-                    .signal_handlers
+                let sig = signal_handlers
                     .get(&signal.value)
                     .ok_or_else(|| format!("unknown signal: 0x{:X}", signal.value))?;
                 let arg = self.get_register(arg_register);
-                sigfn(self, arg)
+                sig.handle(self, arg)
             }
             Instruction::System(sig, _, arg) => {
                 let value = self.get_register(sig);
                 if value > 0xff {
                     Err(format!("unknown signal: 0x{:X}, must be <= 0xff", value))
                 } else {
-                    let sigfn = self
-                        .signal_handlers
+                    let sig = signal_handlers
                         .get(&(value as u8))
                         .ok_or_else(|| format!("unknown signal: 0x{:X}", value))?;
-                    sigfn(self, arg.value as u16)
+                    sig.handle(self, arg.value as u16)
                 }
             }
         }?;

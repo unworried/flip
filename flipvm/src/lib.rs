@@ -8,4 +8,4 @@ mod vm;
 pub use io::MappedMemoryBuffer;
 pub use memory::{Addressable, LinearMemory};
 pub use register::{Flag, Register};
-pub use vm::Machine;
+pub use vm::{Machine, VM};
