@@ -1,5 +1,4 @@
 use alloc::vec::Vec;
-use std::ops::Sub;
 
 #[derive(Debug, PartialEq, Clone, Default, PartialOrd, Eq, Hash)]
 pub struct Span {
