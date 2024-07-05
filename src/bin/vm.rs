@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::{stdin, BufReader, Read};
 use std::path::Path;
 
-use flipvm::{Addressable, LinearMemory, Machine, Register};
+use flipvm::{LinearMemory, Machine, MappedMemoryBuffer, Register};
 
 fn signal_halt(vm: &mut Machine, _: u16) -> Result<(), String> {
     vm.halt = true;
@@ -30,10 +30,14 @@ pub fn main() -> Result<(), String> {
         .map_err(|e| format!("read: {}", e))?;
 
     let mut vm = Machine::new();
-    vm.map(0x0, 1024 * 5, Box::new(LinearMemory::new(1024 * 5)))?;
+    vm.map(0x1000, 0x4000, Box::new(LinearMemory::new(1024 * 5)))?;
+    vm.map(
+        0x0,
+        program.len(),
+        Box::new(MappedMemoryBuffer::new(program)),
+    )?;
     vm.set_register(Register::SP, 0x1000);
     vm.define_handler(0xf0, signal_halt);
-    let _ = vm.memory.load_from_vec(&program, 0);
     while !vm.halt {
         println!("{}", vm.state());
         vm.step()?;
