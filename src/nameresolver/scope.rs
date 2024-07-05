@@ -26,7 +26,12 @@ impl Scope {
         })
     }
 
-    pub fn define_symbol(&mut self, name: &str, id: DefinitionId) {
-        self.variables.insert(name.to_owned(), id);
+    pub fn define_symbol(&mut self, name: &str, id: DefinitionId) -> bool {
+        if !self.variables.contains_key(name) {
+            self.variables.insert(name.to_owned(), id);
+            true
+        } else {
+            false
+        }
     }
 }

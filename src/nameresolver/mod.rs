@@ -102,11 +102,14 @@ impl NameResolver {
         }
     }
 
-    pub fn define_symbol(&mut self, name: &str, info: DefinitionInfo) -> DefinitionId {
+    pub fn define_symbol(&mut self, name: &str, info: DefinitionInfo) -> bool {
         let id = self.symbol_table.len();
-        self.symbol_table.push(info);
-        self.current_scope.borrow_mut().define_symbol(name, id);
-        id
+        if self.current_scope.borrow_mut().define_symbol(name, id) {
+            self.symbol_table.push(info);
+            true
+        } else {
+            false
+        }
     }
 
     pub fn lookup_symbol(&self, name: &str) -> Option<DefinitionId> {
@@ -162,7 +165,12 @@ impl ResolveVisitor for Definition {
             definition: self.value.clone(),
             uses: 0,
         };
-        resolver.define_symbol(&self.pattern.name, info);
+        if !resolver.define_symbol(&self.pattern.name, info) {
+            resolver
+                .diagnostics
+                .borrow_mut()
+                .symbol_already_declared(&self.pattern.name, &self.pattern.span);
+        }
     }
 }
 
@@ -175,15 +183,9 @@ impl ResolveVisitor for Assignment {
                 .diagnostics
                 .borrow_mut()
                 .undeclared_assignment(&self.pattern.name, &self.pattern.span);
-            return;
+        } else if let Some(id) = resolver.lookup_symbol(&self.pattern.name) {
+            resolver.symbol_table[id].definition = self.value.clone();
         }
-
-        let info = DefinitionInfo {
-            pattern: self.pattern.clone(),
-            definition: self.value.clone(),
-            uses: 0,
-        };
-        resolver.define_symbol(&self.pattern.name, info);
     }
 }
 
