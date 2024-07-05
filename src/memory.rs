@@ -100,30 +100,6 @@ impl Addressable for MemoryMapper {
         } else {
             Err(AddressTranslation(addr, Box::new(OutOfBounds(addr_local))))
         }
-        /*let mut candidate: Option<&(usize, usize, Box<dyn Addressable>)> = None;
-        for entry in &self.mapped {
-            let (start, _, _) = entry;
-            if *start < addr as usize {
-                if let Some((c, _, _)) = candidate {
-                    if *start > *c {
-                        candidate = Some(entry);
-                    }
-                } else {
-                    candidate = Some(entry);
-                }
-            }
-        }
-        match candidate {
-            Some((start, size, a)) => {
-                let addr_local = addr - (*start as u32);
-                if addr_local >= (*size as u32) {
-                    None
-                } else {
-                    a.read(addr_local)
-                }
-            }
-            None => None,
-        }*/
     }
 
     fn write(&mut self, addr: u32, value: u8) -> Result<(), MemoryError> {
@@ -139,30 +115,6 @@ impl Addressable for MemoryMapper {
             }
             None => Err(NoMap(addr)),
         }
-        /*let mut candidate: Option<&mut (usize, usize, Box<dyn Addressable>)> = None;
-        for entry in &mut self.mapped {
-            let (start, _, _) = entry;
-            if *start < addr as usize {
-                if let Some((c, _, _)) = candidate {
-                    if *start > *c {
-                        candidate = Some(entry);
-                    }
-                } else {
-                    candidate = Some(entry);
-                }
-            }
-        }
-        match candidate {
-            Some((start, size, a)) => {
-                let addr_local = addr - (*start as u32);
-                if addr_local >= (*size as u32) {
-                    false
-                } else {
-                    a.write(addr_local, value)
-                }
-            }
-            None => false,
-        }*/
     }
 
     fn zero_all(&mut self) -> Result<(), MemoryError> {

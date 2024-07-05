@@ -171,7 +171,7 @@ impl Machine {
 
                 let res: u16 = unsafe {
                     let signed: i16 = std::mem::transmute(base);
-                    std::mem::transmute(signed >> (offset.value as u32))
+                    std::mem::transmute(signed >> (offset.value as u16))
                 };
 
                 self.set_register(r1, res);
@@ -246,7 +246,7 @@ impl Machine {
                     }
                     StackOp::Peek => {
                         let v = self.peek(sp)?;
-                        self.set_register(r, v);
+                        self.set_register(r, v)
                     }
                     StackOp::Dup => {
                         let v = self.peek(sp)?;
