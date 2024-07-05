@@ -15,7 +15,7 @@ pub fn run(vm: &mut Machine, program: &[Instruction]) -> Result<(), String> {
         let program_bytes = program_words.align_to::<u8>().1;
         vm.memory.load_from_vec(program_bytes, 0).unwrap();
     }
-    vm.set_register(Register::SP, 1024*3);
+    vm.set_register(Register::SP, 1024 * 3);
     vm.define_handler(SIGHALT, signal_halt);
     while !vm.halt {
         vm.step()?;

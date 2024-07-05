@@ -32,11 +32,13 @@ pub fn main() -> Result<(), String> {
     let mut vm = Machine::new();
     vm.map(0x1000, 0x4000, Box::new(LinearMemory::new(1024 * 5)))?;
     vm.map(
-        0x0,
+        0x10,
         program.len(),
         Box::new(MappedMemoryBuffer::new(program)),
     )?;
     vm.set_register(Register::SP, 0x1000);
+    vm.set_register(Register::PC, 0x10);
+
     vm.define_handler(0xf0, signal_halt);
     while !vm.halt {
         println!("{}", vm.state());

@@ -96,6 +96,12 @@ pub struct PreProcessor {
     instruction_count: u32,
 }
 
+impl Default for PreProcessor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PreProcessor {
     pub fn new() -> Self {
         Self {

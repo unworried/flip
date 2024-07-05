@@ -3,15 +3,17 @@ use std::io::BufRead;
 use std::io::BufReader;
 use std::path::Path;
 
+use crate::op::Instruction;
 use crate::pp::{Error, PreProcessor};
 
 pub fn setup_std_macros(pp: &mut PreProcessor) {
     pp.define_macro("defvar", defvar);
     pp.define_macro("include", include);
     pp.define_macro("defmacro", defmacro);
+    pp.define_macro("offsetPC", set_pc_offset);
 }
 
-pub fn defvar(pp: &mut PreProcessor, input: Vec<&str>) -> Result<Vec<String>, Error> {
+fn defvar(pp: &mut PreProcessor, input: Vec<&str>) -> Result<Vec<String>, Error> {
     if input.len() != 2 {
         return Err(Error::BadMacroFormat(".defvar <name> <value>".to_string()));
     }
@@ -22,7 +24,7 @@ pub fn defvar(pp: &mut PreProcessor, input: Vec<&str>) -> Result<Vec<String>, Er
     Ok(Vec::new())
 }
 
-pub fn include(_pp: &mut PreProcessor, input: Vec<&str>) -> Result<Vec<String>, Error> {
+fn include(_pp: &mut PreProcessor, input: Vec<&str>) -> Result<Vec<String>, Error> {
     if input.len() != 1 {
         return Err(Error::BadMacroFormat(".include <path>".to_string()));
     }
@@ -38,7 +40,7 @@ pub fn include(_pp: &mut PreProcessor, input: Vec<&str>) -> Result<Vec<String>, 
     Ok(output)
 }
 
-pub fn defmacro(pp: &mut PreProcessor, input: Vec<&str>) -> Result<Vec<String>, Error> {
+fn defmacro(pp: &mut PreProcessor, input: Vec<&str>) -> Result<Vec<String>, Error> {
     if input.is_empty() {
         return Err(Error::BadMacroFormat(".defmacro <name> <body>".to_string()));
     }
@@ -60,5 +62,19 @@ pub fn defmacro(pp: &mut PreProcessor, input: Vec<&str>) -> Result<Vec<String>, 
     }
 
     pp.define_subst_macro(name, lines);
+    Ok(Vec::new())
+}
+
+fn set_pc_offset(pp: &mut PreProcessor, input: Vec<&str>) -> Result<Vec<String>, Error> {
+    if input.len() != 1 {
+        return Err(Error::BadMacroFormat(".offsetPC <offset>".to_string()));
+    }
+
+    let (num, base) = Instruction::pre_handle_number(input.first().unwrap())
+        .map_err(|e| Error::BadMacroFormat(format!("failed to parse number: {}", e)))?;
+    let offset = u32::from_str_radix(num, base)
+        .map_err(|_| Error::BadMacroFormat(format!("invalid number: {}", num)))?;
+
+    pp.instruction_count = offset;
     Ok(Vec::new())
 }
