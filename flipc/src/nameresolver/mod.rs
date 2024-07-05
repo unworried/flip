@@ -14,9 +14,6 @@
 //! - undeclared_assignment: The symbol has not been declared before it was assigned.
 //! - undeclared_reference: The symbol has not been declared before it was referenced.
 //! - reference_before_assignment: The symbol was referenced before it was declared.
-use std::cell::RefCell;
-use std::rc::Rc;
-
 use self::scope::Scope;
 use crate::diagnostics::DiagnosticsCell;
 use crate::parser::ast::{Assignment, Ast, Definition, Pattern, Variable};
@@ -66,26 +63,6 @@ impl NameResolver {
                     .unused_variable(&def.pattern.name, &def.pattern.span);
             }
         }
-    }
-
-    pub fn push_definition(&mut self, def: &Definition) {
-        let info = DefinitionInfo {
-            pattern: def.pattern.clone(),
-            definition: def.value.clone(),
-            uses: 0,
-        };
-
-        self.symbol_table.push(info);
-    }
-
-    pub fn push_assignment(&mut self, def: &Assignment) {
-        let info = DefinitionInfo {
-            pattern: def.pattern.clone(),
-            definition: def.value.clone(),
-            uses: 0,
-        };
-
-        self.symbol_table.push(info);
     }
 
     pub fn push_scope(&mut self) {
