@@ -14,6 +14,9 @@
 //! - undeclared_assignment: The symbol has not been declared before it was assigned.
 //! - undeclared_reference: The symbol has not been declared before it was referenced.
 //! - reference_before_assignment: The symbol was referenced before it was declared.
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use self::scope::Scope;
 use crate::diagnostics::DiagnosticsCell;
 use crate::parser::ast::{Assignment, Ast, Definition, Pattern, Variable};
@@ -37,7 +40,7 @@ pub struct DefinitionInfo {
 pub struct NameResolver {
     symbol_table: Vec<DefinitionInfo>,
     diagnostics: DiagnosticsCell,
-    scopes: Vec<Scope>,
+    current_scope: Rc<RefCell<Scope>>,
 }
 
 impl NameResolver {
@@ -45,7 +48,7 @@ impl NameResolver {
         Self {
             symbol_table: Vec::new(),
             diagnostics,
-            scopes: Vec::new(),
+            current_scope: Rc::new(RefCell::new(Scope::new(None))),
         }
     }
 
@@ -86,11 +89,28 @@ impl NameResolver {
     }
 
     pub fn push_scope(&mut self) {
-        self.scopes.push(Scope::default());
+        let new_scope = Rc::new(RefCell::new(Scope::new(Some(Rc::clone(
+            &self.current_scope,
+        )))));
+        self.current_scope = new_scope;
     }
 
     pub fn pop_scope(&mut self) {
-        self.scopes.pop();
+        let parent = self.current_scope.borrow().parent.clone();
+        if let Some(parent) = parent {
+            self.current_scope = parent;
+        }
+    }
+
+    pub fn define_symbol(&mut self, name: &str, info: DefinitionInfo) -> DefinitionId {
+        let id = self.symbol_table.len();
+        self.symbol_table.push(info);
+        self.current_scope.borrow_mut().define_symbol(name, id);
+        id
+    }
+
+    pub fn lookup_symbol(&self, name: &str) -> Option<DefinitionId> {
+        self.current_scope.borrow().lookup_symbol(name)
     }
 }
 
@@ -137,13 +157,12 @@ impl ResolveVisitor for Ast {
 impl ResolveVisitor for Definition {
     fn define(&mut self, resolver: &mut NameResolver) {
         self.value.define(resolver);
-        let id = resolver.symbol_table.len();
-        resolver.push_definition(self);
-        resolver
-            .scopes
-            .last_mut()
-            .expect("callstack should not be empty")
-            .define_symbol(&self.pattern.name.clone(), id);
+        let info = DefinitionInfo {
+            pattern: self.pattern.clone(),
+            definition: self.value.clone(),
+            uses: 0,
+        };
+        resolver.define_symbol(&self.pattern.name, info);
     }
 }
 
@@ -151,13 +170,7 @@ impl ResolveVisitor for Assignment {
     fn define(&mut self, resolver: &mut NameResolver) {
         self.value.define(resolver);
 
-        if resolver
-            .scopes
-            .last()
-            .expect("callstack should not be empty")
-            .lookup_symbol(&self.pattern.name)
-            .is_none()
-        {
+        if resolver.lookup_symbol(&self.pattern.name).is_none() {
             resolver
                 .diagnostics
                 .borrow_mut()
@@ -165,39 +178,25 @@ impl ResolveVisitor for Assignment {
             return;
         }
 
-        let id = resolver.symbol_table.len();
-        resolver.push_assignment(self);
-        resolver
-            .scopes
-            .last_mut()
-            .expect("callstack should not be empty")
-            .define_symbol(&self.pattern.name.clone(), id);
+        let info = DefinitionInfo {
+            pattern: self.pattern.clone(),
+            definition: self.value.clone(),
+            uses: 0,
+        };
+        resolver.define_symbol(&self.pattern.name, info);
     }
 }
 
 impl ResolveVisitor for Variable {
     fn define(&mut self, resolver: &mut NameResolver) {
-        // Default var definition is None, no ast passes have been made therefore it can be assumed this
-        // is still true.
-        assert!(self.definition.is_none());
-        assert!(!resolver.scopes.is_empty());
-
-        for scope in resolver.scopes.iter().rev() {
-            if let Some(id) = scope.lookup_symbol(&self.pattern) {
-                self.definition = Some(*id);
-
-                let def = &mut resolver
-                    .symbol_table
-                    .get_mut(*id)
-                    .expect("scope lookup already checked");
-                def.uses += 1;
-                return;
-            }
+        if let Some(id) = resolver.lookup_symbol(&self.pattern) {
+            self.definition = Some(id);
+            resolver.symbol_table[id].uses += 1;
+        } else {
+            resolver
+                .diagnostics
+                .borrow_mut()
+                .undefined_reference(&self.pattern, &self.span);
         }
-
-        resolver
-            .diagnostics
-            .borrow_mut()
-            .undefined_reference(&self.pattern, &self.span);
     }
 }
