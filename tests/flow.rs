@@ -1,14 +1,13 @@
 use flipvm::op::{Instruction::*, Literal10Bit, Literal12Bit, Nibble, TestOp};
-use flipvm::Machine;
 use flipvm::Register::*;
 
-use self::common::{run, SIGHALT};
+use self::common::{init_vm, run, SIGHALT};
 
 mod common;
 
 #[test]
 fn jump() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     let program = vec![
         Imm(PC, Literal12Bit::new_checked(10).unwrap()),
         Invalid,
@@ -23,7 +22,7 @@ fn jump() {
 
 #[test]
 fn jump_offset() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     let program = vec![
         Add(Zero, Zero, Zero),
         Add(Zero, Zero, Zero),
@@ -41,7 +40,7 @@ fn jump_offset() {
 
 #[test]
 fn branch() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     let program = vec![
         Imm(A, Literal12Bit::new_checked(12).unwrap()),
         Imm(B, Literal12Bit::new_checked(13).unwrap()),
@@ -57,7 +56,7 @@ fn branch() {
 
 #[test]
 fn branch_without_test() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     let program = vec![
         Imm(A, Literal12Bit::new_checked(12).unwrap()),
         Imm(B, Literal12Bit::new_checked(13).unwrap()),
@@ -73,7 +72,7 @@ fn branch_without_test() {
 
 #[test]
 fn jump_and_link_set() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     let program = vec![
         Imm(B, Literal12Bit::new_checked(4).unwrap()),
         SetAndSave(PC, B, C),
@@ -85,7 +84,7 @@ fn jump_and_link_set() {
 
 #[test]
 fn jump_and_link_add() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     let program = vec![
         Imm(A, Literal12Bit::new_checked(8).unwrap()),
         AddAndSave(PC, A, B),

@@ -1,9 +1,8 @@
 use flipvm::op::{Instruction::*, Literal12Bit, Nibble, TestOp};
 use flipvm::Flag;
-use flipvm::Machine;
 use flipvm::Register::*;
 
-use self::common::{run, SIGHALT};
+use self::common::{init_vm, run, SIGHALT};
 
 mod common;
 macro_rules! test_set {
@@ -24,7 +23,7 @@ macro_rules! test_unset {
 
 #[test]
 fn eq() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     test_unset!(
         vm,
         Imm(A, Literal12Bit::new_checked(123).unwrap()),
@@ -42,7 +41,7 @@ fn eq() {
 
 #[test]
 fn neq() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     test_set!(
         vm,
         Imm(A, Literal12Bit::new_checked(123).unwrap()),
@@ -60,7 +59,7 @@ fn neq() {
 
 #[test]
 fn lt() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
 
     test_set!(
         vm,
@@ -93,7 +92,7 @@ fn lt() {
 
 #[test]
 fn gt() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
 
     test_unset!(
         vm,
@@ -126,7 +125,7 @@ fn gt() {
 
 #[test]
 fn both_zero() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     test_unset!(
         vm,
         Imm(A, Literal12Bit::new_checked(44).unwrap()),
@@ -140,7 +139,7 @@ fn both_zero() {
 
 #[test]
 fn either_nonzero() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     test_set!(
         vm,
         Imm(A, Literal12Bit::new_checked(44).unwrap()),
@@ -154,7 +153,7 @@ fn either_nonzero() {
 
 #[test]
 fn both_nonzero() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     test_unset!(
         vm,
         Imm(A, Literal12Bit::new_checked(44).unwrap()),

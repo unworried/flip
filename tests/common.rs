@@ -1,5 +1,5 @@
 use flipvm::op::Instruction;
-use flipvm::Addressable;
+use flipvm::{Addressable, LinearMemory};
 use flipvm::{Machine, Register};
 
 pub const SIGHALT: u8 = 0x01;
@@ -13,14 +13,21 @@ pub fn run(vm: &mut Machine, program: &[Instruction]) -> Result<(), String> {
     let program_words: Vec<_> = program.iter().map(|x| x.encode_u16()).collect();
     unsafe {
         let program_bytes = program_words.align_to::<u8>().1;
-        vm.memory.load_from_vec(program_bytes, 0);
+        vm.memory.load_from_vec(program_bytes, 0).unwrap();
     }
-    vm.set_register(Register::SP, 0x1000);
+    vm.set_register(Register::SP, 1024*3);
     vm.define_handler(SIGHALT, signal_halt);
     while !vm.halt {
         vm.step()?;
     }
     Ok(())
+}
+
+pub fn init_vm(mem_size: usize) -> Machine {
+    let mut vm = Machine::new();
+    vm.map(0x0, mem_size, Box::new(LinearMemory::new(mem_size)))
+        .unwrap();
+    vm
 }
 
 #[macro_export]

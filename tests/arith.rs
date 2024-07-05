@@ -1,14 +1,14 @@
 use flipvm::op::{Instruction::*, Literal7Bit};
 use flipvm::op::{Literal12Bit, Nibble};
-use flipvm::{Machine, Register::*};
+use flipvm::Register::*;
 
-use self::common::{run, SIGHALT};
+use self::common::{init_vm, run, SIGHALT};
 
 mod common;
 
 #[test]
 fn add() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     let program = vec![
         Imm(A, Literal12Bit::new_checked(11).unwrap()),
         Imm(B, Literal12Bit::new_checked(15).unwrap()),
@@ -21,7 +21,7 @@ fn add() {
 
 #[test]
 fn sub() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     let program = vec![
         Imm(A, Literal12Bit::new_checked(20).unwrap()),
         Imm(B, Literal12Bit::new_checked(15).unwrap()),
@@ -34,7 +34,7 @@ fn sub() {
 
 #[test]
 fn sub_overflow() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     let program = vec![
         Imm(A, Literal12Bit::new_checked(1).unwrap()),
         Imm(B, Literal12Bit::new_checked(57).unwrap()),
@@ -47,7 +47,7 @@ fn sub_overflow() {
 
 #[test]
 fn add_imm() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     let program = vec![
         Imm(A, Literal12Bit::new_checked(11).unwrap()),
         AddImm(A, Literal7Bit::new_checked(4).unwrap()),
@@ -59,7 +59,7 @@ fn add_imm() {
 
 #[test]
 fn add_imm_signed() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     let program = vec![
         Imm(A, Literal12Bit::new_checked(21).unwrap()),
         AddImmSigned(A, Literal7Bit::from_signed(-4).unwrap()),
@@ -71,7 +71,7 @@ fn add_imm_signed() {
 
 #[test]
 fn add_imm_signed_to_zero() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     let program = vec![
         Imm(C, Literal12Bit::new_checked(21).unwrap()),
         AddImmSigned(C, Literal7Bit::from_signed(-21).unwrap()),
@@ -83,7 +83,7 @@ fn add_imm_signed_to_zero() {
 
 #[test]
 fn shift_left() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     let program = vec![
         Imm(C, Literal12Bit::new_checked(0xff).unwrap()),
         ShiftLeft(C, B, Nibble::new_checked(4).unwrap()),
@@ -95,7 +95,7 @@ fn shift_left() {
 
 #[test]
 fn shift_right_logical() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     let program = vec![
         Imm(B, Literal12Bit::new_checked(0x8fc).unwrap()),
         ShiftLeft(B, B, Nibble::new_checked(4).unwrap()),
@@ -110,7 +110,7 @@ fn shift_right_logical() {
 
 #[test]
 fn shift_right_arithmetic() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     let program = vec![
         Imm(A, Literal12Bit::new_checked(0xff0).unwrap()),
         ShiftLeft(A, A, Nibble::new_checked(4).unwrap()),

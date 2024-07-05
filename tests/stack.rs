@@ -1,14 +1,14 @@
 use flipvm::op::{Instruction::*, Literal12Bit, Nibble, StackOp};
-use flipvm::Machine;
+use flipvm::Addressable;
 use flipvm::Register::*;
 
-use self::common::{run, SIGHALT};
+use self::common::{init_vm, run, SIGHALT};
 
 mod common;
 
 #[test]
 fn push() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     let program = vec![
         Imm(A, Literal12Bit::new_checked(123).unwrap()),
         Stack(A, SP, StackOp::Push),
@@ -26,7 +26,7 @@ fn push() {
 
 #[test]
 fn pop() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     let program = vec![
         Imm(A, Literal12Bit::new_checked(1).unwrap()),
         Stack(A, SP, StackOp::Push),
@@ -42,7 +42,7 @@ fn pop() {
 
 #[test]
 fn swap() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     let program = vec![
         Imm(A, Literal12Bit::new_checked(231).unwrap()),
         Imm(B, Literal12Bit::new_checked(537).unwrap()),
@@ -58,7 +58,7 @@ fn swap() {
 
 #[test]
 fn peek() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     let program = vec![
         Imm(A, Literal12Bit::new_checked(1).unwrap()),
         Stack(A, SP, StackOp::Push),
@@ -74,7 +74,7 @@ fn peek() {
 
 #[test]
 fn dup() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     let program = vec![
         Imm(A, Literal12Bit::new_checked(98).unwrap()),
         Stack(A, SP, StackOp::Push),
@@ -90,7 +90,7 @@ fn dup() {
 
 #[test]
 fn rotate() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     let program = vec![
         Imm(A, Literal12Bit::new_checked(1).unwrap()),
         Stack(A, SP, StackOp::Push),
@@ -109,7 +109,7 @@ fn rotate() {
 
 #[test]
 fn add() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     let program = vec![
         Imm(A, Literal12Bit::new_checked(5).unwrap()),
         Stack(A, SP, StackOp::Push),
@@ -124,7 +124,7 @@ fn add() {
 
 #[test]
 fn sub() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     let program = vec![
         Imm(A, Literal12Bit::new_checked(5).unwrap()),
         Stack(A, SP, StackOp::Push),
@@ -139,7 +139,7 @@ fn sub() {
 
 #[test]
 fn load_offset() {
-    let mut vm = Machine::new(1024 * 4);
+    let mut vm = init_vm(1024 * 4);
     let program = vec![
         Imm(A, Literal12Bit::new_checked(105).unwrap()),
         Stack(A, SP, StackOp::Push),
@@ -153,5 +153,5 @@ fn load_offset() {
     ];
     run(&mut vm, &program).unwrap();
     assert_reg_eq!(vm, C, 105);
-    assert_reg_eq!(vm, C, 210);
+    assert_reg_eq!(vm, B, 210);
 }
