@@ -61,6 +61,7 @@ pub trait Addressable {
     }
 }
 
+#[derive(Default)]
 pub struct MemoryMapper {
     mapped: Vec<(usize, usize, Box<dyn Addressable>)>,
 }
