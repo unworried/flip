@@ -48,7 +48,7 @@ fn main() -> Result<(), String> {
             if resolved.is_empty() {
                 continue;
             }
-            if let Some(';') = resolved.chars().nth(0) {
+            if let Some(';') = resolved.chars().next() { // next() == nth(0)
                 continue;
             }
 
