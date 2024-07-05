@@ -197,7 +197,6 @@ impl ResolveVisitor for Variable {
         if let Some(id) = resolver.lookup_symbol(&self.pattern) {
             self.definition = Some(id);
             resolver.symbol_table[id].uses += 1;
-            println!("{}: {:#?}", self.pattern, resolver.symbol_table[id]);
         } else {
             resolver
                 .diagnostics
