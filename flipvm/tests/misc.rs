@@ -1,4 +1,4 @@
-use crate::common::init_vm;
+use crate::common::init_machine;
 use flipvm::op::{Instruction::*, Literal12Bit, Literal7Bit, Nibble, TestOp};
 use flipvm::Register::*;
 
@@ -8,7 +8,7 @@ mod common;
 
 #[test]
 fn loop_control() {
-    let mut vm = init_vm(1024 * 4);
+    let mut m = init_machine(1024 * 4);
     let program = vec![
         Imm(A, Literal12Bit::new_checked(5).unwrap()),
         // Start = 2
@@ -21,6 +21,6 @@ fn loop_control() {
         // End = 14
         System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
-    run(&mut vm, &program).unwrap();
-    assert_reg_eq!(vm, B, 5);
+    run(&mut m, &program).unwrap();
+    assert_reg_eq!(m, B, 5);
 }

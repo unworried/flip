@@ -1,13 +1,13 @@
 use flipvm::op::{Instruction::*, Literal10Bit, Literal12Bit, Nibble, TestOp};
 use flipvm::Register::*;
 
-use self::common::{init_vm, run, SIGHALT};
+use self::common::{init_machine, run, SIGHALT};
 
 mod common;
 
 #[test]
 fn jump() {
-    let mut vm = init_vm(1024 * 4);
+    let mut m = init_machine(1024 * 4);
     let program = vec![
         Imm(PC, Literal12Bit::new_checked(10).unwrap()),
         Invalid,
@@ -16,13 +16,13 @@ fn jump() {
         Invalid,
         System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
-    run(&mut vm, &program).unwrap();
-    assert_reg_eq!(vm, PC, 12);
+    run(&mut m, &program).unwrap();
+    assert_reg_eq!(m, PC, 12);
 }
 
 #[test]
 fn jump_offset() {
-    let mut vm = init_vm(1024 * 4);
+    let mut m = init_machine(1024 * 4);
     let program = vec![
         Add(Zero, Zero, Zero),
         Add(Zero, Zero, Zero),
@@ -34,13 +34,13 @@ fn jump_offset() {
         Invalid,
         System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
-    run(&mut vm, &program).unwrap();
-    assert_reg_eq!(vm, PC, 18);
+    run(&mut m, &program).unwrap();
+    assert_reg_eq!(m, PC, 18);
 }
 
 #[test]
 fn branch() {
-    let mut vm = init_vm(1024 * 4);
+    let mut m = init_machine(1024 * 4);
     let program = vec![
         Imm(A, Literal12Bit::new_checked(12).unwrap()),
         Imm(B, Literal12Bit::new_checked(13).unwrap()),
@@ -51,12 +51,12 @@ fn branch() {
         Invalid,
         System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
-    run(&mut vm, &program).unwrap();
+    run(&mut m, &program).unwrap();
 }
 
 #[test]
 fn branch_without_test() {
-    let mut vm = init_vm(1024 * 4);
+    let mut m = init_machine(1024 * 4);
     let program = vec![
         Imm(A, Literal12Bit::new_checked(12).unwrap()),
         Imm(B, Literal12Bit::new_checked(13).unwrap()),
@@ -67,24 +67,24 @@ fn branch_without_test() {
         AddIf(PC, PC, Nibble::new_checked(0xf).unwrap()),
         System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
-    run(&mut vm, &program).unwrap();
+    run(&mut m, &program).unwrap();
 }
 
 #[test]
 fn jump_and_link_set() {
-    let mut vm = init_vm(1024 * 4);
+    let mut m = init_machine(1024 * 4);
     let program = vec![
         Imm(B, Literal12Bit::new_checked(4).unwrap()),
         SetAndSave(PC, B, C),
         System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
-    run(&mut vm, &program).unwrap();
-    assert_reg_eq!(vm, C, 2);
+    run(&mut m, &program).unwrap();
+    assert_reg_eq!(m, C, 2);
 }
 
 #[test]
 fn jump_and_link_add() {
-    let mut vm = init_vm(1024 * 4);
+    let mut m = init_machine(1024 * 4);
     let program = vec![
         Imm(A, Literal12Bit::new_checked(8).unwrap()),
         AddAndSave(PC, A, B),
@@ -93,6 +93,6 @@ fn jump_and_link_add() {
         Invalid,
         System(Zero, Zero, Nibble::new_checked(SIGHALT).unwrap()),
     ];
-    run(&mut vm, &program).unwrap();
-    assert_reg_eq!(vm, B, 2);
+    run(&mut m, &program).unwrap();
+    assert_reg_eq!(m, B, 2);
 }
