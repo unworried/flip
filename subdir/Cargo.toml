@@ -1,0 +1,16 @@
+[package]
+name = "flipvm"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+macros = { path = "lib/macros" }
+
+[[bin]]
+name = "vm"
+
+[[bin]]
+name = "asm"
+
+[[bin]]
+name = "dis"
