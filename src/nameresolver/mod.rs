@@ -40,7 +40,7 @@ pub struct DefinitionInfo {
 pub struct NameResolver {
     symbol_table: Vec<DefinitionInfo>,
     diagnostics: DiagnosticsCell,
-    current_scope: Rc<RefCell<Scope>>,
+    current_scope: Scope,
 }
 
 impl NameResolver {
@@ -48,7 +48,7 @@ impl NameResolver {
         Self {
             symbol_table: Vec::new(),
             diagnostics,
-            current_scope: Rc::new(RefCell::new(Scope::new(None))),
+            current_scope: Scope::new(None),
         }
     }
 
@@ -89,22 +89,19 @@ impl NameResolver {
     }
 
     pub fn push_scope(&mut self) {
-        let new_scope = Rc::new(RefCell::new(Scope::new(Some(Rc::clone(
-            &self.current_scope,
-        )))));
+        let new_scope = Scope::new(Some(Box::new(self.current_scope.clone())));
         self.current_scope = new_scope;
     }
 
     pub fn pop_scope(&mut self) {
-        let parent = self.current_scope.borrow().parent.clone();
-        if let Some(parent) = parent {
-            self.current_scope = parent;
+        if let Some(parent) = self.current_scope.parent.clone() {
+            self.current_scope = *parent;
         }
     }
 
     pub fn define_symbol(&mut self, name: &str, info: DefinitionInfo) -> bool {
         let id = self.symbol_table.len();
-        if self.current_scope.borrow_mut().define_symbol(name, id) {
+        if self.current_scope.define_symbol(name, id) {
             self.symbol_table.push(info);
             true
         } else {
@@ -113,7 +110,7 @@ impl NameResolver {
     }
 
     pub fn lookup_symbol(&self, name: &str) -> Option<DefinitionId> {
-        self.current_scope.borrow().lookup_symbol(name)
+        self.current_scope.lookup_symbol(name)
     }
 }
 
@@ -144,12 +141,18 @@ impl ResolveVisitor for Ast {
                 un.operand.define(resolver);
             }
             Ast::If(if_expr) => {
+                // TODO: Check these scoping points
                 if_expr.condition.define(resolver);
+                resolver.push_scope();
                 if_expr.then.define(resolver);
+                resolver.pop_scope();
             }
             Ast::While(while_expr) => {
+                // TODO: Check these scoping points
                 while_expr.condition.define(resolver);
+                resolver.push_scope();
                 while_expr.then.define(resolver);
+                resolver.pop_scope();
             }
             Ast::Literal(_) => {}
             Ast::Error => {}
@@ -194,6 +197,7 @@ impl ResolveVisitor for Variable {
         if let Some(id) = resolver.lookup_symbol(&self.pattern) {
             self.definition = Some(id);
             resolver.symbol_table[id].uses += 1;
+            println!("{}: {:#?}", self.pattern, resolver.symbol_table[id]);
         } else {
             resolver
                 .diagnostics
