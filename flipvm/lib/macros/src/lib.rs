@@ -434,9 +434,9 @@ mod test {
     use super::*;
     #[test]
     fn arg_name() -> Result<(), String> {
-        assert!(get_arg_name(0)?.to_string() == "a0".to_string());
-        assert!(get_arg_name(1)?.to_string() == "a1".to_string());
-        assert!(get_arg_name(2)?.to_string() == "a2".to_string());
+        assert!(get_arg_name(0)? == *"a0");
+        assert!(get_arg_name(1)? == *"a1");
+        assert!(get_arg_name(2)? == *"a2");
         assert!(get_arg_name(3).is_err());
         assert!(get_arg_name(99).is_err());
         Ok(())
