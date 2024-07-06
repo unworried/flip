@@ -1,5 +1,5 @@
-use crate::parser::ast::{BinOp, Binary, Literal, LiteralKind, UnOp, Unary, Variable};
-use crate::parser::visitor::{Visitor, Walkable};
+use crate::ast::visitor::{Visitor, Walkable};
+use crate::ast::{BinOp, Binary, Literal, LiteralKind, UnOp, Unary, Variable};
 
 // Currently any operation that yields a float is floored.
 #[derive(Default)]

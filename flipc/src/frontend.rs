@@ -4,8 +4,9 @@
 use crate::diagnostics::DiagnosticBag;
 use crate::error::Result;
 use crate::lexer::Lexer;
-use crate::nameresolver::NameResolver;
 use crate::parser::Parser;
+use crate::passes::nameresolver::NameResolver;
+use crate::passes::{Pass, SymbolTableBuilder};
 use crate::source::Source;
 
 pub fn check(input: &str) -> Result<()> {
@@ -18,9 +19,11 @@ pub fn check(input: &str) -> Result<()> {
 
     let mut root = parser.parse();
 
-    let nameres = NameResolver::new(diagnostics.clone());
-    let st = nameres.resolve(&mut root);
-    println!("{:?}", st);
+    //let nameres = NameResolver::new(diagnostics.clone());
+    // let st = nameres.resolve(&mut root);
+    let st = SymbolTableBuilder::run((&root, diagnostics.clone()));
+    let st = NameResolver::run((&mut root, st, diagnostics.clone()));
+    println!("{:#?}", st);
 
     println!();
     println!("{}", root);

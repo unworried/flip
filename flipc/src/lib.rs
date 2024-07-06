@@ -4,14 +4,16 @@
 #[macro_use]
 extern crate alloc;
 
+mod ast;
+pub use ast::Ast;
+
 mod diagnostics;
 mod error;
 mod escape_codes;
 mod evaluator;
 pub mod frontend;
 mod lexer;
-mod nameresolver;
 mod parser;
+mod passes;
 mod source;
 mod span;
-mod types;
