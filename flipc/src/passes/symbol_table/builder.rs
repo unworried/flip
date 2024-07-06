@@ -1,12 +1,12 @@
 use std::cell::RefCell;
 use std::marker::PhantomData;
 
-use crate::diagnostics::DiagnosticsCell;
-use crate::ast::{Ast, Definition, If, While};
 use crate::ast::visitor::{Visitor, Walkable};
+use crate::ast::{Ast, Definition, If, While};
+use crate::diagnostics::DiagnosticsCell;
 use crate::passes::pass::Pass;
 
-use super::{SymbolTable, Variable};
+use super::{SymbolTable, VariableInfo};
 
 pub struct SymbolTableBuilder<'a> {
     symbol_table: RefCell<SymbolTable>,
@@ -78,9 +78,13 @@ impl<'a> Visitor for SymbolTableBuilder<'a> {
                 .borrow_mut()
                 .symbol_already_declared(&def.pattern.name, &def.pattern.span);
         } else {
-            self.symbol_table
-                .borrow_mut()
-                .insert_variable(def.pattern.clone(), Variable { span: def.span });
+            self.symbol_table.borrow_mut().insert_variable(
+                def.pattern.clone(),
+                VariableInfo {
+                    uses: 0,
+                    span: def.span,
+                },
+            );
         }
 
         def.pattern.name.walk(self);

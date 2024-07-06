@@ -60,11 +60,23 @@ impl NameResolver<'_> {
     }
 
     fn exit_scope(&mut self, index: usize) {
+        self.check_usage();
+
         let previous_symbol_table = *self.symbol_table.borrow_mut().parent.take().unwrap();
         let new_scope = previous_symbol_table.lookup_scope(index).unwrap();
         self.symbol_table.swap(new_scope);
         self.symbol_table = RefCell::new(previous_symbol_table);
         self.scope_idx = index + 1;
+    }
+
+    fn check_usage(&self) {
+        for (pat, def) in self.symbol_table.borrow().variables.iter() {
+            if def.uses == 0 {
+                self.diagnostics
+                    .borrow_mut()
+                    .unused_variable(&pat.name, &pat.span);
+            }
+        }
     }
 }
 
@@ -76,6 +88,7 @@ impl<'a> Pass for NameResolver<'a> {
     fn run((ast, st, diagnostics): Self::Input) -> Self::Output {
         let mut resolver = NameResolver::new(st, diagnostics);
         resolver.visit_ast(ast);
+
         resolver.symbol_table.into_inner()
     }
 }
@@ -115,6 +128,10 @@ impl Visitor for NameResolver<'_> {
             self.diagnostics
                 .borrow_mut()
                 .undefined_reference(&var.name, &var.span);
+        } else {
+            let mut st = self.symbol_table.borrow_mut();
+            let def = st.lookup_variable_mut(var).unwrap();
+            def.uses += 1;
         }
     }
 }
