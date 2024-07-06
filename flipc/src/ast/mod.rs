@@ -1,7 +1,12 @@
+use crate::ast::ptr::P;
+use std::hash::{Hash, Hasher};
+
 use crate::lexer::Token;
-use crate::nameresolver::DefinitionId;
-use crate::parser::P;
 use crate::span::Span;
+
+mod display;
+pub mod ptr;
+pub mod visitor;
 
 #[derive(Debug, Clone)]
 pub enum Ast {
@@ -85,12 +90,8 @@ impl Ast {
         })
     }
 
-    pub fn variable(pattern: Ident, span: Span) -> Ast {
-        Ast::Variable(Variable {
-            definition: None,
-            pattern,
-            span,
-        })
+    pub fn variable(name: Ident, span: Span) -> Ast {
+        Ast::Variable(Variable { name, span })
     }
 }
 #[derive(Debug, Clone)]
@@ -99,10 +100,22 @@ pub struct Sequence {
     pub span: Span,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq)]
 pub struct Pattern {
     pub name: Ident,
     pub span: Span,
+}
+
+impl PartialEq for Pattern {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+    }
+}
+
+impl Hash for Pattern {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.name.hash(state);
+    }
 }
 
 #[derive(Debug, Clone)] // Convert to unbound and bound trees instead
@@ -213,11 +226,6 @@ pub enum LiteralKind {
     String(String),
 }
 
-#[derive(Debug, Clone)]
-pub struct Variable {
-    pub definition: Option<DefinitionId>,
-    pub pattern: Ident,
-    pub span: Span,
-}
+pub type Variable = Pattern;
 
 pub type Ident = String;

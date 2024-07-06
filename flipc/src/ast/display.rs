@@ -1,11 +1,12 @@
+use crate::ast::visitor::Walkable;
+use crate::ast::Ast;
 use alloc::string::String;
 use core::fmt::{Display, Formatter, Result};
 
-use super::ast::{
-    Assignment, Ast, Binary, Definition, If, Literal, LiteralKind, Unary, Variable, While,
-};
-use super::visitor::{Visitor, Walkable};
 use crate::escape_codes::Color;
+
+use super::visitor::Visitor;
+use super::{Assignment, Binary, Definition, If, Literal, LiteralKind, Unary, Variable, While};
 
 impl Display for Ast {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
@@ -121,7 +122,7 @@ impl Visitor for AstDisplay {
 
     fn visit_variable(&mut self, var: &Variable) {
         //self.result.push_str(&format!("{}({:?})", var.pattern, var.definition));
-        self.result.push_str(&var.pattern);
+        self.result.push_str(&var.name);
     }
 
     fn visit_while(&mut self, while_expr: &While) {

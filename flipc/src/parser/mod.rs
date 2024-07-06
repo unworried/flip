@@ -1,17 +1,12 @@
+use crate::Ast;
 use core::mem;
 
-use self::ast::Ast;
 use self::combinators::parse_sequence;
-pub use self::ptr::*;
 use crate::diagnostics::DiagnosticsCell;
 use crate::lexer::{Lexer, Token};
 use crate::span::Span;
 
-pub mod ast;
 mod combinators;
-mod display;
-mod ptr;
-pub mod visitor;
 
 #[cfg(test)]
 mod tests;

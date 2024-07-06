@@ -1,9 +1,9 @@
-use crate::diagnostics::DiagnosticBag;
-use crate::lexer::Lexer;
-use crate::parser::ast::{
+use crate::ast::visitor::{Visitor, Walkable};
+use crate::ast::{
     Assignment, Ast, Binary, Definition, If, Literal, LiteralKind, Unary, Variable, While,
 };
-use crate::parser::visitor::{Visitor, Walkable};
+use crate::diagnostics::DiagnosticBag;
+use crate::lexer::Lexer;
 use crate::parser::Parser;
 
 pub fn assert_ast(input: &str, expected: Vec<ASTNode>) {
@@ -95,7 +95,7 @@ impl Visitor for AstValidator {
     }
 
     fn visit_variable(&mut self, var: &Variable) {
-        self.actual.push(ASTNode::Variable(var.pattern.to_owned()));
+        self.actual.push(ASTNode::Variable(var.name.to_owned()));
     }
 
     fn visit_if(&mut self, if_expr: &If) {

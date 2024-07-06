@@ -1,6 +1,6 @@
 use std::cmp;
 
-use super::ast::{Ast, BinOp, Pattern, UnOp};
+use crate::ast::{Ast, BinOp, Pattern, UnOp};
 use crate::lexer::Token;
 use crate::parser::Parser;
 use crate::span::Span;
