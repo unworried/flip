@@ -50,3 +50,6 @@ if foo > 0 {
 - Implement function declarations and calls
 - Add support for more complex data types
 - Implement optimizations and code generation phase
+
+## License 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE.md)
