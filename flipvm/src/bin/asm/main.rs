@@ -5,8 +5,7 @@ use std::path::Path;
 use std::str::FromStr;
 
 use flipvm::op::{Instruction, InstructionParseError};
-use flipvm::pp::macros;
-use flipvm::pp::PreProcessor;
+use flipvm::pp::{macros, PreProcessor};
 
 mod args;
 
@@ -48,7 +47,8 @@ fn main() -> Result<(), String> {
             if resolved.is_empty() {
                 continue;
             }
-            if let Some(';') = resolved.chars().next() { // next() == nth(0)
+            if let Some(';') = resolved.chars().next() {
+                // next() == nth(0)
                 continue;
             }
 

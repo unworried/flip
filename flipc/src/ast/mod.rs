@@ -1,6 +1,6 @@
-use crate::ast::ptr::P;
 use std::hash::{Hash, Hasher};
 
+use crate::ast::ptr::P;
 use crate::lexer::Token;
 use crate::span::Span;
 

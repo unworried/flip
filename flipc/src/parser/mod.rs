@@ -1,10 +1,10 @@
-use crate::Ast;
 use core::mem;
 
 use self::combinators::parse_sequence;
 use crate::diagnostics::DiagnosticsCell;
 use crate::lexer::{Lexer, Token};
 use crate::span::Span;
+use crate::Ast;
 
 mod combinators;
 

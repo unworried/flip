@@ -1,12 +1,11 @@
-use crate::ast::visitor::Walkable;
-use crate::ast::Ast;
 use alloc::string::String;
 use core::fmt::{Display, Formatter, Result};
 
-use crate::escape_codes::Color;
-
 use super::visitor::Visitor;
 use super::{Assignment, Binary, Definition, If, Literal, LiteralKind, Unary, Variable, While};
+use crate::ast::visitor::Walkable;
+use crate::ast::Ast;
+use crate::escape_codes::Color;
 
 impl Display for Ast {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {

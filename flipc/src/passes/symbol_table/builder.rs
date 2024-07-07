@@ -1,12 +1,11 @@
 use std::cell::RefCell;
 use std::marker::PhantomData;
 
+use super::{SymbolTable, VariableInfo};
 use crate::ast::visitor::{Visitor, Walkable};
 use crate::ast::{Ast, Definition, If, While};
 use crate::diagnostics::DiagnosticsCell;
 use crate::passes::pass::Pass;
-
-use super::{SymbolTable, VariableInfo};
 
 pub struct SymbolTableBuilder<'a> {
     symbol_table: RefCell<SymbolTable>,

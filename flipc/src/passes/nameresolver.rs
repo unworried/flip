@@ -14,15 +14,14 @@
 //! - undeclared_assignment: The symbol has not been declared before it was assigned.
 //! - undeclared_reference: The symbol has not been declared before it was referenced.
 //! - reference_before_assignment: The symbol was referenced before it was declared.
-use crate::ast::visitor::Visitor;
-use crate::ast::visitor::Walkable;
-use crate::ast::{Assignment, Ast, If, Variable, While};
-use crate::diagnostics::DiagnosticsCell;
 use std::cell::RefCell;
 use std::marker::PhantomData;
 
 use super::symbol_table::SymbolTable;
 use super::Pass;
+use crate::ast::visitor::{Visitor, Walkable};
+use crate::ast::{Assignment, Ast, If, Variable, While};
+use crate::diagnostics::DiagnosticsCell;
 
 pub trait ResolveVisitor {
     fn define(&mut self, resolver: &mut NameResolver);

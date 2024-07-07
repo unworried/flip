@@ -1,6 +1,7 @@
-use flipvm::op::Nibble;
-use flipvm::op::{Instruction::*, Literal12Bit};
-use flipvm::{Addressable, Register::*};
+use flipvm::op::Instruction::*;
+use flipvm::op::{Literal12Bit, Nibble};
+use flipvm::Addressable;
+use flipvm::Register::*;
 
 use self::common::{init_machine, run, SIGHALT};
 

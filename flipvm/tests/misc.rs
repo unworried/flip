@@ -1,8 +1,9 @@
-use crate::common::init_machine;
-use flipvm::op::{Instruction::*, Literal12Bit, Literal7Bit, Nibble, TestOp};
+use flipvm::op::Instruction::*;
+use flipvm::op::{Literal12Bit, Literal7Bit, Nibble, TestOp};
 use flipvm::Register::*;
 
 use self::common::{run, SIGHALT};
+use crate::common::init_machine;
 
 mod common;
 

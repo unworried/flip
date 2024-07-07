@@ -3,9 +3,8 @@ use std::str::FromStr;
 
 use macros::VmInstruction;
 
-use crate::Register;
-
 pub use self::fields::*;
+use crate::Register;
 
 mod fields;
 

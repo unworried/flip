@@ -1,4 +1,5 @@
-use flipvm::op::{Instruction::*, Literal12Bit, Nibble, StackOp};
+use flipvm::op::Instruction::*;
+use flipvm::op::{Literal12Bit, Nibble, StackOp};
 use flipvm::Addressable;
 use flipvm::Register::*;
 

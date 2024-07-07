@@ -1,4 +1,5 @@
-use flipvm::op::{Instruction::*, Literal12Bit, Nibble, TestOp};
+use flipvm::op::Instruction::*;
+use flipvm::op::{Literal12Bit, Nibble, TestOp};
 use flipvm::Flag;
 use flipvm::Register::*;
 
