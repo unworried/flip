@@ -89,6 +89,7 @@ impl<'a> Pass for NameResolver<'a> {
         let mut resolver = NameResolver::new(st, diagnostics);
         resolver.visit_ast(ast);
 
+        resolver.check_usage(); // Fix check at root scope. Remove once functions are added.
         resolver.symbol_table.into_inner()
     }
 }
