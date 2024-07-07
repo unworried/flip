@@ -52,4 +52,4 @@ if foo > 0 {
 - Implement optimizations and code generation phase
 
 ## License 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
