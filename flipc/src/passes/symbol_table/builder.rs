@@ -21,6 +21,27 @@ impl SymbolTableBuilder<'_> {
             _phantom: PhantomData,
         }
     }
+
+    fn enter_scope(&mut self) -> usize {
+        let scope_idx = self.symbol_table.borrow_mut().insert_scope();
+        let previous_symbol_table = std::mem::take(&mut self.symbol_table);
+        self.symbol_table.swap(
+            previous_symbol_table
+                .borrow()
+                .lookup_scope(scope_idx)
+                .unwrap(),
+        );
+        self.symbol_table.borrow_mut().parent = Some(Box::new(previous_symbol_table.into_inner()));
+
+        scope_idx
+    }
+
+    fn exit_scope(&mut self, index: usize) {
+        let previous_symbol_table = *self.symbol_table.borrow_mut().parent.take().unwrap();
+        let new_scope = previous_symbol_table.lookup_scope(index).unwrap();
+        self.symbol_table.swap(new_scope);
+        self.symbol_table = RefCell::new(previous_symbol_table);
+    }
 }
 
 impl<'a> Pass for SymbolTableBuilder<'a> {
@@ -35,40 +56,19 @@ impl<'a> Pass for SymbolTableBuilder<'a> {
     }
 }
 
-fn enter_scope(builder: &mut SymbolTableBuilder) -> usize {
-    let scope_idx = builder.symbol_table.borrow_mut().insert_scope();
-    let previous_symbol_table = std::mem::take(&mut builder.symbol_table);
-    builder.symbol_table.swap(
-        previous_symbol_table
-            .borrow()
-            .lookup_scope(scope_idx)
-            .unwrap(),
-    );
-    builder.symbol_table.borrow_mut().parent = Some(Box::new(previous_symbol_table.into_inner()));
-
-    scope_idx
-}
-
-fn exit_scope(builder: &mut SymbolTableBuilder, index: usize) {
-    let previous_symbol_table = *builder.symbol_table.borrow_mut().parent.take().unwrap();
-    let new_scope = previous_symbol_table.lookup_scope(index).unwrap();
-    builder.symbol_table.swap(new_scope);
-    builder.symbol_table = RefCell::new(previous_symbol_table);
-}
-
 impl<'a> Visitor for SymbolTableBuilder<'a> {
     fn visit_if(&mut self, if_expr: &If) {
-        let scope_idx = enter_scope(self);
+        let scope_idx = self.enter_scope();
         if_expr.condition.walk(self);
         if_expr.then.walk(self);
-        exit_scope(self, scope_idx);
+        self.exit_scope(scope_idx);
     }
 
     fn visit_while(&mut self, while_expr: &While) {
-        let scope_idx = enter_scope(self);
+        let scope_idx = self.enter_scope();
         while_expr.condition.walk(self);
         while_expr.then.walk(self);
-        exit_scope(self, scope_idx);
+        self.exit_scope(scope_idx);
     }
 
     fn visit_definition(&mut self, def: &Definition) {

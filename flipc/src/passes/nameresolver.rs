@@ -44,6 +44,16 @@ impl NameResolver<'_> {
         }
     }
 
+    fn check_usage(&self) {
+        for (pat, def) in self.symbol_table.borrow().variables.iter() {
+            if def.uses == 0 {
+                self.diagnostics
+                    .borrow_mut()
+                    .unused_variable(&pat.name, &pat.span);
+            }
+        }
+    }
+
     fn enter_scope(&mut self) -> usize {
         let previous_symbol_table = std::mem::take(&mut self.symbol_table);
         self.symbol_table.swap(
@@ -66,16 +76,6 @@ impl NameResolver<'_> {
         self.symbol_table.swap(new_scope);
         self.symbol_table = RefCell::new(previous_symbol_table);
         self.scope_idx = index + 1;
-    }
-
-    fn check_usage(&self) {
-        for (pat, def) in self.symbol_table.borrow().variables.iter() {
-            if def.uses == 0 {
-                self.diagnostics
-                    .borrow_mut()
-                    .unused_variable(&pat.name, &pat.span);
-            }
-        }
     }
 }
 
