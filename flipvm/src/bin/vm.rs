@@ -37,8 +37,6 @@ pub fn main() -> Result<(), String> {
         Box::new(MappedMemoryBuffer::new(program)),
     )?;
     vm.set_register(Register::SP, 0x1000);
-    vm.set_register(Register::PC, 0x10);
-
     vm.define_handler(0xf0, signal_halt);
     while !vm.is_halted() {
         println!("{}", vm.state());

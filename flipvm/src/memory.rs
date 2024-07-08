@@ -94,7 +94,7 @@ impl MemoryMapper {
 impl Addressable for MemoryMapper {
     fn read(&self, addr: u32) -> Result<u8, MemoryError> {
         let index = self.lookup_mapping(addr).ok_or(NoMap(addr))?;
-        let (start, size, ref a) = &self.mapped[index];
+        let (start, size, a) = &self.mapped[index];
         let addr_local = addr - (*start as u32);
         if addr_local < (*size as u32) {
             a.read(addr_local)
