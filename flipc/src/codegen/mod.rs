@@ -26,6 +26,7 @@ pub struct CodeGenerator {
     unlinked_references: Vec<(usize, Register, String)>,
 }
 
+// FIXME: Impl Pass?
 impl CodeGenerator {
     pub fn run(ast: &Ast, symbol_table: SymbolTable, inital_offset: u32) -> Vec<Instruction> {
         let mut gen = CodeGenerator {
@@ -58,15 +59,22 @@ impl CodeGenerator {
         self.current_offset += 2;
     }
 
-    fn emit_unlinked(&mut self, r: Register, label: String) {
-        self.unlinked_references
-            .push((self.instructions.len(), r, label));
+    fn emit_jump(&mut self, r: Register, label: String) {
+        match self.labels.get(&label) {
+            Some(offset) => {
+                let imm = Literal12Bit::new_checked(*offset as u16).unwrap();
+                self.emit(Instruction::Imm(r, imm));
+            }
+            None => {
+                self.unlinked_references
+                    .push((self.instructions.len(), r, label));
 
-        self.emit(Instruction::Invalid); // Placeholder for labeled immediate
+                self.emit(Instruction::Invalid); // Placeholder for labeled immediate
+            }
+        }
     }
 
     fn define_label(&mut self, label: String) {
-        // TODO: Remove Clone
         self.labels.insert(label.clone(), self.current_offset);
 
         self.unlinked_references.retain(|(loc, r, l)| {
@@ -106,34 +114,51 @@ impl CodeGenerator {
 impl Visitor for CodeGenerator {
     fn visit_if(&mut self, if_expr: &If) {
         let block_id = format!("{}{}", if_expr.span.start, if_expr.span.end);
-        let label_true = format!("lbl_{}_if_true", block_id);
-        let label_out = format!("lbl_{}_if_out", block_id);
+        let true_label = format!("lbl_{}_if_true", block_id);
+        let out_label = format!("lbl_{}_if_out", block_id);
         if_expr.condition.walk(self);
 
         // test cond == false
         self.emit(Instruction::Stack(C, SP, StackOp::Pop));
         self.emit(Instruction::Test(C, Zero, TestOp::BothZero));
         self.emit(Instruction::AddIf(PC, PC, Nibble::new_checked(2).unwrap()));
-        self.emit_unlinked(PC, label_true.clone());
+        self.emit_jump(PC, true_label.clone());
 
-        self.emit_unlinked(PC, label_out.clone());
+        self.emit_jump(PC, out_label.clone());
 
         // if cond == true
-        self.define_label(label_true);
+        self.define_label(true_label);
         let scope_idx = self.enter_scope();
         if_expr.then.walk(self);
         self.exit_scope(scope_idx);
 
-        self.emit_unlinked(PC, label_out.clone());
-        self.define_label(label_out);
+        self.emit_jump(PC, out_label.clone());
+        self.define_label(out_label);
+
+        assert!(self.unlinked_references.is_empty()); // TODO: Do i keep this? + error handling
     }
 
     fn visit_while(&mut self, while_expr: &While) {
-        unimplemented!("While");
-        /*let scope_idx = self.enter_scope();
+        let block_id = format!("{}{}", while_expr.span.start, while_expr.span.end);
+        let cond_label = format!("lbl_{}_while_cond", block_id);
+        let out_label = format!("lbl_{}_while_out", block_id);
+        self.define_label(cond_label.clone());
         while_expr.condition.walk(self);
+
+        self.emit(Instruction::Stack(C, SP, StackOp::Pop));
+        self.emit(Instruction::Test(C, Zero, TestOp::EitherNonZero));
+        self.emit(Instruction::AddIf(PC, PC, Nibble::new_checked(2).unwrap()));
+        self.emit_jump(PC, out_label.clone());
+
+        let scope_idx = self.enter_scope();
         while_expr.then.walk(self);
-        self.exit_scope(scope_idx);*/
+        self.exit_scope(scope_idx);
+        self.emit_jump(PC, cond_label);
+        self.define_label(out_label);
+
+        // TODO: Do i keep this? + error handling
+        // Techincaly Instruction::Invalid will emit error
+        assert!(self.unlinked_references.is_empty());
     }
 
     fn visit_definition(&mut self, def: &Definition) {

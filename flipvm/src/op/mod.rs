@@ -19,7 +19,6 @@ mod fields;
 #[derive(Debug, VmInstruction, PartialEq, Eq)]
 pub enum Instruction {
     #[opcode(0xff)]
-    //TODO: Conv. to restrictive type
     Imm(Register, Literal12Bit), // Doesnt use an opcode
     #[opcode(0x0)]
     Invalid,

@@ -37,7 +37,7 @@ pub fn check(input: &str) -> Result<()> {
     #[cfg(test)]
     assert!(diagnostics.borrow().diagnostics.is_empty());
 
-    diagnostics.borrow().check(&source)?;
+    //diagnostics.borrow().check(&source)?;
 
     let gen = CodeGenerator::run(&root, st, 0x0);
     let mut stdout = stdout().lock();

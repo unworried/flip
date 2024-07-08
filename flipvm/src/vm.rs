@@ -169,6 +169,7 @@ impl VM {
     ) -> Result<(), String> {
         let pc = self.get_register(Register::PC);
         let instruction = self.memory.read2(pc as u32).map_err(|x| x.to_string())?;
+        println!("PC: {}, instruction: {:#06X}", pc, instruction);
 
         self.set_flag(Flag::HasJumped, false);
         let op = Instruction::try_from(instruction)?;
