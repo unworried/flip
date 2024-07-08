@@ -13,6 +13,7 @@ pub struct VariableInfo {
     // TODO: Implement Types
     // type_: Type,
     pub uses: usize,
+    pub local_idx: usize,
     span: Span,
 }
 
