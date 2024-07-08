@@ -10,7 +10,8 @@ use crate::error::Result;
 use crate::lexer::Lexer;
 use crate::parser::Parser;
 use crate::passes::nameresolver::NameResolver;
-use crate::passes::{Pass, SymbolTableBuilder};
+use crate::passes::symbol_table::SymbolTableBuilder;
+use crate::passes::Pass;
 use crate::source::Source;
 
 pub fn check(input: &str) -> Result<()> {
@@ -38,7 +39,7 @@ pub fn check(input: &str) -> Result<()> {
 
     //diagnostics.borrow().check(&source)?;
 
-    let gen = CodeGenerator::run(&root);
+    let gen = CodeGenerator::run(&root, &st);
     let mut stdout = stdout().lock();
     let ins = gen
         .iter()
