@@ -80,7 +80,7 @@ impl<'a> DiagnosticsDisplay<'a> {
 
     pub fn print(&self) -> Result<()> {
         for diagnostic in self.diagnostics {
-            println!("{}", self.stringify(diagnostic)?);
+            eprintln!("{}", self.stringify(diagnostic)?);
         }
 
         Ok(())

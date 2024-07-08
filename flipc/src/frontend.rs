@@ -28,16 +28,16 @@ pub fn check(input: &str) -> Result<()> {
     // let st = nameres.resolve(&mut root);
     let st = SymbolTableBuilder::run((&root, diagnostics.clone()));
     let st = NameResolver::run((&mut root, st, diagnostics.clone()));
-    println!("{:#?}", st);
+    eprintln!("{:#?}", st);
 
-    println!();
-    println!("{}", root);
-    println!();
+    eprintln!();
+    eprintln!("{}", root);
+    eprintln!();
 
     #[cfg(test)]
     assert!(diagnostics.borrow().diagnostics.is_empty());
 
-    //diagnostics.borrow().check(&source)?;
+    diagnostics.borrow().check(&source)?;
 
     let gen = CodeGenerator::run(&root, st, 0x0);
     let mut stdout = stdout().lock();
@@ -50,7 +50,6 @@ pub fn check(input: &str) -> Result<()> {
         .write_all(ins.as_bytes())
         .map_err(|e| format!("{}", e))
         .unwrap();
-    println!("\n");
 
     Ok(())
 }
