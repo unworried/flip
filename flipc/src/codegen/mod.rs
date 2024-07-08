@@ -1,10 +1,11 @@
 use std::cell::RefCell;
+use std::collections::HashMap;
 
 use crate::ast::visitor::Walkable;
 use crate::passes::SymbolTable;
 
-use flipvm::op::{Instruction, Literal12Bit, Literal7Bit, Nibble, StackOp};
-use flipvm::Register::*;
+use flipvm::op::{Instruction, Literal12Bit, Literal7Bit, Nibble, StackOp, TestOp};
+use flipvm::Register::{self, *};
 
 use crate::ast::visitor::Visitor;
 use crate::ast::{
@@ -13,17 +14,28 @@ use crate::ast::{
 use crate::Ast;
 
 pub struct CodeGenerator {
+    inital_offset: u32,
+    current_offset: u32,
+
     instructions: Vec<Instruction>,
+
     symbol_table: RefCell<SymbolTable>,
     scope_idx: usize,
+
+    labels: HashMap<String, u32>,
+    unlinked_references: Vec<(usize, Register, String)>,
 }
 
 impl CodeGenerator {
-    pub fn run(ast: &Ast, symbol_table: SymbolTable) -> Vec<Instruction> {
+    pub fn run(ast: &Ast, symbol_table: SymbolTable, inital_offset: u32) -> Vec<Instruction> {
         let mut gen = CodeGenerator {
+            inital_offset,
+            current_offset: inital_offset,
             instructions: Vec::new(),
             symbol_table: RefCell::new(symbol_table),
             scope_idx: 0,
+            labels: HashMap::new(),
+            unlinked_references: Vec::new(),
         };
 
         ast.walk(&mut gen);
@@ -42,6 +54,30 @@ impl CodeGenerator {
 
     fn emit(&mut self, ins: Instruction) {
         self.instructions.push(ins);
+
+        self.current_offset += 2;
+    }
+
+    fn emit_unlinked(&mut self, r: Register, label: String) {
+        self.unlinked_references
+            .push((self.instructions.len(), r, label));
+
+        self.emit(Instruction::Invalid); // Placeholder for labeled immediate
+    }
+
+    fn define_label(&mut self, label: String) {
+        // TODO: Remove Clone
+        self.labels.insert(label.clone(), self.current_offset);
+
+        self.unlinked_references.retain(|(loc, r, l)| {
+            if *l == label {
+                let imm = Literal12Bit::new_checked(self.current_offset as u16).unwrap();
+                self.instructions[*loc] = Instruction::Imm(*r, imm);
+                false
+            } else {
+                true
+            }
+        });
     }
 
     fn enter_scope(&mut self) -> usize {
@@ -69,17 +105,35 @@ impl CodeGenerator {
 
 impl Visitor for CodeGenerator {
     fn visit_if(&mut self, if_expr: &If) {
-        let scope_idx = self.enter_scope();
+        let block_id = format!("{}{}", if_expr.span.start, if_expr.span.end);
+        let label_true = format!("lbl_{}_if_true", block_id);
+        let label_out = format!("lbl_{}_if_out", block_id);
         if_expr.condition.walk(self);
+
+        // test cond == false
+        self.emit(Instruction::Stack(C, SP, StackOp::Pop));
+        self.emit(Instruction::Test(C, Zero, TestOp::BothZero));
+        self.emit(Instruction::AddIf(PC, PC, Nibble::new_checked(2).unwrap()));
+        self.emit_unlinked(PC, label_true.clone());
+
+        self.emit_unlinked(PC, label_out.clone());
+
+        // if cond == true
+        self.define_label(label_true);
+        let scope_idx = self.enter_scope();
         if_expr.then.walk(self);
         self.exit_scope(scope_idx);
+
+        self.emit_unlinked(PC, label_out.clone());
+        self.define_label(label_out);
     }
 
     fn visit_while(&mut self, while_expr: &While) {
-        let scope_idx = self.enter_scope();
+        unimplemented!("While");
+        /*let scope_idx = self.enter_scope();
         while_expr.condition.walk(self);
         while_expr.then.walk(self);
-        self.exit_scope(scope_idx);
+        self.exit_scope(scope_idx);*/
     }
 
     fn visit_definition(&mut self, def: &Definition) {
@@ -147,6 +201,14 @@ impl Visitor for CodeGenerator {
         match bin.op {
             BinOp::Add => self.emit(Instruction::Stack(Zero, SP, StackOp::Add)),
             BinOp::Sub => self.emit(Instruction::Stack(Zero, SP, StackOp::Sub)),
+            BinOp::Eq => {
+                self.emit(Instruction::Stack(B, SP, StackOp::Pop));
+                self.emit(Instruction::Stack(C, SP, StackOp::Pop));
+                self.emit(Instruction::Test(B, C, TestOp::Eq));
+                self.emit(Instruction::Add(Zero, Zero, C));
+                self.emit(Instruction::AddIf(C, Zero, Nibble::new_checked(1).unwrap()));
+                self.emit(Instruction::Stack(C, SP, StackOp::Push));
+            }
             _ => unimplemented!("binop"),
         }
     }

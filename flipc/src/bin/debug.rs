@@ -12,7 +12,7 @@ fn main() {
     let xyz = "abc";
     "#;*/
     // Fix so not lit strings allowed in binary operations
-    
+
     // TODO FIX THIS NO ERROR EMITED BY COMPILER
     // let line = r#"let x = 7; x = 1 let y = x - 2;"#;
 
@@ -22,8 +22,8 @@ fn main() {
     //let line = r#"let x = 4; let y=x; x = y; x = 7; y = x;"#;
     //let line = r#"let x = 1; x = x + 1;"#;
     //let line = "while \"TMP\" { \nlet x = \"hello, world!\"; \nlet y = \"hello, world 2!\"; \nlet z = \"hello, world 3!\"; \n };";
-    
-    let line = r#"let x = 7; x = 1; let y = 5 - x;"#;
+
+    let line = r#"if 1 == 1 { let x = 7; };"#;
     match frontend::check(line) {
         Ok(_) => println!("No errors found"),
         Err(e) => println!("{}", e),

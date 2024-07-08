@@ -39,7 +39,7 @@ pub fn check(input: &str) -> Result<()> {
 
     //diagnostics.borrow().check(&source)?;
 
-    let gen = CodeGenerator::run(&root, st);
+    let gen = CodeGenerator::run(&root, st, 0x0);
     let mut stdout = stdout().lock();
     let ins = gen
         .iter()
