@@ -3,23 +3,13 @@ use core::fmt::{Display, Formatter, Result};
 
 use super::visitor::Visitor;
 use super::{
-    Assignment, Binary, Definition, If, Literal, LiteralKind, Program, Unary, Variable, While,
+    Assignment, Binary, Call, Definition, Function, If, Literal, LiteralKind, Program, Unary,
+    Variable, While,
 };
 use crate::ast::visitor::Walkable;
-use crate::ast::Ast;
 use crate::escape_codes::Color;
 
 impl Display for Program {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        for func in &self.functions {
-            write!(f, "{}", func.pattern.name)?;
-            write!(f, "{}", func.body)?;
-        }
-        Ok(())
-    }
-}
-
-impl Display for Ast {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         let mut display = AstDisplay::new();
         write!(f, "{}", display.build(self))
@@ -39,8 +29,8 @@ impl AstDisplay {
         }
     }
 
-    pub fn build(&mut self, ast: &Ast) -> &String {
-        self.visit_ast(ast);
+    pub fn build(&mut self, program: &Program) -> &String {
+        self.visit_program(program);
         &self.result
     }
 
@@ -80,6 +70,21 @@ impl AstDisplay {
 }
 
 impl Visitor for AstDisplay {
+    fn visit_function(&mut self, func: &Function) {
+        self.add_statement_header("Function");
+        self.result.push_str(&func.pattern.name);
+
+        self.indent += 1;
+        self.add_statement_header("Parameters");
+        self.result.push_str("$$WIP$$");
+
+        self.add_newline();
+        self.add_statement_header("Body");
+        self.indent += 1;
+        func.body.walk(self);
+        self.add_block_end();
+    }
+
     fn visit_definition(&mut self, def: &Definition) {
         self.add_statement_header("Declare");
         //self.result.push_str(&format!("{}({:?})", def.pattern.name, def.id));
@@ -102,6 +107,11 @@ impl Visitor for AstDisplay {
         def.value.walk(self);
 
         self.indent -= 1;
+    }
+
+    fn visit_call(&mut self, call: &Call) {
+        self.add_statement_header("Call");
+        self.result.push_str(&call.pattern.name);
     }
 
     fn visit_binary(&mut self, bin: &Binary) {

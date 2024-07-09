@@ -75,7 +75,7 @@ mod tests {
         let ast = parse_sequence(&mut parser, Token::Eof);
         let mut evaluator = Evaluator::default();
         evaluator.visit_ast(&ast);
-        println!("{}", ast);
+        println!("{:#?}", ast);
         assert_eq!(evaluator.last_value.unwrap(), expected);
     }
 
