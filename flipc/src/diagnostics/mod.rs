@@ -3,6 +3,7 @@ use alloc::rc::Rc;
 use alloc::string::String;
 use alloc::vec::Vec;
 use core::cell::RefCell;
+use core::fmt::{self, Display};
 
 use self::display::DiagnosticsDisplay;
 use crate::error::{CompilerError, Result};
@@ -16,13 +17,22 @@ mod display;
 pub struct Diagnostic {
     pub kind: DiagnosticKind,
     pub message: String,
-    pub span: Span,
+    pub span: Option<Span>,
 }
 
 #[derive(Debug)]
 pub enum DiagnosticKind {
     Error,
     Warning,
+}
+
+impl Display for DiagnosticKind {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            DiagnosticKind::Error => write!(f, "error"),
+            DiagnosticKind::Warning => write!(f, "warning"),
+        }
+    }
 }
 
 #[derive(Default, Debug)]
@@ -52,7 +62,7 @@ impl DiagnosticBag {
         Ok(())
     }
 
-    fn report(&mut self, kind: DiagnosticKind, message: String, span: Span) {
+    fn report(&mut self, kind: DiagnosticKind, message: String, span: Option<Span>) {
         self.diagnostics.push(Diagnostic {
             kind,
             message,
@@ -61,11 +71,15 @@ impl DiagnosticBag {
     }
 
     fn error(&mut self, message: String, span: Span) {
-        self.report(DiagnosticKind::Error, message, span);
+        self.report(DiagnosticKind::Error, message, Some(span));
+    }
+
+    fn program_error(&mut self, message: String) {
+        self.report(DiagnosticKind::Error, message, None);
     }
 
     fn warning(&mut self, message: String, span: Span) {
-        self.report(DiagnosticKind::Warning, message, span);
+        self.report(DiagnosticKind::Warning, message, Some(span));
     }
 
     pub fn expected_token(&mut self, expected: &Token, actual: &Token, span: &Span) {
@@ -134,5 +148,9 @@ impl DiagnosticBag {
 
     pub fn empty_block(&mut self, span: &Span) {
         self.warning("empty block found".to_owned(), span.clone());
+    }
+
+    pub fn main_not_found(&mut self) {
+        self.program_error("`main` function not found".to_owned());
     }
 }
