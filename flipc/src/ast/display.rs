@@ -12,7 +12,7 @@ use crate::escape_codes::Color;
 impl Display for Program {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         for func in &self.functions {
-            write!(f, "{}", func.name)?;
+            write!(f, "{}", func.pattern.name)?;
             write!(f, "{}", func.body)?;
         }
         Ok(())

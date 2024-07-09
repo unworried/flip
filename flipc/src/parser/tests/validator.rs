@@ -22,7 +22,7 @@ pub fn assert_program(input: &str, expected: HashMap<String, Vec<ASTNode>>) {
 
     for func in program.functions {
         let mut validator = AstValidator {
-            expected: expected.get(&func.name).unwrap().to_vec(),
+            expected: expected.get(&func.pattern.name).unwrap().to_vec(),
             actual: Vec::new(),
         };
         validator.flatten_ast(&func.body);

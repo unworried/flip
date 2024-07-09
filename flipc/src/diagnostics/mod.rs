@@ -128,6 +128,10 @@ impl DiagnosticBag {
         self.warning(format!("unused variable: `{}`", ident), span.clone());
     }
 
+    pub fn unused_function(&mut self, ident: &String, span: &Span) {
+        self.warning(format!("unused function: `{}`", ident), span.clone());
+    }
+
     pub fn empty_block(&mut self, span: &Span) {
         self.warning("empty block found".to_owned(), span.clone());
     }

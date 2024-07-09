@@ -88,6 +88,15 @@ impl<'a> Pass for NameResolver<'a> {
         let mut resolver = NameResolver::new(st, diagnostics);
         resolver.visit_program(ast);
 
+        for (pat, func) in resolver.symbol_table.borrow().functions.iter() {
+            if func.uses == 0 {
+                resolver
+                    .diagnostics
+                    .borrow_mut()
+                    .unused_function(&pat.name, &pat.span);
+            }
+        }
+
         resolver.check_usage(); // Fix check at root scope. Remove once functions are added.
         resolver.symbol_table.into_inner()
     }

@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::marker::PhantomData;
 
-use super::{SymbolTable, VariableInfo};
+use super::{FunctionInfo, SymbolTable, VariableInfo};
 use crate::ast::visitor::{Visitor, Walkable};
 use crate::ast::{Definition, Function, If, Program, While};
 use crate::diagnostics::DiagnosticsCell;
@@ -58,27 +58,42 @@ impl<'a> Pass for SymbolTableBuilder<'a> {
 
 impl<'a> Visitor for SymbolTableBuilder<'a> {
     fn visit_function(&mut self, func: &Function) {
+        if self.symbol_table.borrow().is_shadowing_func(&func.pattern) {
+            self.diagnostics
+                .borrow_mut()
+                .symbol_already_declared(&func.pattern.name, &func.pattern.span);
+        } else {
+            let local_idx = self.symbol_table.borrow().functions.len();
+            self.symbol_table.borrow_mut().insert_function(
+                func.pattern.clone(),
+                FunctionInfo {
+                    uses: 0,
+                    local_idx,
+                    span: func.span,
+                },
+            );
+        }
         let scope_idx = self.enter_scope();
         func.body.walk(self);
         self.exit_scope(scope_idx);
     }
 
     fn visit_if(&mut self, if_expr: &If) {
-        let scope_idx = self.enter_scope();
         if_expr.condition.walk(self);
+        let scope_idx = self.enter_scope();
         if_expr.then.walk(self);
         self.exit_scope(scope_idx);
     }
 
     fn visit_while(&mut self, while_expr: &While) {
-        let scope_idx = self.enter_scope();
         while_expr.condition.walk(self);
+        let scope_idx = self.enter_scope();
         while_expr.then.walk(self);
         self.exit_scope(scope_idx);
     }
 
     fn visit_definition(&mut self, def: &Definition) {
-        if self.symbol_table.borrow().is_shadowing(&def.pattern) {
+        if self.symbol_table.borrow().is_shadowing_var(&def.pattern) {
             self.diagnostics
                 .borrow_mut()
                 .symbol_already_declared(&def.pattern.name, &def.pattern.span);

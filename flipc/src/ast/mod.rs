@@ -14,7 +14,7 @@ pub struct Program {
 
 #[derive(Debug, Clone)]
 pub struct Function {
-    pub name: Ident,
+    pub pattern: Pattern,
     pub body: Ast,
     pub span: Span,
 }

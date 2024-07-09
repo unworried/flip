@@ -31,8 +31,13 @@ pub fn parse_function(parser: &mut Parser) -> Function {
         let body = parse_sequence(parser, Token::RBrace);
         parser.expect(Token::RBrace);
 
-        return Function {
+        let pattern = Pattern {
             name: name.to_owned(),
+            span,
+        };
+
+        return Function {
+            pattern,
             body,
             span: Span::combine(vec![&span, &parser.current_span()]),
         };
