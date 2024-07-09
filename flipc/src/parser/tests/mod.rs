@@ -69,6 +69,60 @@ main() {
 }
 
 #[test]
+fn simple_program_multiple_functions() {
+    let input = r#"
+main() {
+    let x = 5;
+    while x >= 3 {
+        x = x - 1;
+    };
+}
+
+foo() {
+    let x = 4;
+    if x == 4 {
+        x = 5;
+    };
+}
+"#;
+
+    let expected: HashMap<String, Vec<ASTNode>> = HashMap::from([
+        (
+            "main".to_string(),
+            vec![
+                ASTNode::Let,
+                ASTNode::Variable("x".to_string()),
+                ASTNode::Integer(5),
+                ASTNode::While,
+                ASTNode::Binary,
+                ASTNode::Variable("x".to_string()),
+                ASTNode::Integer(3),
+                ASTNode::Variable("x".to_string()),
+                ASTNode::Binary,
+                ASTNode::Variable("x".to_string()),
+                ASTNode::Integer(1),
+            ],
+        ),
+        (
+            "foo".to_string(),
+            vec![
+                ASTNode::Let,
+                ASTNode::Variable("x".to_string()),
+                ASTNode::Integer(4),
+                ASTNode::If,
+                ASTNode::Binary,
+                ASTNode::Variable("x".to_string()),
+                ASTNode::Integer(4),
+                ASTNode::Variable("x".to_string()),
+                ASTNode::Integer(5),
+            ],
+        ),
+    ]);
+
+    assert_program(input, expected);
+}
+
+#[test]
 fn validation_scheme() {
     let input = "while 1 { \nlet bar = \"TEST\"; \nif 1 == 1 { \nlet foo = 45; \n}; \n};\n";
     let expected = vec![
