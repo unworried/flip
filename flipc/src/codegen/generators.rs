@@ -4,12 +4,19 @@ use flipvm::Register::*;
 
 use crate::ast::visitor::Visitor;
 use crate::ast::{
-    Assignment, BinOp, Binary, Definition, If, Literal, LiteralKind, Unary, Variable, While,
+    Assignment, BinOp, Binary, Definition, Function, If, Literal, LiteralKind, Unary, Variable,
+    While,
 };
 
 use super::CodeGenerator;
 
 impl Visitor for CodeGenerator {
+    fn visit_function(&mut self, func: &Function) {
+        let scope_idx = self.enter_scope();
+        func.body.walk(self);
+        self.exit_scope(scope_idx);
+    }
+
     fn visit_if(&mut self, if_expr: &If) {
         let block_id = format!("{}{}", if_expr.span.start, if_expr.span.end);
         let true_label = format!("lbl_{}_if_true", block_id);

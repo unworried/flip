@@ -4,7 +4,7 @@ use self::common::read_source_file;
 
 mod common;
 
-#[ignore]
+//#[ignore]
 #[test]
 fn nested_blocks() {
     let src = read_source_file("nestedblocks.fl");

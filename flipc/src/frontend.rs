@@ -27,6 +27,7 @@ pub fn check(input: &str) -> Result<()> {
     //let nameres = NameResolver::new(diagnostics.clone());
     // let st = nameres.resolve(&mut root);
     let st = SymbolTableBuilder::run((&root, diagnostics.clone()));
+    println!("{:#?}", st);
     let st = NameResolver::run((&mut root, st, diagnostics.clone()));
     eprintln!("{:#?}", st);
 
@@ -37,7 +38,7 @@ pub fn check(input: &str) -> Result<()> {
     #[cfg(test)]
     assert!(diagnostics.borrow().diagnostics.is_empty());
 
-    //diagnostics.borrow().check(&source)?;
+    diagnostics.borrow().check(&source)?;
 
     let gen = CodeGenerator::run(&root, st, 0x0);
     let mut stdout = stdout().lock();
