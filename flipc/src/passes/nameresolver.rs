@@ -20,7 +20,7 @@ use std::marker::PhantomData;
 use super::symbol_table::SymbolTable;
 use super::Pass;
 use crate::ast::visitor::{Visitor, Walkable};
-use crate::ast::{Assignment, Ast, If, Program, Variable, While};
+use crate::ast::{Assignment, Function, If, Program, Variable, While};
 use crate::diagnostics::DiagnosticsCell;
 
 pub trait ResolveVisitor {
@@ -64,8 +64,8 @@ impl NameResolver<'_> {
         );
         self.symbol_table.borrow_mut().parent = Some(Box::new(previous_symbol_table.into_inner()));
 
-        self.scope_idx
-        //core::mem::replace(&mut self.scope_idx, 0)
+        //self.scope_idx
+        core::mem::replace(&mut self.scope_idx, 0)
     }
 
     fn exit_scope(&mut self, index: usize) {
@@ -94,6 +94,12 @@ impl<'a> Pass for NameResolver<'a> {
 }
 
 impl Visitor for NameResolver<'_> {
+    fn visit_function(&mut self, func: &Function) {
+        let scope_idx = self.enter_scope();
+        func.body.walk(self);
+        self.exit_scope(scope_idx);
+    }
+
     fn visit_if(&mut self, if_expr: &If) {
         let scope_idx = self.enter_scope();
         if_expr.condition.walk(self);

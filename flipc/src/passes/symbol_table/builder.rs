@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 
 use super::{SymbolTable, VariableInfo};
 use crate::ast::visitor::{Visitor, Walkable};
-use crate::ast::{Ast, Definition, If, Program, While};
+use crate::ast::{Definition, Function, If, Program, While};
 use crate::diagnostics::DiagnosticsCell;
 use crate::passes::pass::Pass;
 
@@ -57,6 +57,12 @@ impl<'a> Pass for SymbolTableBuilder<'a> {
 }
 
 impl<'a> Visitor for SymbolTableBuilder<'a> {
+    fn visit_function(&mut self, func: &Function) {
+        let scope_idx = self.enter_scope();
+        func.body.walk(self);
+        self.exit_scope(scope_idx);
+    }
+
     fn visit_if(&mut self, if_expr: &If) {
         let scope_idx = self.enter_scope();
         if_expr.condition.walk(self);
