@@ -77,11 +77,13 @@ impl Visitor for CodeGenerator {
         self.define_label(cond_label.clone());
         while_expr.condition.walk(self);
 
+        // Cond
         self.emit(Instruction::Stack(C, SP, StackOp::Pop));
         self.emit(Instruction::Test(C, Zero, TestOp::EitherNonZero));
         self.emit(Instruction::AddIf(PC, PC, Nibble::new_checked(2).unwrap()));
         self.imm_future(PC, out_label.clone());
 
+        // Resolution
         let scope_idx = self.enter_scope();
         while_expr.then.walk(self);
         self.exit_scope(scope_idx);
@@ -100,6 +102,7 @@ impl Visitor for CodeGenerator {
             .local_idx;
         let addr = local_idx as u8 * 2;
 
+        // Walk value to stack and store
         self.emit(Instruction::Stack(C, SP, StackOp::Pop));
         self.emit(Instruction::Add(BP, Zero, B));
         self.emit(Instruction::AddImm(
@@ -120,6 +123,7 @@ impl Visitor for CodeGenerator {
             .local_idx;
         let addr = local_idx as u8 * 2;
 
+        // Walk value to stack and store
         self.emit(Instruction::Stack(C, SP, StackOp::Pop));
         self.emit(Instruction::Add(BP, Zero, B));
         self.emit(Instruction::AddImm(
@@ -138,6 +142,7 @@ impl Visitor for CodeGenerator {
             .local_idx;
         let addr = local_idx as u8 * 2;
 
+        // Load value from stack
         self.emit(Instruction::Add(BP, Zero, C));
         self.emit(Instruction::AddImm(
             C,
