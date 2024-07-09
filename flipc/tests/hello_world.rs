@@ -4,7 +4,8 @@ use self::common::read_source_file;
 
 mod common;
 
-//#[test]
+#[ignore]
+#[test]
 fn hello_world() {
     let src = read_source_file("helloworld.fl");
     match frontend::check(&src) {
