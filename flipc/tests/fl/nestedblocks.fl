@@ -11,6 +11,7 @@ main() {
 }
 
 a() {
+    foo = "hi";
     let baz = 0;
     # let baz = 1;
     # let bar = baz * 3 + 2;

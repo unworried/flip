@@ -73,7 +73,8 @@ pub fn parse_statement(parser: &mut Parser) -> Ast {
                 name: name.to_owned(),
                 span,
             };
-            parse_assignment(parser, pattern)
+            parse_assignment_or_call(parser, pattern)
+            //parse_assignment(parser, pattern)
         }
         Token::If => parse_if(parser),
         Token::While => parse_while(parser),
@@ -133,12 +134,30 @@ pub fn parse_let(parser: &mut Parser) -> Ast {
     )
 }
 
+pub fn parse_assignment_or_call(parser: &mut Parser, pattern: Pattern) -> Ast {
+    let (token, span) = parser.consume();
+
+    match token {
+        Token::Assign => parse_assignment(parser, pattern),
+        Token::LParen => {
+            parser.expect(Token::RParen);
+            Ast::call(pattern, span)
+        }
+        _ => {
+            parser.step_until(&Token::SemiColon);
+            // TODO: Add Err?
+            Ast::Error
+        }
+    }
+}
+
 pub fn parse_assignment(parser: &mut Parser, pattern: Pattern) -> Ast {
-    let start_span = parser.current_span();
+    let start_span = pattern.span;
+    /*let start_span = parser.current_span();
     if !parser.expect_with_outcome(Token::Assign) {
         parser.step_until(&Token::SemiColon);
         return Ast::Error;
-    }
+    }*/
 
     let value = parse_expression(parser);
 

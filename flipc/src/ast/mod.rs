@@ -30,6 +30,7 @@ pub enum Ast {
     Unary(Unary),
     Literal(Literal),
     Variable(Variable),
+    Call(Call),
     Error,
 }
 
@@ -99,6 +100,10 @@ impl Ast {
             operand: P(oprand),
             span,
         })
+    }
+
+    pub fn call(pattern: Pattern, span: Span) -> Ast {
+        Ast::Call(Call { pattern, span })
     }
 
     pub fn variable(name: Ident, span: Span) -> Ast {
@@ -235,6 +240,12 @@ pub struct Literal {
 pub enum LiteralKind {
     Int(u64),
     String(String),
+}
+
+#[derive(Debug, Clone)]
+pub struct Call {
+    pub pattern: Pattern,
+    pub span: Span,
 }
 
 pub type Variable = Pattern;

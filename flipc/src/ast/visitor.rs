@@ -1,6 +1,5 @@
 use super::{
-    Assignment, Ast, Binary, Definition, Function, Ident, If, Literal, Program, Sequence, Unary,
-    Variable, While,
+    Assignment, Ast, Binary, Call, Definition, Function, Ident, If, Literal, Program, Sequence, Unary, Variable, While
 };
 
 pub trait Walkable {
@@ -56,6 +55,8 @@ pub trait Visitor: Sized {
     }
 
     fn visit_variable(&mut self, _var: &Variable) {}
+
+    fn visit_call(&mut self, _call: &Call) {}
 }
 
 impl Walkable for Function {
@@ -76,6 +77,7 @@ impl Walkable for Ast {
             Ast::Binary(bin) => visitor.visit_binary(bin),
             Ast::Unary(un) => visitor.visit_unary(un),
             Ast::Variable(var) => visitor.visit_variable(var),
+            Ast::Call(call) => visitor.visit_call(call),
             Ast::Error => {}
         }
     }
