@@ -116,9 +116,17 @@ impl DiagnosticBag {
         self.error(format!("unknown expression `{}`", token), span.clone());
     }
 
-    pub fn symbol_already_declared(&mut self, pattern: &String, span: &Span) {
+    pub fn variable_already_declared(&mut self, pattern: &String, span: &Span) {
         self.error(
-            format!("symbol: `{}` already exists in scope", pattern),
+            format!("variable: `{}` already exists in scope", pattern),
+            span.clone(),
+        );
+    }
+
+    pub fn function_already_declared(&mut self, pattern: &String, span: &Span) {
+        // TODO: better message maybe?
+        self.error(
+            format!("function: `{}` already exists", pattern),
             span.clone(),
         );
     }

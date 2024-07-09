@@ -80,7 +80,7 @@ impl<'a> Visitor for SymbolTableBuilder<'a> {
         if self.symbol_table.borrow().is_shadowing_func(&func.pattern) {
             self.diagnostics
                 .borrow_mut()
-                .symbol_already_declared(&func.pattern.name, &func.pattern.span);
+                .function_already_declared(&func.pattern.name, &func.pattern.span);
         } else {
             let local_idx = self.symbol_table.borrow().functions.len();
             self.symbol_table.borrow_mut().insert_function(
@@ -115,7 +115,7 @@ impl<'a> Visitor for SymbolTableBuilder<'a> {
         if self.symbol_table.borrow().is_shadowing_var(&def.pattern) {
             self.diagnostics
                 .borrow_mut()
-                .symbol_already_declared(&def.pattern.name, &def.pattern.span);
+                .variable_already_declared(&def.pattern.name, &def.pattern.span);
         } else {
             let local_idx = self.symbol_table.borrow().variables.len();
             self.symbol_table.borrow_mut().insert_variable(

@@ -106,6 +106,7 @@ impl<'a> Pass for NameResolver<'a> {
     }
 }
 
+// FIXME: Here + Builder, move scope enter/exit to sequence visitor, does not need to be duplicated
 impl Visitor for NameResolver<'_> {
     fn visit_function(&mut self, func: &Function) {
         let scope_idx = self.enter_scope();
