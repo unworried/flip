@@ -146,7 +146,7 @@ pub fn parse_assignment_or_call(parser: &mut Parser, pattern: Pattern) -> Ast {
         Token::Assign => parse_assignment(parser, pattern),
         Token::LParen => {
             parser.expect(Token::RParen);
-            Ast::call(pattern, span)
+            Ast::call(pattern, Span::combine(vec![&span, &parser.current_span()]))
         }
         _ => {
             parser.step_until(&Token::SemiColon);

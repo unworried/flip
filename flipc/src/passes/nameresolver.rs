@@ -15,14 +15,12 @@
 //! - undeclared_reference: The symbol has not been declared before it was referenced.
 //! - reference_before_assignment: The symbol was referenced before it was declared.
 use std::cell::RefCell;
-use std::marker::PhantomData;
 
-use super::symbol_table::SymbolTable;
+use super::symbol_table::{FunctionTable, SymbolTable};
 use super::Pass;
 use crate::ast::visitor::{Visitor, Walkable};
-use crate::ast::{Assignment, Function, If, Pattern, Program, Variable, While};
+use crate::ast::{Assignment, Call, Function, If, Program, Variable, While};
 use crate::diagnostics::DiagnosticsCell;
-use crate::span::Span;
 
 pub trait ResolveVisitor {
     fn define(&mut self, resolver: &mut NameResolver);
@@ -30,18 +28,23 @@ pub trait ResolveVisitor {
 
 pub struct NameResolver<'a> {
     symbol_table: RefCell<SymbolTable>,
+    functions: &'a mut FunctionTable,
+
     diagnostics: DiagnosticsCell,
     scope_idx: usize,
-    _phantom: PhantomData<&'a ()>,
 }
 
-impl NameResolver<'_> {
-    pub fn new(symbol_table: SymbolTable, diagnostics: DiagnosticsCell) -> Self {
+impl<'a> NameResolver<'a> {
+    pub fn new(
+        symbol_table: SymbolTable,
+        functions: &'a mut FunctionTable,
+        diagnostics: DiagnosticsCell,
+    ) -> Self {
         Self {
             symbol_table: RefCell::new(symbol_table),
+            functions,
             diagnostics,
             scope_idx: 0,
-            _phantom: PhantomData,
         }
     }
 
@@ -56,7 +59,7 @@ impl NameResolver<'_> {
     }
 
     fn check_functions(&mut self) {
-        for (pat, func) in self.symbol_table.borrow().functions.iter() {
+        for (pat, func) in self.functions.iter() {
             if func.uses == 0 {
                 self.diagnostics
                     .borrow_mut()
@@ -91,12 +94,17 @@ impl NameResolver<'_> {
 }
 
 impl<'a> Pass for NameResolver<'a> {
-    type Input = (&'a Program, SymbolTable, DiagnosticsCell);
+    type Input = (
+        &'a Program,
+        SymbolTable,
+        &'a mut FunctionTable,
+        DiagnosticsCell,
+    );
 
     type Output = SymbolTable;
 
-    fn run((ast, st, diagnostics): Self::Input) -> Self::Output {
-        let mut resolver = NameResolver::new(st, diagnostics);
+    fn run((ast, st, funcs, diagnostics): Self::Input) -> Self::Output {
+        let mut resolver = NameResolver::new(st, funcs, diagnostics);
         resolver.visit_program(ast);
 
         resolver.check_functions();
@@ -152,6 +160,17 @@ impl Visitor for NameResolver<'_> {
             let mut st = self.symbol_table.borrow_mut();
             let def = st.lookup_variable_mut(var).unwrap();
             def.uses += 1;
+        }
+    }
+
+    fn visit_call(&mut self, call: &Call) {
+        if self.functions.get(&call.pattern).is_none() {
+            self.diagnostics
+                .borrow_mut()
+                .undefined_reference(&call.pattern.name, &call.pattern.span);
+        } else {
+            let func = self.functions.get_mut(&call.pattern).expect("unreachable");
+            func.uses += 1;
         }
     }
 }

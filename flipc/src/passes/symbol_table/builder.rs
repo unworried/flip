@@ -1,7 +1,8 @@
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::marker::PhantomData;
 
-use super::{FunctionInfo, SymbolTable, VariableInfo};
+use super::{FunctionInfo, FunctionTable, SymbolTable, VariableInfo};
 use crate::ast::visitor::{Visitor, Walkable};
 use crate::ast::{Definition, Function, If, Pattern, Program, While};
 use crate::diagnostics::DiagnosticsCell;
@@ -9,6 +10,8 @@ use crate::passes::pass::Pass;
 
 pub struct SymbolTableBuilder<'a> {
     symbol_table: RefCell<SymbolTable>,
+    functions: FunctionTable,
+
     diagnostics: DiagnosticsCell,
     _phantom: PhantomData<&'a ()>,
 }
@@ -17,6 +20,7 @@ impl SymbolTableBuilder<'_> {
     pub fn new(diagnostics: DiagnosticsCell) -> Self {
         Self {
             symbol_table: RefCell::new(SymbolTable::default()),
+            functions: HashMap::new(),
             diagnostics,
             _phantom: PhantomData,
         }
@@ -47,7 +51,7 @@ impl SymbolTableBuilder<'_> {
 impl<'a> Pass for SymbolTableBuilder<'a> {
     type Input = (&'a Program, DiagnosticsCell);
 
-    type Output = SymbolTable;
+    type Output = (SymbolTable, FunctionTable);
 
     fn run((ast, diagnostics): Self::Input) -> Self::Output {
         let mut builder = SymbolTableBuilder::new(diagnostics);
@@ -57,12 +61,7 @@ impl<'a> Pass for SymbolTableBuilder<'a> {
             name: "main".to_owned(),
             span: Default::default(),
         };
-        match builder
-            .symbol_table
-            .borrow_mut()
-            .functions
-            .get_mut(&main_pat)
-        {
+        match builder.functions.get_mut(&main_pat) {
             Some(main) => {
                 main.uses += 1;
             }
@@ -71,19 +70,19 @@ impl<'a> Pass for SymbolTableBuilder<'a> {
             }
         }
 
-        builder.symbol_table.into_inner()
+        (builder.symbol_table.into_inner(), builder.functions)
     }
 }
 
 impl<'a> Visitor for SymbolTableBuilder<'a> {
     fn visit_function(&mut self, func: &Function) {
-        if self.symbol_table.borrow().is_shadowing_func(&func.pattern) {
+        if self.functions.contains_key(&func.pattern) {
             self.diagnostics
                 .borrow_mut()
                 .function_already_declared(&func.pattern.name, &func.pattern.span);
         } else {
-            let local_idx = self.symbol_table.borrow().functions.len();
-            self.symbol_table.borrow_mut().insert_function(
+            let local_idx = self.functions.len();
+            self.functions.insert(
                 func.pattern.clone(),
                 FunctionInfo {
                     uses: 0,
@@ -112,7 +111,7 @@ impl<'a> Visitor for SymbolTableBuilder<'a> {
     }
 
     fn visit_definition(&mut self, def: &Definition) {
-        if self.symbol_table.borrow().is_shadowing_var(&def.pattern) {
+        if self.symbol_table.borrow().is_shadowing(&def.pattern) {
             self.diagnostics
                 .borrow_mut()
                 .variable_already_declared(&def.pattern.name, &def.pattern.span);

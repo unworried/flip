@@ -1,5 +1,6 @@
 use super::{
-    Assignment, Ast, Binary, Call, Definition, Function, Ident, If, Literal, Program, Sequence, Unary, Variable, While
+    Assignment, Ast, Binary, Call, Definition, Function, Ident, If, Literal, Program, Sequence,
+    Unary, Variable, While,
 };
 
 pub trait Walkable {

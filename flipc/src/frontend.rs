@@ -26,8 +26,8 @@ pub fn check(input: &str) -> Result<()> {
 
     //let nameres = NameResolver::new(diagnostics.clone());
     // let st = nameres.resolve(&mut root);
-    let st = SymbolTableBuilder::run((&root, diagnostics.clone()));
-    let st = NameResolver::run((&mut root, st, diagnostics.clone()));
+    let (st, mut ft) = SymbolTableBuilder::run((&root, diagnostics.clone()));
+    let st = NameResolver::run((&mut root, st, &mut ft, diagnostics.clone()));
     //eprintln!("{:#?}", st);
 
     eprintln!();
