@@ -29,7 +29,7 @@ pub fn assert_program(input: &str, expected: HashMap<String, Vec<ASTNode>>) {
         validator.validate();
     }
 
-    assert!(diagnostics.borrow().diagnostics.is_empty());
+    assert!(diagnostics.borrow().is_empty());
 }
 
 #[derive(Debug, PartialEq, Clone)]

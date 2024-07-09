@@ -63,6 +63,7 @@ impl Visitor for CodeGenerator {
 
         // TODO: Do i keep this? + error handling
         // Techincaly Instruction::Invalid will emit error
+        eprintln!("unlinked_references: {:?}", self.unlinked_references);
         assert!(self.unlinked_references.is_empty());
     }
 

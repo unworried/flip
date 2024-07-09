@@ -15,7 +15,6 @@ mod display;
 
 #[derive(Debug)]
 pub struct Diagnostic {
-    pub kind: DiagnosticKind,
     pub message: String,
     pub span: Option<Span>,
 }
@@ -37,7 +36,8 @@ impl Display for DiagnosticKind {
 
 #[derive(Default, Debug)]
 pub struct DiagnosticBag {
-    pub diagnostics: Vec<Diagnostic>,
+    pub warnings: Vec<Diagnostic>,
+    pub errors: Vec<Diagnostic>,
 }
 
 pub type DiagnosticsCell = Rc<RefCell<DiagnosticBag>>;
@@ -45,41 +45,57 @@ pub type DiagnosticsCell = Rc<RefCell<DiagnosticBag>>;
 impl DiagnosticBag {
     pub fn new() -> DiagnosticsCell {
         let bag = Self {
-            diagnostics: Vec::new(),
+            warnings: Vec::new(),
+            errors: Vec::new(),
         };
 
         Rc::new(RefCell::new(bag))
     }
 
-    pub fn check(&self, src: &Source) -> Result<()> {
-        if !self.diagnostics.is_empty() {
-            let diagnostics_display = DiagnosticsDisplay::new(src, &self.diagnostics);
-            diagnostics_display.print()?;
-
-            return Err(CompilerError::Diagnostics);
-        }
-
-        Ok(())
+    #[cfg(test)]
+    pub fn is_empty(&self) -> bool {
+        self.warnings.is_empty() && self.errors.is_empty()
     }
 
-    fn report(&mut self, kind: DiagnosticKind, message: String, span: Option<Span>) {
-        self.diagnostics.push(Diagnostic {
-            kind,
-            message,
-            span,
-        });
+    pub fn check(&self, src: &Source) -> Result<()> {
+        let mut error: Option<CompilerError> = None;
+
+        if !self.warnings.is_empty() {
+            let diagnostics_display = DiagnosticsDisplay::new(src, &self.warnings);
+            diagnostics_display.print(DiagnosticKind::Warning)?;
+
+            error = Some(CompilerError::DiagnosticWarning);
+        }
+
+        if !self.errors.is_empty() {
+            let diagnostics_display = DiagnosticsDisplay::new(src, &self.errors);
+            diagnostics_display.print(DiagnosticKind::Error)?;
+
+            error = Some(CompilerError::DiagnosticError);
+        }
+        
+        error.map_or(Ok(()), Err)
     }
 
     fn error(&mut self, message: String, span: Span) {
-        self.report(DiagnosticKind::Error, message, Some(span));
+        self.errors.push(Diagnostic {
+            message,
+            span: Some(span),
+        });
     }
 
     fn program_error(&mut self, message: String) {
-        self.report(DiagnosticKind::Error, message, None);
+        self.errors.push(Diagnostic {
+            message,
+            span: None,
+        });
     }
 
     fn warning(&mut self, message: String, span: Span) {
-        self.report(DiagnosticKind::Warning, message, Some(span));
+        self.warnings.push(Diagnostic {
+            message,
+            span: Some(span),
+        });
     }
 
     pub fn expected_token(&mut self, expected: &Token, actual: &Token, span: &Span) {

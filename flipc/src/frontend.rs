@@ -6,7 +6,7 @@ use std::io::Write;
 
 use crate::codegen::CodeGenerator;
 use crate::diagnostics::DiagnosticBag;
-use crate::error::Result;
+use crate::error::{CompilerError, Result};
 use crate::lexer::Lexer;
 use crate::parser::Parser;
 use crate::passes::nameresolver::NameResolver;
@@ -35,9 +35,13 @@ pub fn check(input: &str) -> Result<()> {
     eprintln!();
 
     #[cfg(test)]
-    assert!(diagnostics.borrow().diagnostics.is_empty());
+    assert!(diagnostics.borrow().is_empty());
 
-    diagnostics.borrow().check(&source)?;
+    match diagnostics.borrow().check(&source) {
+        Ok(_) => Ok(()),
+        Err(CompilerError::DiagnosticWarning) => Ok(()), // TODO: Change maybe in future
+        Err(e) => Err(e),
+    }?;
 
     let gen = CodeGenerator::run(&root, st, 0x0);
     let mut stdout = stdout().lock();

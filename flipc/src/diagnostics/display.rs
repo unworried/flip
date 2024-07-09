@@ -100,7 +100,7 @@ impl<'a> DiagnosticsDisplay<'a> {
         ))
     }
 
-    pub fn print(&self) -> Result<()> {
+    pub fn print(&self, kind: DiagnosticKind) -> Result<()> {
         let mut program_diagnostics = Vec::new();
 
         for diagnostic in self.diagnostics {
@@ -120,7 +120,7 @@ impl<'a> DiagnosticsDisplay<'a> {
             eprintln!(
                 "{}[{}]{}: {}",
                 Color::Red,
-                diagnostic.kind,
+                kind,
                 Color::Reset,
                 diagnostic.message
             );
