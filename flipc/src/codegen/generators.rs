@@ -12,9 +12,38 @@ use super::CodeGenerator;
 
 impl Visitor for CodeGenerator {
     fn visit_function(&mut self, func: &Function) {
+        self.define_label(func.pattern.name.clone());
+
+        let local_off = format!("__internal_{}_local_offset", func.pattern.name);
+        self.addimm_future(SP, local_off.clone());
+
         let scope_idx = self.enter_scope();
         func.body.walk(self);
+        let local_count = self.symbol_table.borrow().local_count();
         self.exit_scope(scope_idx);
+
+        // Return addr
+        self.emit(Instruction::LoadStackOffset(
+            C,
+            BP,
+            Nibble::new_checked(1).unwrap(),
+        ));
+        // Reload previous stack pointer ( BP - 2 )
+        self.emit(Instruction::Add(BP, Zero, SP));
+        self.emit(Instruction::AddImmSigned(
+            SP,
+            Literal7Bit::from_signed(-2).unwrap(),
+        ));
+        // Load previous base pointer
+        self.emit(Instruction::LoadStackOffset(
+            BP,
+            BP,
+            Nibble::new_checked(2).unwrap(),
+        ));
+        self.emit(Instruction::AddImm(C, Literal7Bit::new_checked(6).unwrap()));
+        self.emit(Instruction::Add(C, Zero, PC));
+
+        self.define_label_offset(local_off, local_count as u32 * 2);
     }
 
     fn visit_if(&mut self, if_expr: &If) {
@@ -27,9 +56,9 @@ impl Visitor for CodeGenerator {
         self.emit(Instruction::Stack(C, SP, StackOp::Pop));
         self.emit(Instruction::Test(C, Zero, TestOp::BothZero));
         self.emit(Instruction::AddIf(PC, PC, Nibble::new_checked(2).unwrap()));
-        self.emit_jump(PC, true_label.clone());
+        self.imm_future(PC, true_label.clone());
 
-        self.emit_jump(PC, out_label.clone());
+        self.imm_future(PC, out_label.clone());
 
         // if cond == true
         self.define_label(true_label);
@@ -37,10 +66,8 @@ impl Visitor for CodeGenerator {
         if_expr.then.walk(self);
         self.exit_scope(scope_idx);
 
-        self.emit_jump(PC, out_label.clone());
+        self.imm_future(PC, out_label.clone());
         self.define_label(out_label);
-
-        assert!(self.unlinked_references.is_empty()); // TODO: Do i keep this? + error handling
     }
 
     fn visit_while(&mut self, while_expr: &While) {
@@ -53,18 +80,13 @@ impl Visitor for CodeGenerator {
         self.emit(Instruction::Stack(C, SP, StackOp::Pop));
         self.emit(Instruction::Test(C, Zero, TestOp::EitherNonZero));
         self.emit(Instruction::AddIf(PC, PC, Nibble::new_checked(2).unwrap()));
-        self.emit_jump(PC, out_label.clone());
+        self.imm_future(PC, out_label.clone());
 
         let scope_idx = self.enter_scope();
         while_expr.then.walk(self);
         self.exit_scope(scope_idx);
-        self.emit_jump(PC, cond_label);
+        self.imm_future(PC, cond_label);
         self.define_label(out_label);
-
-        // TODO: Do i keep this? + error handling
-        // Techincaly Instruction::Invalid will emit error
-        eprintln!("unlinked_references: {:?}", self.unlinked_references);
-        assert!(self.unlinked_references.is_empty());
     }
 
     fn visit_definition(&mut self, def: &Definition) {

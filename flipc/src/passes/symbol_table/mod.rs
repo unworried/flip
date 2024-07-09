@@ -65,6 +65,17 @@ impl SymbolTable {
         }
     }
 
+    pub fn local_count(&self) -> usize {
+        let mut count = 0;
+        count += self.variables.len();
+
+        for scope in self.scopes.iter() {
+            count += scope.borrow().local_count();
+        }
+
+        count
+    }
+
     pub fn lookup_scope(&self, idx: usize) -> Option<&RefCell<SymbolTable>> {
         self.scopes.get(idx)
     }

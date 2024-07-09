@@ -5,10 +5,8 @@ use crate::ast::visitor::Visitor;
 use crate::ast::Program;
 use crate::passes::SymbolTable;
 
-use flipvm::op::{Instruction, Literal12Bit, Nibble, StackOp};
+use flipvm::op::{Instruction, Literal12Bit, Literal7Bit, Nibble, StackOp};
 use flipvm::Register::{self, *};
-
-use crate::Ast;
 
 mod generators;
 
@@ -24,7 +22,12 @@ pub struct CodeGenerator {
     labels: HashMap<String, u32>,
     // TODO: Look into alternatives that arent O(n)
     //unlinked_references: HashMap<String, Vec<(usize, Register)>>, // O(1)
-    unlinked_references: Vec<(usize, Register, String)>,
+    unlinked_references: Vec<(usize, FutureType, Register, String)>,
+}
+
+enum FutureType {
+    Imm,
+    AddImm,
 }
 
 // FIXME: Impl Pass?
@@ -40,7 +43,20 @@ impl CodeGenerator {
             unlinked_references: Vec::new(),
         };
 
-        gen.visit_program(ast);
+        gen.emit(Instruction::Imm(
+            SP,
+            Literal12Bit::new_checked(0x3ff).unwrap(),
+        ));
+        gen.emit(Instruction::ShiftLeft(
+            SP,
+            SP,
+            Nibble::new_checked(4).unwrap(),
+        ));
+        gen.emit(Instruction::Stack(BP, SP, StackOp::Push));
+        gen.emit(Instruction::Stack(PC, SP, StackOp::Push));
+        gen.emit(Instruction::Add(SP, Zero, BP));
+        gen.imm_future(PC, "main".to_string());
+
         gen.emit(Instruction::Imm(
             C,
             Literal12Bit::new_checked(0xf0).unwrap(),
@@ -50,6 +66,12 @@ impl CodeGenerator {
             Zero,
             Nibble::new_checked(0).unwrap(),
         ));
+
+        gen.visit_program(ast);
+
+        // TODO: Do i keep this? + error handling
+        // Techincaly Instruction::Invalid will emit error
+        assert!(gen.unlinked_references.is_empty());
 
         gen.instructions
     }
@@ -69,7 +91,7 @@ impl CodeGenerator {
         self.emit(Instruction::Stack(C, SP, StackOp::Push));
     }
 
-    fn emit_jump(&mut self, r: Register, label: String) {
+    fn imm_future(&mut self, r: Register, label: String) {
         match self.labels.get(&label) {
             Some(offset) => {
                 let imm = Literal12Bit::new_checked(*offset as u16).unwrap();
@@ -77,7 +99,26 @@ impl CodeGenerator {
             }
             None => {
                 self.unlinked_references
-                    .push((self.instructions.len(), r, label));
+                    .push((self.instructions.len(), FutureType::Imm, r, label));
+
+                self.emit(Instruction::Invalid); // Placeholder for labeled immediate
+            }
+        }
+    }
+
+    fn addimm_future(&mut self, r: Register, label: String) {
+        match self.labels.get(&label) {
+            Some(offset) => {
+                let imm = Literal7Bit::new_checked(*offset as u8).unwrap();
+                self.emit(Instruction::AddImm(r, imm));
+            }
+            None => {
+                self.unlinked_references.push((
+                    self.instructions.len(),
+                    FutureType::AddImm,
+                    r,
+                    label,
+                ));
 
                 self.emit(Instruction::Invalid); // Placeholder for labeled immediate
             }
@@ -85,12 +126,24 @@ impl CodeGenerator {
     }
 
     fn define_label(&mut self, label: String) {
-        self.labels.insert(label.clone(), self.current_offset);
+        self.define_label_offset(label, self.current_offset)
+    }
 
-        self.unlinked_references.retain(|(loc, r, l)| {
+    fn define_label_offset(&mut self, label: String, offset: u32) {
+        self.labels.insert(label.clone(), offset);
+
+        self.unlinked_references.retain(|(loc, ft, r, l)| {
             if *l == label {
-                let imm = Literal12Bit::new_checked(self.current_offset as u16).unwrap();
-                self.instructions[*loc] = Instruction::Imm(*r, imm);
+                match ft {
+                    FutureType::Imm => {
+                        let imm = Literal12Bit::new_checked(offset as u16).unwrap();
+                        self.instructions[*loc] = Instruction::Imm(*r, imm);
+                    }
+                    FutureType::AddImm => {
+                        let imm = Literal7Bit::new_checked(offset as u8).unwrap();
+                        self.instructions[*loc] = Instruction::AddImm(*r, imm);
+                    }
+                }
                 false
             } else {
                 true
@@ -108,8 +161,8 @@ impl CodeGenerator {
         );
         self.symbol_table.borrow_mut().parent = Some(Box::new(previous_symbol_table.into_inner()));
 
-        self.scope_idx
-        //core::mem::replace(&mut self.scope_idx, 0)
+        //self.scope_idx
+        core::mem::replace(&mut self.scope_idx, 0)
     }
 
     fn exit_scope(&mut self, index: usize) {
