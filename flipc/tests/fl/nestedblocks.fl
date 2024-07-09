@@ -9,7 +9,7 @@ main() {
         };
     };
 }
-
+ 
 a() {
     foo = "hi";
     let baz = 0;

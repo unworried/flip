@@ -8,6 +8,7 @@ mod display;
 pub mod ptr;
 pub mod visitor;
 
+#[derive(Debug)]
 pub struct Program {
     pub functions: Vec<Function>,
 }

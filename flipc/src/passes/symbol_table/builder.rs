@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 
 use super::{FunctionInfo, SymbolTable, VariableInfo};
 use crate::ast::visitor::{Visitor, Walkable};
-use crate::ast::{Definition, Function, If, Program, While};
+use crate::ast::{Definition, Function, If, Pattern, Program, While};
 use crate::diagnostics::DiagnosticsCell;
 use crate::passes::pass::Pass;
 
@@ -52,6 +52,25 @@ impl<'a> Pass for SymbolTableBuilder<'a> {
     fn run((ast, diagnostics): Self::Input) -> Self::Output {
         let mut builder = SymbolTableBuilder::new(diagnostics);
         builder.visit_program(ast);
+
+        let main_pat = Pattern {
+            name: "main".to_owned(),
+            span: Default::default(),
+        };
+        match builder
+            .symbol_table
+            .borrow_mut()
+            .functions
+            .get_mut(&main_pat)
+        {
+            Some(main) => {
+                main.uses += 1;
+            }
+            None => {
+                builder.diagnostics.borrow_mut().main_not_found();
+            }
+        }
+
         builder.symbol_table.into_inner()
     }
 }
