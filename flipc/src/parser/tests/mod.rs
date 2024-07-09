@@ -1,8 +1,72 @@
-use self::validator::{assert_ast, ASTNode};
+use std::collections::HashMap;
+
+use self::validator::{assert_ast, assert_program, ASTNode};
 
 mod controller;
 mod expression;
 mod validator;
+
+#[test]
+fn simple_program() {
+    let input = r#"
+main() {
+    let x = 1;
+    if x == 2 {
+        x = 3;
+    };
+}
+        "#;
+
+    let expected: HashMap<String, Vec<ASTNode>> = HashMap::from([(
+        "main".to_string(),
+        vec![
+            ASTNode::Let,
+            ASTNode::Variable("x".to_string()),
+            ASTNode::Integer(1),
+            ASTNode::If,
+            ASTNode::Binary,
+            ASTNode::Variable("x".to_string()),
+            ASTNode::Integer(2),
+            ASTNode::Variable("x".to_string()),
+            ASTNode::Integer(3),
+        ],
+    )]);
+
+    assert_program(input, expected);
+}
+
+#[test]
+fn simple_program_newline() {
+    let input = r#"
+        
+main() {
+
+
+    let x = 1;
+    if x == 2 {
+        x = 3;
+    };
+}
+
+"#;
+
+    let expected: HashMap<String, Vec<ASTNode>> = HashMap::from([(
+        "main".to_string(),
+        vec![
+            ASTNode::Let,
+            ASTNode::Variable("x".to_string()),
+            ASTNode::Integer(1),
+            ASTNode::If,
+            ASTNode::Binary,
+            ASTNode::Variable("x".to_string()),
+            ASTNode::Integer(2),
+            ASTNode::Variable("x".to_string()),
+            ASTNode::Integer(3),
+        ],
+    )]);
+
+    assert_program(input, expected);
+}
 
 #[test]
 fn validation_scheme() {

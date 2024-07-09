@@ -1,9 +1,12 @@
+use std::collections::HashMap;
+
 use crate::ast::visitor::{Visitor, Walkable};
 use crate::ast::{
     Assignment, Ast, Binary, Definition, If, Literal, LiteralKind, Unary, Variable, While,
 };
 use crate::diagnostics::DiagnosticBag;
-use crate::lexer::Lexer;
+use crate::lexer::{Lexer, Token};
+use crate::parser::combinators::parse_sequence;
 use crate::parser::Parser;
 
 pub fn assert_ast(input: &str, expected: Vec<ASTNode>) {
@@ -11,7 +14,25 @@ pub fn assert_ast(input: &str, expected: Vec<ASTNode>) {
     validator.validate();
 }
 
-#[derive(Debug, PartialEq)]
+pub fn assert_program(input: &str, expected: HashMap<String, Vec<ASTNode>>) {
+    let mut lexer = Lexer::new(input.to_string());
+    let diagnostics = DiagnosticBag::new();
+    let mut parser = Parser::new(&mut lexer, diagnostics.clone());
+    let program = parser.parse();
+
+    for func in program.functions {
+        let mut validator = AstValidator {
+            expected: expected.get(&func.name).unwrap().to_vec(),
+            actual: Vec::new(),
+        };
+        validator.flatten_ast(&func.body);
+        validator.validate();
+    }
+
+    assert!(diagnostics.borrow().diagnostics.is_empty());
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub enum ASTNode {
     If,
     While,
@@ -29,11 +50,12 @@ pub struct AstValidator {
 }
 
 impl AstValidator {
+    // FIXME: Diagnostics not being checked
     pub fn new(input: &str, expected: Vec<ASTNode>) -> Self {
         let mut lexer = Lexer::new(input.to_string());
         let diagnostics = DiagnosticBag::new();
         let mut parser = Parser::new(&mut lexer, diagnostics);
-        let ast = parser.parse();
+        let ast = parse_sequence(&mut parser, Token::Eof);
         let mut validator = AstValidator {
             expected,
             actual: Vec::new(),

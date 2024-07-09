@@ -1,13 +1,12 @@
 use core::mem;
 
-use self::combinators::{parse_function, parse_program, parse_sequence};
+use self::combinators::parse_program;
 use crate::ast::Program;
 use crate::diagnostics::DiagnosticsCell;
 use crate::lexer::{Lexer, Token};
 use crate::span::Span;
-use crate::Ast;
 
-mod combinators;
+pub mod combinators;
 
 #[cfg(test)]
 mod tests;
