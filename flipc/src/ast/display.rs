@@ -2,10 +2,22 @@ use alloc::string::String;
 use core::fmt::{Display, Formatter, Result};
 
 use super::visitor::Visitor;
-use super::{Assignment, Binary, Definition, If, Literal, LiteralKind, Unary, Variable, While};
+use super::{
+    Assignment, Binary, Definition, If, Literal, LiteralKind, Program, Unary, Variable, While,
+};
 use crate::ast::visitor::Walkable;
 use crate::ast::Ast;
 use crate::escape_codes::Color;
+
+impl Display for Program {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        for func in &self.functions {
+            write!(f, "{}", func.name)?;
+            write!(f, "{}", func.body)?;
+        }
+        Ok(())
+    }
+}
 
 impl Display for Ast {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {

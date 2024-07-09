@@ -1,9 +1,44 @@
 use std::cmp;
 
-use crate::ast::{Ast, BinOp, Pattern, UnOp};
+use crate::ast::{Ast, BinOp, Function, Pattern, Program, UnOp};
 use crate::lexer::Token;
 use crate::parser::Parser;
 use crate::span::Span;
+
+pub fn parse_program(parser: &mut Parser) -> Program {
+    let mut functions = Vec::new();
+    while !parser.current_token_is(&Token::Eof) {
+        while parser.current_token_is(&Token::Newline) {
+            parser.step();
+        }
+
+        functions.push(parse_function(parser));
+
+        while parser.current_token_is(&Token::Newline) {
+            parser.step();
+        }
+    }
+
+    Program { functions }
+}
+
+pub fn parse_function(parser: &mut Parser) -> Function {
+    if let (Token::Ident(name), span) = parser.consume() {
+        parser.expect(Token::LParen);
+        parser.expect(Token::RParen);
+        parser.expect(Token::LBrace);
+
+        let body = parse_sequence(parser, Token::RBrace);
+        parser.expect(Token::RBrace);
+
+        return Function {
+            name: name.to_owned(),
+            body,
+            span: Span::combine(vec![&span, &parser.current_span()]),
+        };
+    }
+    panic!("Implement error handling for function parsing");
+}
 
 pub fn parse_sequence(parser: &mut Parser, end_delim: Token) -> Ast {
     let start_span = parser.current_span();
@@ -173,7 +208,7 @@ pub fn parse_unary(parser: &mut Parser) -> Ast {
         _ => return Ast::Error,
     };
 
-    /*
+    /* FIXME:
      * Should this really be caught here?
      * Catches cases where whitespace between operator and expression
      * e.g. - 1, let foo = - bar;

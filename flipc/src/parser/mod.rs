@@ -1,6 +1,7 @@
 use core::mem;
 
-use self::combinators::parse_sequence;
+use self::combinators::{parse_function, parse_program, parse_sequence};
+use crate::ast::Program;
 use crate::diagnostics::DiagnosticsCell;
 use crate::lexer::{Lexer, Token};
 use crate::span::Span;
@@ -33,8 +34,8 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse(&mut self) -> Ast {
-        parse_sequence(self, Token::Eof)
+    pub fn parse(&mut self) -> Program {
+        parse_program(self)
     }
 
     pub fn step(&mut self) {

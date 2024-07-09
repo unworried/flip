@@ -8,6 +8,17 @@ mod display;
 pub mod ptr;
 pub mod visitor;
 
+pub struct Program {
+    pub functions: Vec<Function>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Function {
+    pub name: Ident,
+    pub body: Ast,
+    pub span: Span,
+}
+
 #[derive(Debug, Clone)]
 pub enum Ast {
     Sequence(Sequence),
@@ -23,8 +34,8 @@ pub enum Ast {
 }
 
 impl Ast {
-    pub fn sequence(statements: Vec<Ast>, span: Span) -> Ast {
-        Ast::Sequence(Sequence { statements, span })
+    pub fn sequence(expressions: Vec<Ast>, span: Span) -> Ast {
+        Ast::Sequence(Sequence { expressions, span })
     }
 
     pub fn definition(pattern: Pattern, value: Ast, span: Span) -> Ast {
@@ -96,7 +107,7 @@ impl Ast {
 }
 #[derive(Debug, Clone)]
 pub struct Sequence {
-    pub statements: Vec<Ast>,
+    pub expressions: Vec<Ast>,
     pub span: Span,
 }
 

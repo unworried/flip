@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 
 use super::{SymbolTable, VariableInfo};
 use crate::ast::visitor::{Visitor, Walkable};
-use crate::ast::{Ast, Definition, If, While};
+use crate::ast::{Ast, Definition, If, Program, While};
 use crate::diagnostics::DiagnosticsCell;
 use crate::passes::pass::Pass;
 
@@ -45,13 +45,13 @@ impl SymbolTableBuilder<'_> {
 }
 
 impl<'a> Pass for SymbolTableBuilder<'a> {
-    type Input = (&'a Ast, DiagnosticsCell);
+    type Input = (&'a Program, DiagnosticsCell);
 
     type Output = SymbolTable;
 
     fn run((ast, diagnostics): Self::Input) -> Self::Output {
         let mut builder = SymbolTableBuilder::new(diagnostics);
-        builder.visit_ast(ast);
+        builder.visit_program(ast);
         builder.symbol_table.into_inner()
     }
 }

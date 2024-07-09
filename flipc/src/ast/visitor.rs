@@ -1,5 +1,5 @@
 use super::{
-    Assignment, Ast, Binary, Definition, Ident, If, Literal, Sequence, Unary, Variable, While,
+    Assignment, Ast, Binary, Definition, Function, Ident, If, Literal, Program, Sequence, Unary, Variable, While
 };
 
 pub trait Walkable {
@@ -7,12 +7,16 @@ pub trait Walkable {
 }
 
 pub trait Visitor: Sized {
+    fn visit_program(&mut self, program: &Program) {
+        program.functions.iter().for_each(|func| func.walk(self));
+    }
+
     fn visit_ast(&mut self, ast: &Ast) {
         ast.walk(self);
     }
 
     fn visit_sequence(&mut self, seq: &Sequence) {
-        seq.statements.iter().for_each(|stmt| stmt.walk(self));
+        seq.expressions.iter().for_each(|stmt| stmt.walk(self));
     }
 
     fn visit_binary(&mut self, bin: &Binary) {
@@ -47,6 +51,12 @@ pub trait Visitor: Sized {
     }
 
     fn visit_variable(&mut self, _var: &Variable) {}
+}
+
+impl Walkable for Function {
+    fn walk<V: Visitor>(&self, visitor: &mut V) {
+        self.body.walk(visitor);
+    }
 }
 
 impl Walkable for Ast {

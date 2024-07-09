@@ -1,7 +1,8 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 
-use crate::ast::visitor::Walkable;
+use crate::ast::visitor::Visitor;
+use crate::ast::Program;
 use crate::passes::SymbolTable;
 
 use flipvm::op::{Instruction, Literal12Bit, Nibble, StackOp};
@@ -28,7 +29,7 @@ pub struct CodeGenerator {
 
 // FIXME: Impl Pass?
 impl CodeGenerator {
-    pub fn run(ast: &Ast, symbol_table: SymbolTable, inital_offset: u32) -> Vec<Instruction> {
+    pub fn run(ast: &Program, symbol_table: SymbolTable, inital_offset: u32) -> Vec<Instruction> {
         let mut gen = CodeGenerator {
             inital_offset,
             current_offset: inital_offset,
@@ -39,7 +40,7 @@ impl CodeGenerator {
             unlinked_references: Vec::new(),
         };
 
-        ast.walk(&mut gen);
+        gen.visit_program(ast);
         gen.emit(Instruction::Imm(
             C,
             Literal12Bit::new_checked(0xf0).unwrap(),

@@ -20,7 +20,7 @@ use std::marker::PhantomData;
 use super::symbol_table::SymbolTable;
 use super::Pass;
 use crate::ast::visitor::{Visitor, Walkable};
-use crate::ast::{Assignment, Ast, If, Variable, While};
+use crate::ast::{Assignment, Ast, If, Program, Variable, While};
 use crate::diagnostics::DiagnosticsCell;
 
 pub trait ResolveVisitor {
@@ -80,13 +80,13 @@ impl NameResolver<'_> {
 }
 
 impl<'a> Pass for NameResolver<'a> {
-    type Input = (&'a Ast, SymbolTable, DiagnosticsCell);
+    type Input = (&'a Program, SymbolTable, DiagnosticsCell);
 
     type Output = SymbolTable;
 
     fn run((ast, st, diagnostics): Self::Input) -> Self::Output {
         let mut resolver = NameResolver::new(st, diagnostics);
-        resolver.visit_ast(ast);
+        resolver.visit_program(ast);
 
         resolver.check_usage(); // Fix check at root scope. Remove once functions are added.
         resolver.symbol_table.into_inner()

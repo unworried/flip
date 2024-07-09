@@ -23,7 +23,7 @@ fn main() {
     //let line = r#"let x = 1; x = x + 1;"#;
     //let line = "while \"TMP\" { \nlet x = \"hello, world!\"; \nlet y = \"hello, world 2!\"; \nlet z = \"hello, world 3!\"; \n };";
 
-    let line = r#"while 1 { let x = 7; };"#;
+    let line = r#"main() { while 1 { let x = 7; }; }"#;
     match frontend::check(line) {
         Ok(_) => eprintln!("No errors found"),
         Err(e) => eprintln!("{}", e),
