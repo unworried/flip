@@ -76,6 +76,8 @@ main() {
     while x >= 3 {
         x = x - 1;
     };
+
+    foo();
 }
 
 foo() {
@@ -101,6 +103,7 @@ foo() {
                 ASTNode::Binary,
                 ASTNode::Variable("x".to_string()),
                 ASTNode::Integer(1),
+                ASTNode::Call("foo".to_string()),
             ],
         ),
         (

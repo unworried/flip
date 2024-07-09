@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::ast::visitor::{Visitor, Walkable};
 use crate::ast::{
-    Assignment, Ast, Binary, Definition, If, Literal, LiteralKind, Unary, Variable, While,
+    Assignment, Ast, Binary, Call, Definition, If, Literal, LiteralKind, Unary, Variable, While,
 };
 use crate::diagnostics::DiagnosticBag;
 use crate::lexer::{Lexer, Token};
@@ -42,6 +42,7 @@ pub enum ASTNode {
     Binary,
     Unary,
     Variable(String),
+    Call(String),
 }
 
 pub struct AstValidator {
@@ -92,6 +93,11 @@ impl AstValidator {
 }
 
 impl Visitor for AstValidator {
+    fn visit_call(&mut self, call: &Call) {
+        self.actual
+            .push(ASTNode::Call(call.pattern.name.to_owned()));
+    }
+
     fn visit_binary(&mut self, bin: &Binary) {
         self.actual.push(ASTNode::Binary);
         bin.left.walk(self);
