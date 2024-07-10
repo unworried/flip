@@ -23,14 +23,13 @@ fn main() {
     //let line = r#"let x = 1; x = x + 1;"#;
     //let line = "while \"TMP\" { \nlet x = \"hello, world!\"; \nlet y = \"hello, world 2!\"; \nlet z = \"hello, world 3!\"; \n };";
 
-    let line = r#"main() { if 1 <= 1 { if 1 <= 1 { let x = 1; }; }; }"#;
+    //let line = r#"main() { if 1 <= 1 { if 1 <= 1 { let x = 1; }; }; }"#;
     let line = r#"main() {
-        let x = 4;
-        a(x, -(x-2));
+        let x = a(1, 2);
     }
     
     a(b, c) {
-        let y = 2;
+        return b + c;
     }"#;
     match frontend::check(line) {
         Ok(_) => eprintln!("No errors found"),

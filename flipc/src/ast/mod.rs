@@ -26,6 +26,7 @@ pub enum Ast {
     Sequence(Sequence),
     Definition(Definition),
     Assignment(Assignment),
+    Return(P<Ast>),
     If(If), // WARN: When funcs are added. need to change this to only allow stmts
     While(While),
     Binary(Binary),
@@ -105,11 +106,19 @@ impl Ast {
     }
 
     pub fn call(pattern: Pattern, arguments: Vec<Ast>, span: Span) -> Ast {
-        Ast::Call(Call { pattern, arguments, span })
+        Ast::Call(Call {
+            pattern,
+            arguments,
+            span,
+        })
     }
 
     pub fn variable(name: Ident, span: Span) -> Ast {
         Ast::Variable(Variable { name, span })
+    }
+
+    pub fn return_expr(value: Ast) -> Ast {
+        Ast::Return(P(value))
     }
 }
 #[derive(Debug, Clone)]

@@ -8,7 +8,6 @@ use crate::diagnostics::DiagnosticBag;
 use crate::lexer::{Lexer, Token};
 use crate::parser::combinators::parse_sequence;
 use crate::parser::Parser;
-use crate::source::Source;
 
 pub fn assert_ast(input: &str, expected: Vec<ASTNode>) {
     let validator = AstValidator::new(input, expected);

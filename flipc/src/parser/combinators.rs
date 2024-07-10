@@ -133,6 +133,10 @@ pub fn parse_statement(parser: &mut Parser) -> Ast {
         }
         Token::If => parse_if(parser),
         Token::While => parse_while(parser),
+        Token::Return => {
+            let value = parse_expression(parser);
+            Ast::return_expr(value)
+        }
         _ => {
             parser
                 .diagnostics
@@ -194,21 +198,23 @@ pub fn parse_assignment_or_call(parser: &mut Parser, pattern: Pattern) -> Ast {
 
     match token {
         Token::Assign => parse_assignment(parser, pattern),
-        Token::LParen => {
-            let args = parse_arguments(parser);
-            parser.expect(Token::RParen);
-            Ast::call(
-                pattern,
-                args,
-                Span::combine(vec![&span, &parser.current_span()]),
-            )
-        }
+        Token::LParen => parse_call(parser, pattern, span),
         _ => {
             parser.step_until(&Token::SemiColon);
             // TODO: Add Err?
             Ast::Error
         }
     }
+}
+
+fn parse_call(parser: &mut Parser, pattern: Pattern, start_span: Span) -> Ast {
+    let args = parse_arguments(parser);
+    parser.expect(Token::RParen);
+    Ast::call(
+        pattern,
+        args,
+        Span::combine(vec![&start_span, &parser.current_span()]),
+    )
 }
 
 // TODO: Test
@@ -327,7 +333,20 @@ pub fn parse_primary(parser: &mut Parser) -> Ast {
         Token::String(value) => Ast::string(value.to_owned(), span),
         Token::LParen => parse_group(parser),
         // Grammar: (identifier) => Token::Ident
-        Token::Ident(symbol) => Ast::variable(symbol.to_owned(), span),
+        Token::Ident(symbol) => {
+            // Func Call Check
+            if parser.current_token_is(&Token::LParen) {
+                parser.expect(Token::LParen);
+                let pattern = Pattern {
+                    name: symbol.to_owned(),
+                    span,
+                };
+                return parse_call(parser, pattern, span);
+            }
+
+            // Var
+            Ast::variable(symbol.to_owned(), span)
+        }
         _ => panic!("Really shouldn't reach here, implement fatal error instead"),
     }
 }

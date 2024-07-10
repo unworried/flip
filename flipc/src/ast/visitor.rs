@@ -60,6 +60,10 @@ pub trait Visitor: Sized {
     fn visit_call(&mut self, call: &Call) {
         call.arguments.iter().for_each(|arg| arg.walk(self));
     }
+
+    fn visit_return(&mut self, ret: &Ast) {
+        ret.walk(self);
+    }
 }
 
 impl Walkable for Function {
@@ -81,6 +85,7 @@ impl Walkable for Ast {
             Ast::Unary(un) => visitor.visit_unary(un),
             Ast::Variable(var) => visitor.visit_variable(var),
             Ast::Call(call) => visitor.visit_call(call),
+            Ast::Return(ret) => visitor.visit_return(ret),
             Ast::Error => {}
         }
     }

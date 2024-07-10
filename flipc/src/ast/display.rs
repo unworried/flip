@@ -8,6 +8,7 @@ use super::{
 };
 use crate::ast::visitor::Walkable;
 use crate::escape_codes::Color;
+use crate::Ast;
 
 impl Display for Program {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
@@ -88,6 +89,14 @@ impl Visitor for AstDisplay {
         self.indent += 1;
         func.body.walk(self);
         self.add_block_end();
+    }
+
+    fn visit_return(&mut self, ret: &Ast) {
+        self.add_statement_header("Return");
+        self.indent += 1;
+        self.add_expression_header("Expression");
+        ret.walk(self);
+        self.indent -= 1;
     }
 
     fn visit_definition(&mut self, def: &Definition) {

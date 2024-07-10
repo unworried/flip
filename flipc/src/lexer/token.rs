@@ -35,6 +35,7 @@ pub enum Token {
     Else,
     While,
     Print,
+    Return,
 
     // Separators
     LParen,
@@ -70,6 +71,7 @@ impl Display for Token {
             Token::Else => "else",
             Token::While => "while",
             Token::Print => "print",
+            Token::Return => "return",
             Token::LParen => "(",
             Token::RParen => ")",
             Token::LBrace => "{",
@@ -134,6 +136,7 @@ impl From<String> for Token {
             "else" => Self::Else,
             "while" => Self::While,
             "print" => Self::Print,
+            "return" => Self::Return,
 
             _ => Self::Ident(value),
         }
@@ -232,5 +235,24 @@ mod tests {
     #[test]
     fn comma() {
         assert_eq!(Token::from(b','), Token::Comma);
+    }
+
+    #[test]
+    fn semi_colon() {
+        assert_eq!(Token::from(b';'), Token::SemiColon);
+    }
+
+    #[test]
+    fn ident() {
+        assert_eq!(Token::from(String::from("let")), Token::Let);
+        assert_eq!(Token::from(String::from("if")), Token::If);
+        assert_eq!(Token::from(String::from("else")), Token::Else);
+        assert_eq!(Token::from(String::from("while")), Token::While);
+        assert_eq!(Token::from(String::from("print")), Token::Print);
+        assert_eq!(Token::from(String::from("return")), Token::Return);
+        assert_eq!(
+            Token::from(String::from("foobar")),
+            Token::Ident(String::from("foobar"))
+        );
     }
 }
