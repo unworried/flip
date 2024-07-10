@@ -84,6 +84,12 @@ impl<'a> Parser<'a> {
         true
     }
 
+    pub fn optional(&mut self, optional: Token) {
+        if self.current_token_is(&optional) {
+            self.step();
+        }
+    }
+
     fn step_until(&mut self, token: &Token) {
         while !self.current_token_is(token) && !self.current_token_is(&Token::Eof) {
             self.step();

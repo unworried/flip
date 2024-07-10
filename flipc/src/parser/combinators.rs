@@ -39,6 +39,9 @@ pub fn parse_function(parser: &mut Parser) -> Function {
             span,
         };
 
+        // TODO: Test this - Allows optional `;` at end of function
+        parser.optional(Token::SemiColon);
+
         return Function {
             pattern,
             parameters,
@@ -47,7 +50,7 @@ pub fn parse_function(parser: &mut Parser) -> Function {
         };
     }
     // FIXME: ...
-    panic!("Implement error handling for function parsing");
+    panic!("Implement error handling: {}", parser.current_token());
 }
 
 // TODO: Test
@@ -180,7 +183,11 @@ pub fn parse_assignment_or_call(parser: &mut Parser, pattern: Pattern) -> Ast {
         Token::LParen => {
             let args = parse_arguments(parser);
             parser.expect(Token::RParen);
-            Ast::call(pattern, args, Span::combine(vec![&span, &parser.current_span()]))
+            Ast::call(
+                pattern,
+                args,
+                Span::combine(vec![&span, &parser.current_span()]),
+            )
         }
         _ => {
             parser.step_until(&Token::SemiColon);
