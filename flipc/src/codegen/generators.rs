@@ -1,4 +1,6 @@
 use crate::ast::visitor::Walkable;
+use crate::passes::symbol_table::DefinitionType;
+use crate::Ast;
 use flipvm::op::{Instruction, Literal12Bit, Literal7Bit, Nibble, StackOp, TestOp};
 use flipvm::Register::*;
 
@@ -18,6 +20,7 @@ impl Visitor for CodeGenerator {
         self.addimm_future(SP, local_off.clone());
 
         let scope_idx = self.enter_scope();
+
         func.body.walk(self);
         let local_count = self.symbol_table.borrow().local_count();
         self.exit_scope(scope_idx);
@@ -44,6 +47,11 @@ impl Visitor for CodeGenerator {
         self.emit(Instruction::Add(C, Zero, PC));
 
         self.define_label_offset(local_off, local_count as u32 * 2);
+    }
+
+    fn visit_return(&mut self, ret: &Ast) {
+        ret.walk(self);
+        self.emit(Instruction::Stack(A, SP, StackOp::Pop));
     }
 
     fn visit_call(&mut self, call: &Call) {
@@ -111,7 +119,7 @@ impl Visitor for CodeGenerator {
         let local_idx = self
             .symbol_table
             .borrow()
-            .lookup_variable(&def.pattern)
+            .lookup_symbol(&def.pattern)
             .unwrap()
             .local_idx;
         let addr = local_idx as u8 * 2;
@@ -132,7 +140,7 @@ impl Visitor for CodeGenerator {
         let local_idx = self
             .symbol_table
             .borrow()
-            .lookup_variable(&def.pattern)
+            .lookup_symbol(&def.pattern)
             .unwrap()
             .local_idx;
         let addr = local_idx as u8 * 2;
@@ -148,22 +156,25 @@ impl Visitor for CodeGenerator {
     }
 
     fn visit_variable(&mut self, var: &Variable) {
-        let local_idx = self
-            .symbol_table
-            .borrow()
-            .lookup_variable(var)
-            .unwrap()
-            .local_idx;
-        let addr = local_idx as u8 * 2;
+        let var_info = self.symbol_table.borrow().lookup_symbol(&var).unwrap();
+        let addr = var_info.local_idx as u8 * 2;
+        let def_type = &var_info.def_type;
 
-        // Load value from stack
-        self.emit(Instruction::Add(BP, Zero, C));
-        self.emit(Instruction::AddImm(
-            C,
-            Literal7Bit::new_checked(addr).unwrap(),
-        ));
-        self.emit(Instruction::LoadWord(C, C, Zero));
-        self.emit(Instruction::Stack(C, SP, StackOp::Push));
+        match def_type {
+            DefinitionType::Local => {
+                // Load value from stack
+                self.emit(Instruction::Add(BP, Zero, C));
+                self.emit(Instruction::AddImm(
+                    C,
+                    Literal7Bit::new_checked(addr).unwrap(),
+                ));
+                self.emit(Instruction::LoadWord(C, C, Zero));
+                self.emit(Instruction::Stack(C, SP, StackOp::Push));
+            }
+            DefinitionType::Argument => {
+                unimplemented!("argument var")
+            }
+        }
     }
 
     fn visit_binary(&mut self, bin: &Binary) {

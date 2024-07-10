@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
-use super::{FunctionInfo, FunctionTable, SymbolTable, VariableInfo};
+use super::{DefinitionType, FunctionInfo, FunctionTable, SymbolInfo, SymbolTable};
 use crate::ast::visitor::{Visitor, Walkable};
 use crate::ast::{Definition, Function, If, Pattern, Program, While};
 use crate::diagnostics::DiagnosticsCell;
@@ -48,16 +48,17 @@ impl SymbolTableBuilder<'_> {
         self.symbol_table = RefCell::new(previous_symbol_table);
     }
 
-    fn define_variable(&self, pattern: &Pattern, span: &Span) {
+    fn define_variable(&self, pattern: &Pattern, span: &Span, def_type: DefinitionType) {
         if self.symbol_table.borrow().is_shadowing(pattern) {
             self.diagnostics
                 .borrow_mut()
                 .variable_already_declared(&pattern.name, &pattern.span);
         } else {
-            let local_idx = self.symbol_table.borrow().variables.len();
-            self.symbol_table.borrow_mut().insert_variable(
+            let local_idx = self.symbol_table.borrow().symbols.len();
+            self.symbol_table.borrow_mut().insert_symbol(
                 pattern.clone(),
-                VariableInfo {
+                SymbolInfo {
+                    def_type,
                     uses: 0,
                     local_idx,
                     span: *span,
@@ -113,7 +114,7 @@ impl<'a> Visitor for SymbolTableBuilder<'a> {
         let scope_idx = self.enter_scope();
         func.parameters
             .iter()
-            .for_each(|pat| self.define_variable(pat, &pat.span));
+            .for_each(|pat| self.define_variable(pat, &pat.span, DefinitionType::Argument));
         func.body.walk(self);
         self.exit_scope(scope_idx);
     }
@@ -133,7 +134,7 @@ impl<'a> Visitor for SymbolTableBuilder<'a> {
     }
 
     fn visit_definition(&mut self, def: &Definition) {
-        self.define_variable(&def.pattern, &def.span);
+        self.define_variable(&def.pattern, &def.span, DefinitionType::Local);
         def.pattern.name.walk(self);
         def.value.walk(self);
     }

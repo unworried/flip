@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 
 use crate::ast::visitor::Visitor;
-use crate::ast::Program;
+use crate::ast::{Pattern, Program};
 use crate::passes::SymbolTable;
 
 use flipvm::op::{Instruction, Literal12Bit, Literal7Bit, Nibble, StackOp};

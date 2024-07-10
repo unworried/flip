@@ -11,12 +11,21 @@ pub use builder::SymbolTableBuilder;
 pub type FunctionTable = HashMap<Pattern, FunctionInfo>;
 
 #[derive(Debug, Default)]
-pub struct VariableInfo {
+pub struct SymbolInfo {
     // TODO: Implement Types
     // type_: Type,
+    pub def_type: DefinitionType,
     pub uses: usize,
     pub local_idx: usize,
     span: Span,
+}
+
+#[repr(u8)]
+#[derive(Debug, Default)]
+pub enum DefinitionType {
+    #[default]
+    Local,
+    Argument,
 }
 
 #[derive(Debug, Default)]
@@ -29,14 +38,14 @@ pub struct FunctionInfo {
 #[derive(Debug, Default)]
 pub struct SymbolTable {
     pub parent: Option<Box<SymbolTable>>,
-    pub variables: HashMap<Pattern, VariableInfo>,
+    pub symbols: HashMap<Pattern, SymbolInfo>,
     pub scope_idx: usize,
     scopes: Vec<RefCell<SymbolTable>>,
 }
 
 impl SymbolTable {
     pub fn is_shadowing(&self, ident: &Pattern) -> bool {
-        if self.variables.contains_key(ident) {
+        if self.symbols.contains_key(ident) {
             true
         } else if let Some(parent) = self.parent.as_ref() {
             parent.is_shadowing(ident)
@@ -45,21 +54,21 @@ impl SymbolTable {
         }
     }
 
-    pub fn lookup_variable(&self, ident: &Pattern) -> Option<&VariableInfo> {
-        if let Some(var) = self.variables.get(ident) {
+    pub fn lookup_symbol(&self, ident: &Pattern) -> Option<&SymbolInfo> {
+        if let Some(var) = self.symbols.get(ident) {
             Some(var)
         } else if let Some(parent) = self.parent.as_ref() {
-            parent.lookup_variable(ident)
+            parent.lookup_symbol(ident)
         } else {
             None
         }
     }
 
-    pub fn lookup_variable_mut(&mut self, ident: &Pattern) -> Option<&mut VariableInfo> {
-        if let Some(var) = self.variables.get_mut(ident) {
+    pub fn lookup_symbol_mut(&mut self, ident: &Pattern) -> Option<&mut SymbolInfo> {
+        if let Some(var) = self.symbols.get_mut(ident) {
             Some(var)
         } else if let Some(parent) = self.parent.as_mut() {
-            parent.lookup_variable_mut(ident)
+            parent.lookup_symbol_mut(ident)
         } else {
             None
         }
@@ -67,7 +76,7 @@ impl SymbolTable {
 
     pub fn local_count(&self) -> usize {
         let mut count = 0;
-        count += self.variables.len();
+        count += self.symbols.len();
 
         for scope in self.scopes.iter() {
             count += scope.borrow().local_count();
@@ -87,7 +96,7 @@ impl SymbolTable {
         idx
     }
 
-    pub fn insert_variable(&mut self, ident: Pattern, variable: VariableInfo) {
-        self.variables.insert(ident, variable);
+    pub fn insert_symbol(&mut self, ident: Pattern, variable: SymbolInfo) {
+        self.symbols.insert(ident, variable);
     }
 }

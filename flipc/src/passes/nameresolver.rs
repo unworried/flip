@@ -49,7 +49,7 @@ impl<'a> NameResolver<'a> {
     }
 
     fn check_usage(&self) {
-        for (pat, def) in self.symbol_table.borrow().variables.iter() {
+        for (pat, def) in self.symbol_table.borrow().symbols.iter() {
             if def.uses == 0 {
                 self.diagnostics
                     .borrow_mut()
@@ -140,7 +140,7 @@ impl Visitor for NameResolver<'_> {
         if self
             .symbol_table
             .borrow()
-            .lookup_variable(&def.pattern)
+            .lookup_symbol(&def.pattern)
             .is_none()
         {
             self.diagnostics
@@ -152,13 +152,13 @@ impl Visitor for NameResolver<'_> {
     }
 
     fn visit_variable(&mut self, var: &Variable) {
-        if self.symbol_table.borrow().lookup_variable(var).is_none() {
+        if self.symbol_table.borrow().lookup_symbol(var).is_none() {
             self.diagnostics
                 .borrow_mut()
                 .undefined_reference(&var.name, &var.span);
         } else {
             let mut st = self.symbol_table.borrow_mut();
-            let def = st.lookup_variable_mut(var).unwrap();
+            let def = st.lookup_symbol_mut(var).unwrap();
             def.uses += 1;
         }
     }
