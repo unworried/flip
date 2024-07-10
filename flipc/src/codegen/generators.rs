@@ -55,7 +55,7 @@ impl Visitor for CodeGenerator {
     }
 
     fn visit_call(&mut self, call: &Call) {
-        for arg in &call.arguments {
+        for arg in call.arguments.iter().rev() {
             arg.walk(self);
         }
 
@@ -121,7 +121,7 @@ impl Visitor for CodeGenerator {
             .borrow()
             .lookup_symbol(&def.pattern)
             .unwrap()
-            .local_idx;
+            .symbol_idx;
         let addr = local_idx as u8 * 2;
 
         // Walk value to stack and store
@@ -142,7 +142,7 @@ impl Visitor for CodeGenerator {
             .borrow()
             .lookup_symbol(&def.pattern)
             .unwrap()
-            .local_idx;
+            .symbol_idx;
         let addr = local_idx as u8 * 2;
 
         // Walk value to stack and store
@@ -156,9 +156,11 @@ impl Visitor for CodeGenerator {
     }
 
     fn visit_variable(&mut self, var: &Variable) {
-        let var_info = self.symbol_table.borrow().lookup_symbol(&var).unwrap();
-        let addr = var_info.local_idx as u8 * 2;
-        let def_type = &var_info.def_type;
+        let (var_idx, def_type) = {
+            let symbol_table = self.symbol_table.borrow();
+            let var_info = symbol_table.lookup_symbol(var).unwrap();
+            (var_info.symbol_idx, var_info.def_type.clone())
+        };
 
         match def_type {
             DefinitionType::Local => {
@@ -166,13 +168,18 @@ impl Visitor for CodeGenerator {
                 self.emit(Instruction::Add(BP, Zero, C));
                 self.emit(Instruction::AddImm(
                     C,
-                    Literal7Bit::new_checked(addr).unwrap(),
+                    Literal7Bit::new_checked(var_idx as u8 * 2).unwrap(),
                 ));
                 self.emit(Instruction::LoadWord(C, C, Zero));
                 self.emit(Instruction::Stack(C, SP, StackOp::Push));
             }
             DefinitionType::Argument => {
-                unimplemented!("argument var")
+                self.emit(Instruction::LoadStackOffset(
+                    C,
+                    BP,
+                    Nibble::new_checked(var_idx as u8 + 3).unwrap(),
+                ));
+                self.emit(Instruction::Stack(C, SP, StackOp::Push));
             }
         }
     }

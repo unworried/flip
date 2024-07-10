@@ -12,6 +12,7 @@ use crate::span::Span;
 pub struct SymbolTableBuilder<'a> {
     symbol_table: RefCell<SymbolTable>,
     functions: FunctionTable,
+    argument_idx: usize,
 
     diagnostics: DiagnosticsCell,
     _phantom: PhantomData<&'a ()>,
@@ -22,6 +23,7 @@ impl SymbolTableBuilder<'_> {
         Self {
             symbol_table: RefCell::new(SymbolTable::default()),
             functions: HashMap::new(),
+            argument_idx: 0,
             diagnostics,
             _phantom: PhantomData,
         }
@@ -48,19 +50,27 @@ impl SymbolTableBuilder<'_> {
         self.symbol_table = RefCell::new(previous_symbol_table);
     }
 
-    fn define_variable(&self, pattern: &Pattern, span: &Span, def_type: DefinitionType) {
+    fn define_variable(&mut self, pattern: &Pattern, span: &Span, def_type: DefinitionType) {
         if self.symbol_table.borrow().is_shadowing(pattern) {
             self.diagnostics
                 .borrow_mut()
                 .variable_already_declared(&pattern.name, &pattern.span);
         } else {
-            let local_idx = self.symbol_table.borrow().symbols.len();
+            let symbol_idx = match def_type {
+                DefinitionType::Local => self.symbol_table.borrow().symbols.len(),
+                DefinitionType::Argument => {
+                    let idx = self.argument_idx;
+                    self.argument_idx += 1;
+                    idx
+                }
+            };
+
             self.symbol_table.borrow_mut().insert_symbol(
                 pattern.clone(),
                 SymbolInfo {
                     def_type,
                     uses: 0,
-                    local_idx,
+                    symbol_idx,
                     span: *span,
                 },
             );

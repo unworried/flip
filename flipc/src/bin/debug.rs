@@ -26,6 +26,7 @@ fn main() {
     //let line = r#"main() { if 1 <= 1 { if 1 <= 1 { let x = 1; }; }; }"#;
     let line = r#"main() {
         let x = a(1, 2);
+        return x + 7;
     }
     
     a(b, c) {

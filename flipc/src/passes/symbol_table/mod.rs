@@ -16,12 +16,12 @@ pub struct SymbolInfo {
     // type_: Type,
     pub def_type: DefinitionType,
     pub uses: usize,
-    pub local_idx: usize,
+    pub symbol_idx: usize,
     span: Span,
 }
 
 #[repr(u8)]
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub enum DefinitionType {
     #[default]
     Local,
@@ -76,7 +76,11 @@ impl SymbolTable {
 
     pub fn local_count(&self) -> usize {
         let mut count = 0;
-        count += self.symbols.len();
+        count += self
+            .symbols
+            .iter()
+            .filter(|(_, v)| v.def_type == DefinitionType::Local)
+            .count();
 
         for scope in self.scopes.iter() {
             count += scope.borrow().local_count();

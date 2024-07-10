@@ -3,8 +3,8 @@
     - [x] Add arguments to the function signature
     - [x] Add arguments to the function body scope
     - [x] Add arguments to the function call
-    - [ ] add arguments to function codegen
+    - [x] add arguments to function codegen
     - [x] Parser Test
 
-- [ ] Add function return
+- [x] Add function return
 - [ ] Add function testing. unit/integration
