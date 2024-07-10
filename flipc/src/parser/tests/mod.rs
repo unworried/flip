@@ -5,6 +5,7 @@ use self::validator::{assert_ast, assert_program, ASTNode};
 mod controller;
 mod expression;
 mod validator;
+mod function;
 
 #[test]
 fn simple_program() {
