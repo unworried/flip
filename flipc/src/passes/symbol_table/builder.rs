@@ -7,6 +7,7 @@ use crate::ast::visitor::{Visitor, Walkable};
 use crate::ast::{Definition, Function, If, Pattern, Program, While};
 use crate::diagnostics::DiagnosticsCell;
 use crate::passes::pass::Pass;
+use crate::span::Span;
 
 pub struct SymbolTableBuilder<'a> {
     symbol_table: RefCell<SymbolTable>,
@@ -45,6 +46,24 @@ impl SymbolTableBuilder<'_> {
         let new_scope = previous_symbol_table.lookup_scope(index).unwrap();
         self.symbol_table.swap(new_scope);
         self.symbol_table = RefCell::new(previous_symbol_table);
+    }
+
+    fn define_variable(&self, pattern: &Pattern, span: &Span) {
+        if self.symbol_table.borrow().is_shadowing(pattern) {
+            self.diagnostics
+                .borrow_mut()
+                .variable_already_declared(&pattern.name, &pattern.span);
+        } else {
+            let local_idx = self.symbol_table.borrow().variables.len();
+            self.symbol_table.borrow_mut().insert_variable(
+                pattern.clone(),
+                VariableInfo {
+                    uses: 0,
+                    local_idx,
+                    span: *span,
+                },
+            );
+        }
     }
 }
 
@@ -92,6 +111,9 @@ impl<'a> Visitor for SymbolTableBuilder<'a> {
             );
         }
         let scope_idx = self.enter_scope();
+        func.parameters
+            .iter()
+            .for_each(|pat| self.define_variable(pat, &pat.span));
         func.body.walk(self);
         self.exit_scope(scope_idx);
     }
@@ -111,22 +133,7 @@ impl<'a> Visitor for SymbolTableBuilder<'a> {
     }
 
     fn visit_definition(&mut self, def: &Definition) {
-        if self.symbol_table.borrow().is_shadowing(&def.pattern) {
-            self.diagnostics
-                .borrow_mut()
-                .variable_already_declared(&def.pattern.name, &def.pattern.span);
-        } else {
-            let local_idx = self.symbol_table.borrow().variables.len();
-            self.symbol_table.borrow_mut().insert_variable(
-                def.pattern.clone(),
-                VariableInfo {
-                    uses: 0,
-                    local_idx,
-                    span: def.span,
-                },
-            );
-        }
-
+        self.define_variable(&def.pattern, &def.span);
         def.pattern.name.walk(self);
         def.value.walk(self);
     }
