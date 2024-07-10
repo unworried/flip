@@ -1,9 +1,10 @@
 # Branch Functions TODO
-- [ ] Add function arguments
-    - [ ] Add arguments to the function signature
+- [x] Add function arguments
+    - [x] Add arguments to the function signature
     - [ ] Add arguments to the function body scope
-    - [ ] Add arguments to the function call
+    - [x] Add arguments to the function call
     - [ ] add arguments to function codegen
+    - [ ] Parser Test
 
 - [ ] Add function return
 - [ ] Add function testing. unit/integration
