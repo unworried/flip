@@ -172,5 +172,7 @@ impl Visitor for NameResolver<'_> {
             let func = self.functions.get_mut(&call.pattern).expect("unreachable");
             func.uses += 1;
         }
+
+        call.arguments.iter().for_each(|arg| arg.walk(self));
     }
 }
