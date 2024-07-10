@@ -4,8 +4,8 @@ use flipvm::Register::*;
 
 use crate::ast::visitor::Visitor;
 use crate::ast::{
-    Assignment, BinOp, Binary, Definition, Function, If, Literal, LiteralKind, Unary, Variable,
-    While,
+    Assignment, BinOp, Binary, Call, Definition, Function, If, Literal, LiteralKind, Unary,
+    Variable, While,
 };
 
 use super::CodeGenerator;
@@ -44,6 +44,20 @@ impl Visitor for CodeGenerator {
         self.emit(Instruction::Add(C, Zero, PC));
 
         self.define_label_offset(local_off, local_count as u32 * 2);
+    }
+
+    fn visit_call(&mut self, call: &Call) {
+        for arg in &call.arguments {
+            arg.walk(self);
+        }
+
+        self.emit(Instruction::Stack(BP, SP, StackOp::Push));
+        self.emit(Instruction::Stack(PC, SP, StackOp::Push));
+        self.emit(Instruction::Add(SP, Zero, BP));
+        self.imm_future(PC, call.pattern.name.clone());
+
+        // Push return
+        self.emit(Instruction::Stack(A, SP, StackOp::Push));
     }
 
     fn visit_if(&mut self, if_expr: &If) {
