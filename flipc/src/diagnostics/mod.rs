@@ -19,6 +19,7 @@ pub struct Diagnostic {
     pub span: Option<Span>,
 }
 
+#[repr(u8)]
 #[derive(Debug)]
 pub enum DiagnosticKind {
     Error,
@@ -73,7 +74,7 @@ impl DiagnosticBag {
 
             error = Some(CompilerError::DiagnosticError);
         }
-        
+
         error.map_or(Ok(()), Err)
     }
 

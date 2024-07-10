@@ -12,7 +12,7 @@ main() {
     a();
 }
  
-a() {
+a(b, c) {
     #foo = "hi";
     let baz = 0;
     # let baz = 1;

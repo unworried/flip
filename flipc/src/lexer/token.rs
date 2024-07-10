@@ -41,6 +41,7 @@ pub enum Token {
     RParen,
     LBrace,
     RBrace,
+    Comma,
     SemiColon,
 }
 
@@ -73,6 +74,7 @@ impl Display for Token {
             Token::RParen => ")",
             Token::LBrace => "{",
             Token::RBrace => "}",
+            Token::Comma => ",",
             Token::SemiColon => ";",
             Token::Whitespace => r#" "#,
         };
@@ -97,6 +99,7 @@ impl From<u8> for Token {
             b')' => Self::RParen,
             b'{' => Self::LBrace,
             b'}' => Self::RBrace,
+            b',' => Self::Comma,
             b';' => Self::SemiColon,
 
             _ => Self::Illegal,
@@ -204,5 +207,30 @@ mod tests {
     #[test]
     fn greater_than_equal() {
         assert_eq!(Token::from((b'>', b'=')), Token::GreaterThanEqual);
+    }
+
+    #[test]
+    fn left_paren() {
+        assert_eq!(Token::from(b'('), Token::LParen);
+    }
+
+    #[test]
+    fn right_paren() {
+        assert_eq!(Token::from(b')'), Token::RParen);
+    }
+
+    #[test]
+    fn left_brace() {
+        assert_eq!(Token::from(b'{'), Token::LBrace);
+    }
+
+    #[test]
+    fn right_brace() {
+        assert_eq!(Token::from(b'}'), Token::RBrace);
+    }
+
+    #[test]
+    fn comma() {
+        assert_eq!(Token::from(b','), Token::Comma);
     }
 }

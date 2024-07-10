@@ -16,6 +16,7 @@ pub struct Program {
 #[derive(Debug, Clone)]
 pub struct Function {
     pub pattern: Pattern,
+    pub parameters: Vec<Pattern>,
     pub body: Ast,
     pub span: Span,
 }

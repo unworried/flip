@@ -25,6 +25,7 @@ pub struct CodeGenerator {
     unlinked_references: Vec<(usize, FutureType, Register, String)>,
 }
 
+#[repr(u8)]
 enum FutureType {
     Imm,
     AddImm,

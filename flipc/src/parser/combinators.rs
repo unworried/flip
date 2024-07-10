@@ -24,10 +24,13 @@ pub fn parse_program(parser: &mut Parser) -> Program {
 
 pub fn parse_function(parser: &mut Parser) -> Function {
     if let (Token::Ident(name), span) = parser.consume() {
+        // Parameters
         parser.expect(Token::LParen);
+        let parameters = parse_parameters(parser);
         parser.expect(Token::RParen);
-        parser.expect(Token::LBrace);
 
+        // Body Block
+        parser.expect(Token::LBrace);
         let body = parse_sequence(parser, Token::RBrace);
         parser.expect(Token::RBrace);
 
@@ -38,11 +41,41 @@ pub fn parse_function(parser: &mut Parser) -> Function {
 
         return Function {
             pattern,
+            parameters,
             body,
             span: Span::combine(vec![&span, &parser.current_span()]),
         };
     }
+    // FIXME: ...
     panic!("Implement error handling for function parsing");
+}
+
+fn parse_parameters(parser: &mut Parser) -> Vec<Pattern> {
+    let mut parameters: Vec<Pattern> = Vec::new();
+    while !parser.current_token_is(&Token::RParen) {
+        let (token, param_span) = parser.consume();
+        match token {
+            Token::Ident(name) => {
+                parameters.push(Pattern {
+                    name: name.to_owned(),
+                    span: param_span,
+                });
+
+                if !parser.current_token_is(&Token::RParen) {
+                    parser.expect(Token::Comma);
+                }
+            }
+            _ => {
+                parser
+                    .diagnostics
+                    .borrow_mut()
+                    .unexpected_token(&token, &param_span);
+                parser.step_until(&Token::RParen);
+                break;
+            }
+        }
+    }
+    parameters
 }
 
 pub fn parse_sequence(parser: &mut Parser, end_delim: Token) -> Ast {
@@ -127,7 +160,7 @@ pub fn parse_let(parser: &mut Parser) -> Ast {
 
     let pattern = Pattern {
         name,
-        span: start_span.clone(),
+        span: start_span,
     };
 
     let value = parse_expression(parser);

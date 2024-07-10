@@ -109,10 +109,9 @@ impl<'a> Parser<'a> {
     }
 
     pub fn current_span(&self) -> Span {
-        self.current_token.1.clone()
+        self.current_token.1
     }
 
-    #[cfg(test)]
     pub fn next_token(&self) -> &Token {
         &self.next_token.0
     }

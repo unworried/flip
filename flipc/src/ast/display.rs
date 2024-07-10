@@ -76,7 +76,12 @@ impl Visitor for AstDisplay {
 
         self.indent += 1;
         self.add_statement_header("Parameters");
-        self.result.push_str("$$WIP$$");
+        let params = func
+            .parameters
+            .iter()
+            .map(|p| p.name.clone())
+            .collect::<Vec<String>>();
+        self.result.push_str(&format!("{:?}", params));
 
         self.add_newline();
         self.add_statement_header("Body");

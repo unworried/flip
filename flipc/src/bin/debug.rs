@@ -24,6 +24,13 @@ fn main() {
     //let line = "while \"TMP\" { \nlet x = \"hello, world!\"; \nlet y = \"hello, world 2!\"; \nlet z = \"hello, world 3!\"; \n };";
 
     let line = r#"main() { if 1 <= 1 { if 1 <= 1 { let x = 1; }; }; }"#;
+    let line = r#"main() {
+        let x = 4;
+    }
+    
+    a(b, c, 1) {
+        let y = 2;
+    }"#;
     match frontend::check(line) {
         Ok(_) => eprintln!("No errors found"),
         Err(e) => eprintln!("{}", e),
