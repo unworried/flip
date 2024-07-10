@@ -104,8 +104,8 @@ impl Ast {
         })
     }
 
-    pub fn call(pattern: Pattern, span: Span) -> Ast {
-        Ast::Call(Call { pattern, span })
+    pub fn call(pattern: Pattern, arguments: Vec<Ast>, span: Span) -> Ast {
+        Ast::Call(Call { pattern, arguments, span })
     }
 
     pub fn variable(name: Ident, span: Span) -> Ast {
@@ -247,6 +247,7 @@ pub enum LiteralKind {
 #[derive(Debug, Clone)]
 pub struct Call {
     pub pattern: Pattern,
+    pub arguments: Vec<Ast>,
     pub span: Span,
 }
 

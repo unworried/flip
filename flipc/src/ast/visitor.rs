@@ -57,7 +57,9 @@ pub trait Visitor: Sized {
 
     fn visit_variable(&mut self, _var: &Variable) {}
 
-    fn visit_call(&mut self, _call: &Call) {}
+    fn visit_call(&mut self, call: &Call) {
+        call.arguments.iter().for_each(|arg| arg.walk(self));
+    }
 }
 
 impl Walkable for Function {

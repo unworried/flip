@@ -50,6 +50,7 @@ pub fn parse_function(parser: &mut Parser) -> Function {
     panic!("Implement error handling for function parsing");
 }
 
+// TODO: Test
 fn parse_parameters(parser: &mut Parser) -> Vec<Pattern> {
     let mut parameters: Vec<Pattern> = Vec::new();
     while !parser.current_token_is(&Token::RParen) {
@@ -112,7 +113,6 @@ pub fn parse_statement(parser: &mut Parser) -> Ast {
                 span,
             };
             parse_assignment_or_call(parser, pattern)
-            //parse_assignment(parser, pattern)
         }
         Token::If => parse_if(parser),
         Token::While => parse_while(parser),
@@ -178,8 +178,9 @@ pub fn parse_assignment_or_call(parser: &mut Parser, pattern: Pattern) -> Ast {
     match token {
         Token::Assign => parse_assignment(parser, pattern),
         Token::LParen => {
+            let args = parse_arguments(parser);
             parser.expect(Token::RParen);
-            Ast::call(pattern, Span::combine(vec![&span, &parser.current_span()]))
+            Ast::call(pattern, args, Span::combine(vec![&span, &parser.current_span()]))
         }
         _ => {
             parser.step_until(&Token::SemiColon);
@@ -187,6 +188,20 @@ pub fn parse_assignment_or_call(parser: &mut Parser, pattern: Pattern) -> Ast {
             Ast::Error
         }
     }
+}
+
+// TODO: Test
+fn parse_arguments(parser: &mut Parser) -> Vec<Ast> {
+    let mut args: Vec<Ast> = Vec::new();
+    while !parser.current_token_is(&Token::RParen) {
+        args.push(parse_expression(parser));
+
+        if !parser.current_token_is(&Token::RParen) {
+            parser.expect(Token::Comma);
+        }
+    }
+
+    args
 }
 
 pub fn parse_assignment(parser: &mut Parser, pattern: Pattern) -> Ast {

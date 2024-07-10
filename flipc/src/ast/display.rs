@@ -117,6 +117,17 @@ impl Visitor for AstDisplay {
     fn visit_call(&mut self, call: &Call) {
         self.add_statement_header("Call");
         self.result.push_str(&call.pattern.name);
+
+        self.indent += 1;
+        self.add_statement_header("Arguments");
+        for arg in &call.arguments {
+            self.indent += 1;
+            self.add_expression_header("Expression");
+            arg.walk(self);
+            self.indent -= 1;
+        }
+        self.indent -= 1;
+
     }
 
     fn visit_binary(&mut self, bin: &Binary) {

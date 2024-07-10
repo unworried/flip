@@ -26,9 +26,10 @@ fn main() {
     let line = r#"main() { if 1 <= 1 { if 1 <= 1 { let x = 1; }; }; }"#;
     let line = r#"main() {
         let x = 4;
+        a(x, -(x-2));
     }
     
-    a(b, c, 1) {
+    a(b, c) {
         let y = 2;
     }"#;
     match frontend::check(line) {
