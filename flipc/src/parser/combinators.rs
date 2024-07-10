@@ -341,6 +341,7 @@ pub fn parse_primary(parser: &mut Parser) -> Ast {
                     name: symbol.to_owned(),
                     span,
                 };
+
                 return parse_call(parser, pattern, span);
             }
 
