@@ -12,7 +12,11 @@ pub fn parse_program(parser: &mut Parser) -> Program {
             parser.step();
         }
 
-        functions.push(parse_function(parser));
+        // TODO: Review this
+        match parse_function(parser) {
+            Some(func) => functions.push(func),
+            None => parser.step(),
+        }
 
         while parser.current_token_is(&Token::Newline) {
             parser.step();
@@ -22,35 +26,45 @@ pub fn parse_program(parser: &mut Parser) -> Program {
     Program { functions }
 }
 
-pub fn parse_function(parser: &mut Parser) -> Function {
-    if let (Token::Ident(name), span) = parser.consume() {
-        // Parameters
-        parser.expect(Token::LParen);
-        let parameters = parse_parameters(parser);
-        parser.expect(Token::RParen);
+pub fn parse_function(parser: &mut Parser) -> Option<Function> {
+    let (token, span) = parser.consume();
+    match token {
+        Token::Ident(name) => {
+            // Parameters
+            parser.expect(Token::LParen);
+            let parameters = parse_parameters(parser);
+            parser.expect(Token::RParen);
 
-        // Body Block
-        parser.expect(Token::LBrace);
-        let body = parse_sequence(parser, Token::RBrace);
-        parser.expect(Token::RBrace);
+            // Body Block
+            parser.expect(Token::LBrace);
+            let body = parse_sequence(parser, Token::RBrace);
+            parser.expect(Token::RBrace);
 
-        let pattern = Pattern {
-            name: name.to_owned(),
-            span,
-        };
+            let pattern = Pattern {
+                name: name.to_owned(),
+                span,
+            };
 
-        // TODO: Test this - Allows optional `;` at end of function
-        parser.optional(Token::SemiColon);
+            // TODO: Test this - Allows optional `;` at end of function
+            parser.optional(Token::SemiColon);
 
-        return Function {
-            pattern,
-            parameters,
-            body,
-            span: Span::combine(vec![&span, &parser.current_span()]),
-        };
+            Some(Function {
+                pattern,
+                parameters,
+                body,
+                span: Span::combine(vec![&span, &parser.current_span()]),
+            })
+        }
+        _ => {
+            parser
+                .diagnostics
+                .borrow_mut()
+                .unexpected_token(&token, &span);
+            None
+        }
     }
     // FIXME: ...
-    panic!("Implement error handling: {}", parser.current_token());
+    //panic!("Implement error handling: {}", parser.current_token());
 }
 
 // TODO: Test

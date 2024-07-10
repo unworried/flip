@@ -118,6 +118,7 @@ impl<'a> Parser<'a> {
         self.current_token.1
     }
 
+    #[cfg(test)]
     pub fn next_token(&self) -> &Token {
         &self.next_token.0
     }
