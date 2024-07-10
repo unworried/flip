@@ -92,6 +92,30 @@ impl CodeGenerator {
         self.emit(Instruction::Stack(C, SP, StackOp::Push));
     }
 
+    fn emit_function_exit(&mut self) {
+        // Load return addr
+        self.emit(Instruction::LoadStackOffset(
+            C,
+            BP,
+            Nibble::new_checked(1).unwrap(),
+        ));
+        // Reload previous stack pointer ( BP - 2 )
+        self.emit(Instruction::Add(BP, Zero, SP));
+        self.emit(Instruction::AddImmSigned(
+            SP,
+            Literal7Bit::from_signed(-2).unwrap(),
+        ));
+        // Load previous base pointer
+        self.emit(Instruction::LoadStackOffset(
+            BP,
+            BP,
+            Nibble::new_checked(2).unwrap(),
+        ));
+        // Jump to return addr
+        self.emit(Instruction::AddImm(C, Literal7Bit::new_checked(6).unwrap()));
+        self.emit(Instruction::Add(C, Zero, PC));
+    }
+
     fn imm_future(&mut self, r: Register, label: String) {
         match self.labels.get(&label) {
             Some(offset) => {

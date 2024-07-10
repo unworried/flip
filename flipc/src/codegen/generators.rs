@@ -25,33 +25,16 @@ impl Visitor for CodeGenerator {
         let local_count = self.symbol_table.borrow().local_count();
         self.exit_scope(scope_idx);
 
-        // Return addr
-        self.emit(Instruction::LoadStackOffset(
-            C,
-            BP,
-            Nibble::new_checked(1).unwrap(),
-        ));
-        // Reload previous stack pointer ( BP - 2 )
-        self.emit(Instruction::Add(BP, Zero, SP));
-        self.emit(Instruction::AddImmSigned(
-            SP,
-            Literal7Bit::from_signed(-2).unwrap(),
-        ));
-        // Load previous base pointer
-        self.emit(Instruction::LoadStackOffset(
-            BP,
-            BP,
-            Nibble::new_checked(2).unwrap(),
-        ));
-        self.emit(Instruction::AddImm(C, Literal7Bit::new_checked(6).unwrap()));
-        self.emit(Instruction::Add(C, Zero, PC));
-
+        self.emit_function_exit();
         self.define_label_offset(local_off, local_count as u32 * 2);
     }
 
     fn visit_return(&mut self, ret: &Ast) {
         ret.walk(self);
         self.emit(Instruction::Stack(A, SP, StackOp::Pop));
+
+        // FIXME: when return exists emit function exit done twice
+        self.emit_function_exit();
     }
 
     fn visit_call(&mut self, call: &Call) {

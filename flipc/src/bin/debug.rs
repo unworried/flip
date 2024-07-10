@@ -25,12 +25,21 @@ fn main() {
 
     //let line = r#"main() { if 1 <= 1 { if 1 <= 1 { let x = 1; }; }; }"#;
     let line = r#"main() {
-        let x = a(1, 2);
-        return x + 7;
+        return fib(10);
     }
     
-    a(b, c) {
-        return b + c;
+    fib(n) {
+        if n == 0 {
+            return 0;
+        };
+
+        if n == 1 {
+            return 1;
+        };
+
+        let t1 = fib(n - 1);
+        let t2 = fib(n - 2);
+        return t1 + t2;
     }"#;
     match frontend::check(line) {
         Ok(_) => eprintln!("No errors found"),
