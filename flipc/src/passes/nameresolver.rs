@@ -158,8 +158,7 @@ impl Visitor for NameResolver<'_> {
                 .undefined_reference(&var.name, &var.span);
         } else {
             let mut st = self.symbol_table.borrow_mut();
-            let def = st.lookup_symbol_mut(var).unwrap();
-            def.uses += 1;
+            st.update_symbol(var, |def| def.uses += 1);
         }
     }
 

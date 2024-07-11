@@ -64,13 +64,16 @@ impl SymbolTable {
         }
     }
 
-    pub fn lookup_symbol_mut(&mut self, ident: &Pattern) -> Option<&mut SymbolInfo> {
+    pub fn update_symbol<F>(&mut self, ident: &Pattern, f: F)
+    where
+        F: FnOnce(&mut SymbolInfo),
+    {
         if let Some(var) = self.symbols.get_mut(ident) {
-            Some(var)
+            f(var);
         } else if let Some(parent) = self.parent.as_mut() {
-            parent.lookup_symbol_mut(ident)
+            parent.update_symbol(ident, f);
         } else {
-            None
+            unreachable!("Symbol not found in symbol table");
         }
     }
 
