@@ -1,7 +1,10 @@
 [package]
 name = "flipvm"
 version = "0.1.0"
+authors = ["unworried"]
+description = "The Flip Virtual Machine"
 edition = "2021"
+license = "MIT"
 
 [dependencies]
 macros = { path = "lib/macros" }
