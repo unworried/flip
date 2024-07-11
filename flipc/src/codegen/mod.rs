@@ -46,30 +46,7 @@ impl CodeGenerator {
             unlinked_references: Vec::new(),
         };
 
-        gen.emit(Instruction::Imm(
-            SP,
-            Literal12Bit::new_checked(0x3ff).unwrap(),
-        ));
-        gen.emit(Instruction::ShiftLeft(
-            SP,
-            SP,
-            Nibble::new_checked(4).unwrap(),
-        ));
-        gen.emit(Instruction::Stack(BP, SP, StackOp::Push));
-        gen.emit(Instruction::Stack(PC, SP, StackOp::Push));
-        gen.emit(Instruction::Add(SP, Zero, BP));
-        gen.imm_future(PC, "main".to_string());
-
-        gen.emit(Instruction::Imm(
-            C,
-            Literal12Bit::new_checked(0xf0).unwrap(),
-        ));
-        gen.emit(Instruction::System(
-            C,
-            Zero,
-            Nibble::new_checked(0).unwrap(),
-        ));
-
+        gen.emit_init();
         gen.visit_program(ast);
 
         // TODO: Do i keep this? + error handling
@@ -77,6 +54,32 @@ impl CodeGenerator {
         assert!(gen.unlinked_references.is_empty());
 
         gen.instructions
+    }
+
+    fn emit_init(&mut self) {
+        self.emit(Instruction::Imm(
+            SP,
+            Literal12Bit::new_checked(0x3ff).unwrap(),
+        ));
+        self.emit(Instruction::ShiftLeft(
+            SP,
+            SP,
+            Nibble::new_checked(4).unwrap(),
+        ));
+        self.emit(Instruction::Stack(BP, SP, StackOp::Push));
+        self.emit(Instruction::Stack(PC, SP, StackOp::Push));
+        self.emit(Instruction::Add(SP, Zero, BP));
+        self.imm_future(PC, "main".to_string());
+
+        self.emit(Instruction::Imm(
+            C,
+            Literal12Bit::new_checked(0xf0).unwrap(),
+        ));
+        self.emit(Instruction::System(
+            C,
+            Zero,
+            Nibble::new_checked(0).unwrap(),
+        ));
     }
 
     fn emit(&mut self, ins: Instruction) {

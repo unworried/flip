@@ -28,10 +28,10 @@ main() {
     let mut lexer = Lexer::new(input.to_string());
     let mut parser = Parser::new(&mut lexer, diagnostics.clone());
 
-    let mut root = parser.parse();
+    let root = parser.parse();
 
     let (st, mut ft) = SymbolTableBuilder::run((&root, diagnostics.clone()));
-    let st = NameResolver::run((&mut root, st, &mut ft, diagnostics.clone()));
+    let st = NameResolver::run((&root, st, &mut ft, diagnostics.clone()));
 
     let actual = CodeGenerator::run(&root, st, 0x0);
 
