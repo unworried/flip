@@ -35,12 +35,14 @@ pub enum Token {
     Else,
     While,
     Print,
+    Return,
 
     // Separators
     LParen,
     RParen,
     LBrace,
     RBrace,
+    Comma,
     SemiColon,
 }
 
@@ -69,10 +71,12 @@ impl Display for Token {
             Token::Else => "else",
             Token::While => "while",
             Token::Print => "print",
+            Token::Return => "return",
             Token::LParen => "(",
             Token::RParen => ")",
             Token::LBrace => "{",
             Token::RBrace => "}",
+            Token::Comma => ",",
             Token::SemiColon => ";",
             Token::Whitespace => r#" "#,
         };
@@ -97,6 +101,7 @@ impl From<u8> for Token {
             b')' => Self::RParen,
             b'{' => Self::LBrace,
             b'}' => Self::RBrace,
+            b',' => Self::Comma,
             b';' => Self::SemiColon,
 
             _ => Self::Illegal,
@@ -131,6 +136,7 @@ impl From<String> for Token {
             "else" => Self::Else,
             "while" => Self::While,
             "print" => Self::Print,
+            "return" => Self::Return,
 
             _ => Self::Ident(value),
         }
@@ -204,5 +210,49 @@ mod tests {
     #[test]
     fn greater_than_equal() {
         assert_eq!(Token::from((b'>', b'=')), Token::GreaterThanEqual);
+    }
+
+    #[test]
+    fn left_paren() {
+        assert_eq!(Token::from(b'('), Token::LParen);
+    }
+
+    #[test]
+    fn right_paren() {
+        assert_eq!(Token::from(b')'), Token::RParen);
+    }
+
+    #[test]
+    fn left_brace() {
+        assert_eq!(Token::from(b'{'), Token::LBrace);
+    }
+
+    #[test]
+    fn right_brace() {
+        assert_eq!(Token::from(b'}'), Token::RBrace);
+    }
+
+    #[test]
+    fn comma() {
+        assert_eq!(Token::from(b','), Token::Comma);
+    }
+
+    #[test]
+    fn semi_colon() {
+        assert_eq!(Token::from(b';'), Token::SemiColon);
+    }
+
+    #[test]
+    fn ident() {
+        assert_eq!(Token::from(String::from("let")), Token::Let);
+        assert_eq!(Token::from(String::from("if")), Token::If);
+        assert_eq!(Token::from(String::from("else")), Token::Else);
+        assert_eq!(Token::from(String::from("while")), Token::While);
+        assert_eq!(Token::from(String::from("print")), Token::Print);
+        assert_eq!(Token::from(String::from("return")), Token::Return);
+        assert_eq!(
+            Token::from(String::from("foobar")),
+            Token::Ident(String::from("foobar"))
+        );
     }
 }

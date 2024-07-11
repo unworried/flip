@@ -1,9 +1,12 @@
+use std::collections::HashMap;
+
 use crate::ast::visitor::{Visitor, Walkable};
 use crate::ast::{
-    Assignment, Ast, Binary, Definition, If, Literal, LiteralKind, Unary, Variable, While,
+    Assignment, Ast, Binary, Call, Definition, If, Literal, LiteralKind, Unary, Variable, While,
 };
 use crate::diagnostics::DiagnosticBag;
-use crate::lexer::Lexer;
+use crate::lexer::{Lexer, Token};
+use crate::parser::combinators::parse_sequence;
 use crate::parser::Parser;
 
 pub fn assert_ast(input: &str, expected: Vec<ASTNode>) {
@@ -11,7 +14,45 @@ pub fn assert_ast(input: &str, expected: Vec<ASTNode>) {
     validator.validate();
 }
 
-#[derive(Debug, PartialEq)]
+// HashMap<function_name, expected_ast>
+pub fn assert_program(input: &str, expected: HashMap<String, Vec<ASTNode>>) {
+    let mut lexer = Lexer::new(input.to_string());
+    let diagnostics = DiagnosticBag::new();
+    let mut parser = Parser::new(&mut lexer, diagnostics.clone());
+    let program = parser.parse();
+
+    for func in program.functions {
+        let mut validator = AstValidator {
+            expected: expected.get(&func.pattern.name).unwrap().to_vec(),
+            actual: Vec::new(),
+        };
+        // TODO: May revist this, pushes paramters to top of ast to compare with expected
+        for param in &func.parameters {
+            validator
+                .actual
+                .push(ASTNode::Variable(param.name.to_owned()));
+        }
+
+        validator.flatten_ast(&func.body);
+        validator.validate();
+    }
+
+    // TODO: Maybe refactor this
+    // FIXME: Will break if diagnostic messages change
+    let diagnostic_msgs: Vec<String> = diagnostics
+        .borrow()
+        .errors
+        .iter()
+        .map(|d| d.message.clone())
+        .collect();
+    assert!(
+        diagnostics.borrow().is_empty(),
+        "diagnostics returned: {:?}",
+        diagnostic_msgs
+    );
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub enum ASTNode {
     If,
     While,
@@ -21,6 +62,7 @@ pub enum ASTNode {
     Binary,
     Unary,
     Variable(String),
+    Call(String),
 }
 
 pub struct AstValidator {
@@ -29,11 +71,12 @@ pub struct AstValidator {
 }
 
 impl AstValidator {
+    // FIXME: Diagnostics not being checked
     pub fn new(input: &str, expected: Vec<ASTNode>) -> Self {
         let mut lexer = Lexer::new(input.to_string());
         let diagnostics = DiagnosticBag::new();
         let mut parser = Parser::new(&mut lexer, diagnostics);
-        let ast = parser.parse();
+        let ast = parse_sequence(&mut parser, Token::Eof);
         let mut validator = AstValidator {
             expected,
             actual: Vec::new(),
@@ -44,7 +87,7 @@ impl AstValidator {
     }
 
     fn flatten_ast(&mut self, ast: &Ast) {
-        self.actual.clear();
+        //self.actual.clear(); // FIXME: Do i need this?
         self.visit_ast(ast);
     }
 
@@ -70,6 +113,12 @@ impl AstValidator {
 }
 
 impl Visitor for AstValidator {
+    fn visit_call(&mut self, call: &Call) {
+        self.actual
+            .push(ASTNode::Call(call.pattern.name.to_owned()));
+        call.arguments.iter().for_each(|arg| arg.walk(self));
+    }
+
     fn visit_binary(&mut self, bin: &Binary) {
         self.actual.push(ASTNode::Binary);
         bin.left.walk(self);

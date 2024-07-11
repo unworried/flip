@@ -8,23 +8,38 @@ mod display;
 pub mod ptr;
 pub mod visitor;
 
+#[derive(Debug)]
+pub struct Program {
+    pub functions: Vec<Function>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Function {
+    pub pattern: Pattern,
+    pub parameters: Vec<Pattern>,
+    pub body: Ast,
+    pub span: Span,
+}
+
 #[derive(Debug, Clone)]
 pub enum Ast {
     Sequence(Sequence),
     Definition(Definition),
     Assignment(Assignment),
+    Return(P<Ast>),
     If(If), // WARN: When funcs are added. need to change this to only allow stmts
     While(While),
     Binary(Binary),
     Unary(Unary),
     Literal(Literal),
     Variable(Variable),
+    Call(Call),
     Error,
 }
 
 impl Ast {
-    pub fn sequence(statements: Vec<Ast>, span: Span) -> Ast {
-        Ast::Sequence(Sequence { statements, span })
+    pub fn sequence(expressions: Vec<Ast>, span: Span) -> Ast {
+        Ast::Sequence(Sequence { expressions, span })
     }
 
     pub fn definition(pattern: Pattern, value: Ast, span: Span) -> Ast {
@@ -90,13 +105,25 @@ impl Ast {
         })
     }
 
+    pub fn call(pattern: Pattern, arguments: Vec<Ast>, span: Span) -> Ast {
+        Ast::Call(Call {
+            pattern,
+            arguments,
+            span,
+        })
+    }
+
     pub fn variable(name: Ident, span: Span) -> Ast {
         Ast::Variable(Variable { name, span })
+    }
+
+    pub fn return_expr(value: Ast) -> Ast {
+        Ast::Return(P(value))
     }
 }
 #[derive(Debug, Clone)]
 pub struct Sequence {
-    pub statements: Vec<Ast>,
+    pub expressions: Vec<Ast>,
     pub span: Span,
 }
 
@@ -224,6 +251,13 @@ pub struct Literal {
 pub enum LiteralKind {
     Int(u64),
     String(String),
+}
+
+#[derive(Debug, Clone)]
+pub struct Call {
+    pub pattern: Pattern,
+    pub arguments: Vec<Ast>,
+    pub span: Span,
 }
 
 pub type Variable = Pattern;

@@ -1,12 +1,12 @@
 use core::mem;
 
-use self::combinators::parse_sequence;
+use self::combinators::parse_program;
+use crate::ast::Program;
 use crate::diagnostics::DiagnosticsCell;
 use crate::lexer::{Lexer, Token};
 use crate::span::Span;
-use crate::Ast;
 
-mod combinators;
+pub mod combinators;
 
 #[cfg(test)]
 mod tests;
@@ -33,8 +33,8 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse(&mut self) -> Ast {
-        parse_sequence(self, Token::Eof)
+    pub fn parse(&mut self) -> Program {
+        parse_program(self)
     }
 
     pub fn step(&mut self) {
@@ -84,6 +84,12 @@ impl<'a> Parser<'a> {
         true
     }
 
+    pub fn optional(&mut self, optional: Token) {
+        if self.current_token_is(&optional) {
+            self.step();
+        }
+    }
+
     fn step_until(&mut self, token: &Token) {
         while !self.current_token_is(token) && !self.current_token_is(&Token::Eof) {
             self.step();
@@ -109,7 +115,7 @@ impl<'a> Parser<'a> {
     }
 
     pub fn current_span(&self) -> Span {
-        self.current_token.1.clone()
+        self.current_token.1
     }
 
     #[cfg(test)]

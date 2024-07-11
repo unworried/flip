@@ -1,14 +1,19 @@
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::marker::PhantomData;
 
-use super::{SymbolTable, VariableInfo};
+use super::{DefinitionType, FunctionInfo, FunctionTable, SymbolInfo, SymbolTable};
 use crate::ast::visitor::{Visitor, Walkable};
-use crate::ast::{Ast, Definition, If, While};
+use crate::ast::{Definition, Function, If, Pattern, Program, While};
 use crate::diagnostics::DiagnosticsCell;
 use crate::passes::pass::Pass;
+use crate::span::Span;
 
 pub struct SymbolTableBuilder<'a> {
     symbol_table: RefCell<SymbolTable>,
+    functions: FunctionTable,
+    argument_idx: usize,
+
     diagnostics: DiagnosticsCell,
     _phantom: PhantomData<&'a ()>,
 }
@@ -17,6 +22,8 @@ impl SymbolTableBuilder<'_> {
     pub fn new(diagnostics: DiagnosticsCell) -> Self {
         Self {
             symbol_table: RefCell::new(SymbolTable::default()),
+            functions: HashMap::new(),
+            argument_idx: 0,
             diagnostics,
             _phantom: PhantomData,
         }
@@ -42,52 +49,102 @@ impl SymbolTableBuilder<'_> {
         self.symbol_table.swap(new_scope);
         self.symbol_table = RefCell::new(previous_symbol_table);
     }
+
+    fn define_variable(&mut self, pattern: &Pattern, span: &Span, def_type: DefinitionType) {
+        if self.symbol_table.borrow().is_shadowing(pattern) {
+            self.diagnostics
+                .borrow_mut()
+                .variable_already_declared(&pattern.name, &pattern.span);
+        } else {
+            let symbol_idx = match def_type {
+                DefinitionType::Local => self.symbol_table.borrow().symbols.len(),
+                DefinitionType::Argument => {
+                    let idx = self.argument_idx;
+                    self.argument_idx += 1;
+                    idx
+                }
+            };
+
+            self.symbol_table.borrow_mut().insert_symbol(
+                pattern.clone(),
+                SymbolInfo {
+                    def_type,
+                    uses: 0,
+                    symbol_idx,
+                    span: *span,
+                },
+            );
+        }
+    }
 }
 
 impl<'a> Pass for SymbolTableBuilder<'a> {
-    type Input = (&'a Ast, DiagnosticsCell);
+    type Input = (&'a Program, DiagnosticsCell);
 
-    type Output = SymbolTable;
+    type Output = (SymbolTable, FunctionTable);
 
     fn run((ast, diagnostics): Self::Input) -> Self::Output {
         let mut builder = SymbolTableBuilder::new(diagnostics);
-        builder.visit_ast(ast);
-        builder.symbol_table.into_inner()
+        builder.visit_program(ast);
+
+        let main_pat = Pattern {
+            name: "main".to_owned(),
+            span: Default::default(),
+        };
+        match builder.functions.get_mut(&main_pat) {
+            Some(main) => {
+                main.uses += 1;
+            }
+            None => {
+                builder.diagnostics.borrow_mut().main_not_found();
+            }
+        }
+
+        (builder.symbol_table.into_inner(), builder.functions)
     }
 }
 
 impl<'a> Visitor for SymbolTableBuilder<'a> {
-    fn visit_if(&mut self, if_expr: &If) {
+    fn visit_function(&mut self, func: &Function) {
+        if self.functions.contains_key(&func.pattern) {
+            self.diagnostics
+                .borrow_mut()
+                .function_already_declared(&func.pattern.name, &func.pattern.span);
+        } else {
+            let local_idx = self.functions.len();
+            self.functions.insert(
+                func.pattern.clone(),
+                FunctionInfo {
+                    uses: 0,
+                    local_idx,
+                    span: func.span,
+                },
+            );
+        }
         let scope_idx = self.enter_scope();
+        func.parameters
+            .iter()
+            .for_each(|pat| self.define_variable(pat, &pat.span, DefinitionType::Argument));
+        func.body.walk(self);
+        self.exit_scope(scope_idx);
+    }
+
+    fn visit_if(&mut self, if_expr: &If) {
         if_expr.condition.walk(self);
+        let scope_idx = self.enter_scope();
         if_expr.then.walk(self);
         self.exit_scope(scope_idx);
     }
 
     fn visit_while(&mut self, while_expr: &While) {
-        let scope_idx = self.enter_scope();
         while_expr.condition.walk(self);
+        let scope_idx = self.enter_scope();
         while_expr.then.walk(self);
         self.exit_scope(scope_idx);
     }
 
     fn visit_definition(&mut self, def: &Definition) {
-        if self.symbol_table.borrow().is_shadowing(&def.pattern) {
-            self.diagnostics
-                .borrow_mut()
-                .symbol_already_declared(&def.pattern.name, &def.pattern.span);
-        } else {
-            let local_idx = self.symbol_table.borrow().variables.len();
-            self.symbol_table.borrow_mut().insert_variable(
-                def.pattern.clone(),
-                VariableInfo {
-                    uses: 0,
-                    local_idx,
-                    span: def.span,
-                },
-            );
-        }
-
+        self.define_variable(&def.pattern, &def.span, DefinitionType::Local);
         def.pattern.name.walk(self);
         def.value.walk(self);
     }

@@ -3,6 +3,7 @@ use alloc::rc::Rc;
 use alloc::string::String;
 use alloc::vec::Vec;
 use core::cell::RefCell;
+use core::fmt::{self, Display};
 
 use self::display::DiagnosticsDisplay;
 use crate::error::{CompilerError, Result};
@@ -14,20 +15,30 @@ mod display;
 
 #[derive(Debug)]
 pub struct Diagnostic {
-    pub kind: DiagnosticKind,
     pub message: String,
-    pub span: Span,
+    pub span: Option<Span>,
 }
 
+#[repr(u8)]
 #[derive(Debug)]
 pub enum DiagnosticKind {
     Error,
     Warning,
 }
 
+impl Display for DiagnosticKind {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            DiagnosticKind::Error => write!(f, "error"),
+            DiagnosticKind::Warning => write!(f, "warning"),
+        }
+    }
+}
+
 #[derive(Default, Debug)]
 pub struct DiagnosticBag {
-    pub diagnostics: Vec<Diagnostic>,
+    pub warnings: Vec<Diagnostic>,
+    pub errors: Vec<Diagnostic>,
 }
 
 pub type DiagnosticsCell = Rc<RefCell<DiagnosticBag>>;
@@ -35,37 +46,57 @@ pub type DiagnosticsCell = Rc<RefCell<DiagnosticBag>>;
 impl DiagnosticBag {
     pub fn new() -> DiagnosticsCell {
         let bag = Self {
-            diagnostics: Vec::new(),
+            warnings: Vec::new(),
+            errors: Vec::new(),
         };
 
         Rc::new(RefCell::new(bag))
     }
 
-    pub fn check(&self, src: &Source) -> Result<()> {
-        if !self.diagnostics.is_empty() {
-            let diagnostics_display = DiagnosticsDisplay::new(src, &self.diagnostics);
-            diagnostics_display.print()?;
-
-            return Err(CompilerError::Diagnostics);
-        }
-
-        Ok(())
+    #[cfg(test)]
+    pub fn is_empty(&self) -> bool {
+        self.warnings.is_empty() && self.errors.is_empty()
     }
 
-    fn report(&mut self, kind: DiagnosticKind, message: String, span: Span) {
-        self.diagnostics.push(Diagnostic {
-            kind,
-            message,
-            span,
-        });
+    pub fn check(&self, src: &Source) -> Result<()> {
+        let mut error: Option<CompilerError> = None;
+
+        if !self.warnings.is_empty() {
+            let diagnostics_display = DiagnosticsDisplay::new(src, &self.warnings);
+            diagnostics_display.print(DiagnosticKind::Warning)?;
+
+            error = Some(CompilerError::DiagnosticWarning);
+        }
+
+        if !self.errors.is_empty() {
+            let diagnostics_display = DiagnosticsDisplay::new(src, &self.errors);
+            diagnostics_display.print(DiagnosticKind::Error)?;
+
+            error = Some(CompilerError::DiagnosticError);
+        }
+
+        error.map_or(Ok(()), Err)
     }
 
     fn error(&mut self, message: String, span: Span) {
-        self.report(DiagnosticKind::Error, message, span);
+        self.errors.push(Diagnostic {
+            message,
+            span: Some(span),
+        });
+    }
+
+    fn program_error(&mut self, message: String) {
+        self.errors.push(Diagnostic {
+            message,
+            span: None,
+        });
     }
 
     fn warning(&mut self, message: String, span: Span) {
-        self.report(DiagnosticKind::Warning, message, span);
+        self.warnings.push(Diagnostic {
+            message,
+            span: Some(span),
+        });
     }
 
     pub fn expected_token(&mut self, expected: &Token, actual: &Token, span: &Span) {
@@ -102,9 +133,17 @@ impl DiagnosticBag {
         self.error(format!("unknown expression `{}`", token), span.clone());
     }
 
-    pub fn symbol_already_declared(&mut self, pattern: &String, span: &Span) {
+    pub fn variable_already_declared(&mut self, pattern: &String, span: &Span) {
         self.error(
-            format!("symbol: `{}` already exists in scope", pattern),
+            format!("variable: `{}` already exists in scope", pattern),
+            span.clone(),
+        );
+    }
+
+    pub fn function_already_declared(&mut self, pattern: &String, span: &Span) {
+        // TODO: better message maybe?
+        self.error(
+            format!("function: `{}` already exists", pattern),
             span.clone(),
         );
     }
@@ -128,7 +167,15 @@ impl DiagnosticBag {
         self.warning(format!("unused variable: `{}`", ident), span.clone());
     }
 
+    pub fn unused_function(&mut self, ident: &String, span: &Span) {
+        self.warning(format!("unused function: `{}`", ident), span.clone());
+    }
+
     pub fn empty_block(&mut self, span: &Span) {
         self.warning("empty block found".to_owned(), span.clone());
+    }
+
+    pub fn main_not_found(&mut self) {
+        self.program_error("`main` function not found".to_owned());
     }
 }

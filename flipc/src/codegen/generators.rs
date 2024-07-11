@@ -1,15 +1,56 @@
 use crate::ast::visitor::Walkable;
+use crate::passes::symbol_table::DefinitionType;
+use crate::Ast;
 use flipvm::op::{Instruction, Literal12Bit, Literal7Bit, Nibble, StackOp, TestOp};
 use flipvm::Register::*;
 
 use crate::ast::visitor::Visitor;
 use crate::ast::{
-    Assignment, BinOp, Binary, Definition, If, Literal, LiteralKind, Unary, Variable, While,
+    Assignment, BinOp, Binary, Call, Definition, Function, If, Literal, LiteralKind, Unary,
+    Variable, While,
 };
 
 use super::CodeGenerator;
 
 impl Visitor for CodeGenerator {
+    fn visit_function(&mut self, func: &Function) {
+        self.define_label(func.pattern.name.clone());
+
+        let local_off = format!("__internal_{}_local_offset", func.pattern.name);
+        self.addimm_future(SP, local_off.clone());
+
+        let scope_idx = self.enter_scope();
+
+        func.body.walk(self);
+        let local_count = self.symbol_table.borrow().local_count();
+        self.exit_scope(scope_idx);
+
+        self.emit_function_exit();
+        self.define_label_offset(local_off, local_count as u32 * 2);
+    }
+
+    fn visit_return(&mut self, ret: &Ast) {
+        ret.walk(self);
+        self.emit(Instruction::Stack(A, SP, StackOp::Pop));
+
+        // FIXME: when return exists emit function exit done twice
+        self.emit_function_exit();
+    }
+
+    fn visit_call(&mut self, call: &Call) {
+        for arg in call.arguments.iter().rev() {
+            arg.walk(self);
+        }
+
+        self.emit(Instruction::Stack(BP, SP, StackOp::Push));
+        self.emit(Instruction::Stack(PC, SP, StackOp::Push));
+        self.emit(Instruction::Add(SP, Zero, BP));
+        self.imm_future(PC, call.pattern.name.clone());
+
+        // Push return
+        self.emit(Instruction::Stack(A, SP, StackOp::Push));
+    }
+
     fn visit_if(&mut self, if_expr: &If) {
         let block_id = format!("{}{}", if_expr.span.start, if_expr.span.end);
         let true_label = format!("lbl_{}_if_true", block_id);
@@ -20,9 +61,9 @@ impl Visitor for CodeGenerator {
         self.emit(Instruction::Stack(C, SP, StackOp::Pop));
         self.emit(Instruction::Test(C, Zero, TestOp::BothZero));
         self.emit(Instruction::AddIf(PC, PC, Nibble::new_checked(2).unwrap()));
-        self.emit_jump(PC, true_label.clone());
+        self.imm_future(PC, true_label.clone());
 
-        self.emit_jump(PC, out_label.clone());
+        self.imm_future(PC, out_label.clone());
 
         // if cond == true
         self.define_label(true_label);
@@ -30,10 +71,8 @@ impl Visitor for CodeGenerator {
         if_expr.then.walk(self);
         self.exit_scope(scope_idx);
 
-        self.emit_jump(PC, out_label.clone());
+        self.imm_future(PC, out_label.clone());
         self.define_label(out_label);
-
-        assert!(self.unlinked_references.is_empty()); // TODO: Do i keep this? + error handling
     }
 
     fn visit_while(&mut self, while_expr: &While) {
@@ -43,20 +82,18 @@ impl Visitor for CodeGenerator {
         self.define_label(cond_label.clone());
         while_expr.condition.walk(self);
 
+        // Cond
         self.emit(Instruction::Stack(C, SP, StackOp::Pop));
         self.emit(Instruction::Test(C, Zero, TestOp::EitherNonZero));
         self.emit(Instruction::AddIf(PC, PC, Nibble::new_checked(2).unwrap()));
-        self.emit_jump(PC, out_label.clone());
+        self.imm_future(PC, out_label.clone());
 
+        // Resolution
         let scope_idx = self.enter_scope();
         while_expr.then.walk(self);
         self.exit_scope(scope_idx);
-        self.emit_jump(PC, cond_label);
+        self.imm_future(PC, cond_label);
         self.define_label(out_label);
-
-        // TODO: Do i keep this? + error handling
-        // Techincaly Instruction::Invalid will emit error
-        assert!(self.unlinked_references.is_empty());
     }
 
     fn visit_definition(&mut self, def: &Definition) {
@@ -65,11 +102,12 @@ impl Visitor for CodeGenerator {
         let local_idx = self
             .symbol_table
             .borrow()
-            .lookup_variable(&def.pattern)
+            .lookup_symbol(&def.pattern)
             .unwrap()
-            .local_idx;
+            .symbol_idx;
         let addr = local_idx as u8 * 2;
 
+        // Walk value to stack and store
         self.emit(Instruction::Stack(C, SP, StackOp::Pop));
         self.emit(Instruction::Add(BP, Zero, B));
         self.emit(Instruction::AddImm(
@@ -85,11 +123,12 @@ impl Visitor for CodeGenerator {
         let local_idx = self
             .symbol_table
             .borrow()
-            .lookup_variable(&def.pattern)
+            .lookup_symbol(&def.pattern)
             .unwrap()
-            .local_idx;
+            .symbol_idx;
         let addr = local_idx as u8 * 2;
 
+        // Walk value to stack and store
         self.emit(Instruction::Stack(C, SP, StackOp::Pop));
         self.emit(Instruction::Add(BP, Zero, B));
         self.emit(Instruction::AddImm(
@@ -100,21 +139,32 @@ impl Visitor for CodeGenerator {
     }
 
     fn visit_variable(&mut self, var: &Variable) {
-        let local_idx = self
-            .symbol_table
-            .borrow()
-            .lookup_variable(var)
-            .unwrap()
-            .local_idx;
-        let addr = local_idx as u8 * 2;
+        let (var_idx, def_type) = {
+            let symbol_table = self.symbol_table.borrow();
+            let var_info = symbol_table.lookup_symbol(var).unwrap();
+            (var_info.symbol_idx, var_info.def_type.clone())
+        };
 
-        self.emit(Instruction::Add(BP, Zero, C));
-        self.emit(Instruction::AddImm(
-            C,
-            Literal7Bit::new_checked(addr).unwrap(),
-        ));
-        self.emit(Instruction::LoadWord(C, C, Zero));
-        self.emit(Instruction::Stack(C, SP, StackOp::Push));
+        match def_type {
+            DefinitionType::Local => {
+                // Load value from stack
+                self.emit(Instruction::Add(BP, Zero, C));
+                self.emit(Instruction::AddImm(
+                    C,
+                    Literal7Bit::new_checked(var_idx as u8 * 2).unwrap(),
+                ));
+                self.emit(Instruction::LoadWord(C, C, Zero));
+                self.emit(Instruction::Stack(C, SP, StackOp::Push));
+            }
+            DefinitionType::Argument => {
+                self.emit(Instruction::LoadStackOffset(
+                    C,
+                    BP,
+                    Nibble::new_checked(var_idx as u8 + 3).unwrap(),
+                ));
+                self.emit(Instruction::Stack(C, SP, StackOp::Push));
+            }
+        }
     }
 
     fn visit_binary(&mut self, bin: &Binary) {
@@ -142,11 +192,41 @@ impl Visitor for CodeGenerator {
     fn visit_literal(&mut self, lit: &Literal) {
         match &lit.kind {
             LiteralKind::Int(i) => {
-                self.emit(Instruction::Imm(
-                    C,
-                    Literal12Bit::new_checked(*i as u16).unwrap(),
-                ));
-                self.emit(Instruction::Stack(C, SP, StackOp::Push));
+                if *i <= 0xfff {
+                    self.emit(Instruction::Imm(
+                        C,
+                        Literal12Bit::new_checked(*i as u16).unwrap(),
+                    ));
+                    self.emit(Instruction::Stack(C, SP, StackOp::Push));
+                } else if *i <= 0xffff && (i & 0xf) == 0 {
+                    self.emit(Instruction::Imm(
+                        C,
+                        Literal12Bit::new_checked((i >> 4) as u16).unwrap(),
+                    ));
+                    self.emit(Instruction::ShiftLeft(
+                        C,
+                        C,
+                        Nibble::new_checked(4).unwrap(),
+                    ));
+                    self.emit(Instruction::Stack(C, SP, StackOp::Push));
+                } else if *i <= 0xffff {
+                    self.emit(Instruction::Imm(
+                        C,
+                        Literal12Bit::new_checked((i >> 4) as u16).unwrap(),
+                    ));
+                    self.emit(Instruction::ShiftLeft(
+                        C,
+                        C,
+                        Nibble::new_checked(4).unwrap(),
+                    ));
+                    self.emit(Instruction::AddImm(
+                        C,
+                        Literal7Bit::new_checked((i & 0xf) as u8).unwrap(),
+                    ));
+                    self.emit(Instruction::Stack(C, SP, StackOp::Push));
+                } else {
+                    unimplemented!("int too large");
+                }
             }
             LiteralKind::String(_) => unimplemented!("string literal"),
         }

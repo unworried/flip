@@ -23,7 +23,24 @@ fn main() {
     //let line = r#"let x = 1; x = x + 1;"#;
     //let line = "while \"TMP\" { \nlet x = \"hello, world!\"; \nlet y = \"hello, world 2!\"; \nlet z = \"hello, world 3!\"; \n };";
 
-    let line = r#"while 1 { let x = 7; };"#;
+    //let line = r#"main() { if 1 <= 1 { if 1 <= 1 { let x = 1; }; }; }"#;
+    let line = r#"main() {
+        return fib(10);
+    }
+    
+    fib(n) {
+        if n == 0 {
+            return 0;
+        };
+
+        if n == 1 {
+            return 1;
+        };
+
+        let t1 = fib(n - 1);
+        let t2 = fib(n - 2);
+        return t1 + t2;
+    }"#;
     match frontend::check(line) {
         Ok(_) => eprintln!("No errors found"),
         Err(e) => eprintln!("{}", e),

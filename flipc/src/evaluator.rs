@@ -64,16 +64,18 @@ mod tests {
 
     use super::*;
     use crate::diagnostics::DiagnosticBag;
+    use crate::lexer::Token;
+    use crate::parser::combinators::parse_sequence;
     use crate::parser::Parser;
 
     fn assert_eval(input: &str, expected: f64) {
         let mut lexer = crate::lexer::Lexer::new(input.to_string());
         let diagnostics = DiagnosticBag::new();
         let mut parser = Parser::new(&mut lexer, diagnostics);
-        let program = parser.parse();
+        let ast = parse_sequence(&mut parser, Token::Eof);
         let mut evaluator = Evaluator::default();
-        evaluator.visit_ast(&program);
-        println!("{}", program);
+        evaluator.visit_ast(&ast);
+        println!("{:#?}", ast);
         assert_eq!(evaluator.last_value.unwrap(), expected);
     }
 

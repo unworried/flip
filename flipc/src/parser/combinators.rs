@@ -1,9 +1,100 @@
 use std::cmp;
 
-use crate::ast::{Ast, BinOp, Pattern, UnOp};
+use crate::ast::{Ast, BinOp, Function, Pattern, Program, UnOp};
 use crate::lexer::Token;
 use crate::parser::Parser;
 use crate::span::Span;
+
+pub fn parse_program(parser: &mut Parser) -> Program {
+    let mut functions = Vec::new();
+    while !parser.current_token_is(&Token::Eof) {
+        while parser.current_token_is(&Token::Newline) {
+            parser.step();
+        }
+
+        // TODO: Review this
+        match parse_function(parser) {
+            Some(func) => functions.push(func),
+            None => parser.step(),
+        }
+
+        while parser.current_token_is(&Token::Newline) {
+            parser.step();
+        }
+    }
+
+    Program { functions }
+}
+
+pub fn parse_function(parser: &mut Parser) -> Option<Function> {
+    let (token, span) = parser.consume();
+    match token {
+        Token::Ident(name) => {
+            // Parameters
+            parser.expect(Token::LParen);
+            let parameters = parse_parameters(parser);
+            parser.expect(Token::RParen);
+
+            // Body Block
+            parser.expect(Token::LBrace);
+            let body = parse_sequence(parser, Token::RBrace);
+            parser.expect(Token::RBrace);
+
+            let pattern = Pattern {
+                name: name.to_owned(),
+                span,
+            };
+
+            // TODO: Test this - Allows optional `;` at end of function
+            parser.optional(Token::SemiColon);
+
+            Some(Function {
+                pattern,
+                parameters,
+                body,
+                span: Span::combine(vec![&span, &parser.current_span()]),
+            })
+        }
+        _ => {
+            parser
+                .diagnostics
+                .borrow_mut()
+                .unexpected_token(&token, &span);
+            None
+        }
+    }
+    // FIXME: ...
+    //panic!("Implement error handling: {}", parser.current_token());
+}
+
+// TODO: Test
+fn parse_parameters(parser: &mut Parser) -> Vec<Pattern> {
+    let mut parameters: Vec<Pattern> = Vec::new();
+    while !parser.current_token_is(&Token::RParen) {
+        let (token, param_span) = parser.consume();
+        match token {
+            Token::Ident(name) => {
+                parameters.push(Pattern {
+                    name: name.to_owned(),
+                    span: param_span,
+                });
+
+                if !parser.current_token_is(&Token::RParen) {
+                    parser.expect(Token::Comma);
+                }
+            }
+            _ => {
+                parser
+                    .diagnostics
+                    .borrow_mut()
+                    .unexpected_token(&token, &param_span);
+                parser.step_until(&Token::RParen);
+                break;
+            }
+        }
+    }
+    parameters
+}
 
 pub fn parse_sequence(parser: &mut Parser, end_delim: Token) -> Ast {
     let start_span = parser.current_span();
@@ -38,10 +129,14 @@ pub fn parse_statement(parser: &mut Parser) -> Ast {
                 name: name.to_owned(),
                 span,
             };
-            parse_assignment(parser, pattern)
+            parse_assignment_or_call(parser, pattern)
         }
         Token::If => parse_if(parser),
         Token::While => parse_while(parser),
+        Token::Return => {
+            let value = parse_expression(parser);
+            Ast::return_expr(value)
+        }
         _ => {
             parser
                 .diagnostics
@@ -86,7 +181,7 @@ pub fn parse_let(parser: &mut Parser) -> Ast {
 
     let pattern = Pattern {
         name,
-        span: start_span.clone(),
+        span: start_span,
     };
 
     let value = parse_expression(parser);
@@ -98,12 +193,51 @@ pub fn parse_let(parser: &mut Parser) -> Ast {
     )
 }
 
+pub fn parse_assignment_or_call(parser: &mut Parser, pattern: Pattern) -> Ast {
+    let (token, span) = parser.consume();
+
+    match token {
+        Token::Assign => parse_assignment(parser, pattern),
+        Token::LParen => parse_call(parser, pattern, span),
+        _ => {
+            parser.step_until(&Token::SemiColon);
+            // TODO: Add Err?
+            Ast::Error
+        }
+    }
+}
+
+fn parse_call(parser: &mut Parser, pattern: Pattern, start_span: Span) -> Ast {
+    let args = parse_arguments(parser);
+    parser.expect(Token::RParen);
+    Ast::call(
+        pattern,
+        args,
+        Span::combine(vec![&start_span, &parser.current_span()]),
+    )
+}
+
+// TODO: Test
+fn parse_arguments(parser: &mut Parser) -> Vec<Ast> {
+    let mut args: Vec<Ast> = Vec::new();
+    while !parser.current_token_is(&Token::RParen) {
+        args.push(parse_expression(parser));
+
+        if !parser.current_token_is(&Token::RParen) {
+            parser.expect(Token::Comma);
+        }
+    }
+
+    args
+}
+
 pub fn parse_assignment(parser: &mut Parser, pattern: Pattern) -> Ast {
-    let start_span = parser.current_span();
+    let start_span = pattern.span;
+    /*let start_span = parser.current_span();
     if !parser.expect_with_outcome(Token::Assign) {
         parser.step_until(&Token::SemiColon);
         return Ast::Error;
-    }
+    }*/
 
     let value = parse_expression(parser);
 
@@ -173,7 +307,7 @@ pub fn parse_unary(parser: &mut Parser) -> Ast {
         _ => return Ast::Error,
     };
 
-    /*
+    /* FIXME:
      * Should this really be caught here?
      * Catches cases where whitespace between operator and expression
      * e.g. - 1, let foo = - bar;
@@ -199,7 +333,21 @@ pub fn parse_primary(parser: &mut Parser) -> Ast {
         Token::String(value) => Ast::string(value.to_owned(), span),
         Token::LParen => parse_group(parser),
         // Grammar: (identifier) => Token::Ident
-        Token::Ident(symbol) => Ast::variable(symbol.to_owned(), span),
+        Token::Ident(symbol) => {
+            // Func Call Check
+            if parser.current_token_is(&Token::LParen) {
+                parser.expect(Token::LParen);
+                let pattern = Pattern {
+                    name: symbol.to_owned(),
+                    span,
+                };
+
+                return parse_call(parser, pattern, span);
+            }
+
+            // Var
+            Ast::variable(symbol.to_owned(), span)
+        }
         _ => panic!("Really shouldn't reach here, implement fatal error instead"),
     }
 }

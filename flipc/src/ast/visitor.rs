@@ -1,5 +1,6 @@
 use super::{
-    Assignment, Ast, Binary, Definition, Ident, If, Literal, Sequence, Unary, Variable, While,
+    Assignment, Ast, Binary, Call, Definition, Function, Ident, If, Literal, Program, Sequence,
+    Unary, Variable, While,
 };
 
 pub trait Walkable {
@@ -7,12 +8,20 @@ pub trait Walkable {
 }
 
 pub trait Visitor: Sized {
+    fn visit_program(&mut self, program: &Program) {
+        program.functions.iter().for_each(|func| func.walk(self));
+    }
+
+    fn visit_function(&mut self, program: &Function) {
+        program.body.walk(self);
+    }
+
     fn visit_ast(&mut self, ast: &Ast) {
         ast.walk(self);
     }
 
     fn visit_sequence(&mut self, seq: &Sequence) {
-        seq.statements.iter().for_each(|stmt| stmt.walk(self));
+        seq.expressions.iter().for_each(|stmt| stmt.walk(self));
     }
 
     fn visit_binary(&mut self, bin: &Binary) {
@@ -47,6 +56,20 @@ pub trait Visitor: Sized {
     }
 
     fn visit_variable(&mut self, _var: &Variable) {}
+
+    fn visit_call(&mut self, call: &Call) {
+        call.arguments.iter().for_each(|arg| arg.walk(self));
+    }
+
+    fn visit_return(&mut self, ret: &Ast) {
+        ret.walk(self);
+    }
+}
+
+impl Walkable for Function {
+    fn walk<V: Visitor>(&self, visitor: &mut V) {
+        visitor.visit_function(self);
+    }
 }
 
 impl Walkable for Ast {
@@ -61,6 +84,8 @@ impl Walkable for Ast {
             Ast::Binary(bin) => visitor.visit_binary(bin),
             Ast::Unary(un) => visitor.visit_unary(un),
             Ast::Variable(var) => visitor.visit_variable(var),
+            Ast::Call(call) => visitor.visit_call(call),
+            Ast::Return(ret) => visitor.visit_return(ret),
             Ast::Error => {}
         }
     }
