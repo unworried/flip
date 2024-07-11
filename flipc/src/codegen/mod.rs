@@ -9,6 +9,8 @@ use flipvm::op::{Instruction, Literal12Bit, Literal7Bit, Nibble, StackOp};
 use flipvm::Register::{self, *};
 
 mod generators;
+#[cfg(test)]
+mod tests;
 
 pub struct CodeGenerator {
     inital_offset: u32,
