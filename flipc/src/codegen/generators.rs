@@ -192,11 +192,41 @@ impl Visitor for CodeGenerator {
     fn visit_literal(&mut self, lit: &Literal) {
         match &lit.kind {
             LiteralKind::Int(i) => {
-                self.emit(Instruction::Imm(
-                    C,
-                    Literal12Bit::new_checked(*i as u16).unwrap(),
-                ));
-                self.emit(Instruction::Stack(C, SP, StackOp::Push));
+                if *i <= 0xfff {
+                    self.emit(Instruction::Imm(
+                        C,
+                        Literal12Bit::new_checked(*i as u16).unwrap(),
+                    ));
+                    self.emit(Instruction::Stack(C, SP, StackOp::Push));
+                } else if *i <= 0xffff && (i & 0xf) == 0 {
+                    self.emit(Instruction::Imm(
+                        C,
+                        Literal12Bit::new_checked((i >> 4) as u16).unwrap(),
+                    ));
+                    self.emit(Instruction::ShiftLeft(
+                        C,
+                        C,
+                        Nibble::new_checked(4).unwrap(),
+                    ));
+                    self.emit(Instruction::Stack(C, SP, StackOp::Push));
+                } else if *i <= 0xffff {
+                    self.emit(Instruction::Imm(
+                        C,
+                        Literal12Bit::new_checked((i >> 4) as u16).unwrap(),
+                    ));
+                    self.emit(Instruction::ShiftLeft(
+                        C,
+                        C,
+                        Nibble::new_checked(4).unwrap(),
+                    ));
+                    self.emit(Instruction::AddImm(
+                        C,
+                        Literal7Bit::new_checked((i & 0xf) as u8).unwrap(),
+                    ));
+                    self.emit(Instruction::Stack(C, SP, StackOp::Push));
+                } else {
+                    unimplemented!("int too large");
+                }
             }
             LiteralKind::String(_) => unimplemented!("string literal"),
         }
