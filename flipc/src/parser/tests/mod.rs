@@ -4,8 +4,8 @@ use self::validator::{assert_ast, assert_program, ASTNode};
 
 mod controller;
 mod expression;
-mod validator;
 mod function;
+mod validator;
 
 #[test]
 fn simple_program() {

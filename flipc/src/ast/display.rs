@@ -136,7 +136,6 @@ impl Visitor for AstDisplay {
             self.indent -= 1;
         }
         self.indent -= 1;
-
     }
 
     fn visit_binary(&mut self, bin: &Binary) {

@@ -174,7 +174,6 @@ fn function_parameters_missing_comma() {
     )]);
 
     assert_program(input, expected);
-
 }
 
 #[test]
