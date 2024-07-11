@@ -7,3 +7,12 @@ version = "0.1.0"
 
 [dependencies]
 flipvm = { path = "../flipvm" }
+
+[[bin]]
+name = "debug"
+
+[[bin]]
+name = "repl"
+
+[[bin]]
+name = "compile"

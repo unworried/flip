@@ -8,6 +8,8 @@ mod ast;
 pub use ast::Ast;
 
 mod codegen;
+pub use codegen::CodeGenerator;
+
 mod diagnostics;
 mod error;
 mod escape_codes;

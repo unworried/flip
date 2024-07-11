@@ -1,20 +1,17 @@
 //! frontend.rs - Module for the compiler frontend wrapper. The frontend is responsible for taking
 //! the input source code and converting it into an abstract syntax tree (AST) and then checking the
 //! AST for syntax and semantic errors.
-use std::io::stdout;
-use std::io::Write;
-
-use crate::codegen::CodeGenerator;
+use crate::ast::Program;
 use crate::diagnostics::DiagnosticBag;
 use crate::error::{CompilerError, Result};
 use crate::lexer::Lexer;
 use crate::parser::Parser;
 use crate::passes::nameresolver::NameResolver;
 use crate::passes::symbol_table::SymbolTableBuilder;
-use crate::passes::Pass;
+use crate::passes::{Pass, SymbolTable};
 use crate::source::Source;
 
-pub fn check(input: &str) -> Result<()> {
+pub fn check(input: &str) -> Result<(Program, SymbolTable)> {
     let diagnostics = DiagnosticBag::new();
 
     // Fix to make lexer take src
@@ -43,17 +40,5 @@ pub fn check(input: &str) -> Result<()> {
         Err(e) => Err(e),
     }?;
 
-    let gen = CodeGenerator::run(&root, st, 0x0);
-    let mut stdout = stdout().lock();
-    let ins = gen
-        .iter()
-        .map(|i| i.to_string())
-        .collect::<Vec<String>>()
-        .join("\n");
-    stdout
-        .write_all(ins.as_bytes())
-        .map_err(|e| format!("{}", e))
-        .unwrap();
-
-    Ok(())
+    Ok((root, st))
 }
