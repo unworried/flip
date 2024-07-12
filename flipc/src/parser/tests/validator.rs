@@ -58,6 +58,7 @@ pub enum ASTNode {
     While,
     Let,
     Integer(u64),
+    Char(char),
     String(String),
     Binary,
     Unary,
@@ -162,6 +163,7 @@ impl Visitor for AstValidator {
     fn visit_literal(&mut self, lit: &Literal) {
         match &lit.kind {
             LiteralKind::Int(int) => self.actual.push(ASTNode::Integer(int.to_owned())),
+            LiteralKind::Char(ch) => self.actual.push(ASTNode::Char(ch.to_owned())),
             LiteralKind::String(string) => self.actual.push(ASTNode::String(string.to_owned())),
         }
     }

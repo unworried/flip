@@ -228,6 +228,13 @@ impl Visitor for CodeGenerator {
                     unimplemented!("int too large");
                 }
             }
+            LiteralKind::Char(ch) => {
+                self.emit(Instruction::Imm(
+                    C,
+                    Literal12Bit::new_checked(*ch as u16).unwrap(),
+                ));
+                self.emit(Instruction::Stack(C, SP, StackOp::Push));
+            }
             LiteralKind::String(_) => unimplemented!("string literal"),
         }
     }

@@ -15,6 +15,7 @@ pub enum Token {
 
     // Literals
     Int(u64),
+    Char(char),
     String(String),
 
     /// Operators
@@ -34,7 +35,6 @@ pub enum Token {
     If,
     Else,
     While,
-    Print,
     Return,
 
     // Separators
@@ -55,6 +55,7 @@ impl Display for Token {
             Token::Eof => "EoF",
             Token::Newline => r#"\n"#,
             Token::Int(val) => return write!(f, "Integer({})", val),
+            Token::Char(ch) => return write!(f, "Char({})", ch),
             Token::String(val) => return write!(f, "String({})", val),
             Token::Equal => "==",
             Token::NotEqual => "!=",
@@ -70,7 +71,6 @@ impl Display for Token {
             Token::If => "if",
             Token::Else => "else",
             Token::While => "while",
-            Token::Print => "print",
             Token::Return => "return",
             Token::LParen => "(",
             Token::RParen => ")",
@@ -135,7 +135,6 @@ impl From<String> for Token {
             "if" => Self::If,
             "else" => Self::Else,
             "while" => Self::While,
-            "print" => Self::Print,
             "return" => Self::Return,
 
             _ => Self::Ident(value),
@@ -248,7 +247,6 @@ mod tests {
         assert_eq!(Token::from(String::from("if")), Token::If);
         assert_eq!(Token::from(String::from("else")), Token::Else);
         assert_eq!(Token::from(String::from("while")), Token::While);
-        assert_eq!(Token::from(String::from("print")), Token::Print);
         assert_eq!(Token::from(String::from("return")), Token::Return);
         assert_eq!(
             Token::from(String::from("foobar")),

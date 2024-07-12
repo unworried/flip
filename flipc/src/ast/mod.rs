@@ -81,6 +81,13 @@ impl Ast {
         })
     }
 
+    pub fn char(value: char, span: Span) -> Ast {
+        Ast::Literal(Literal {
+            kind: LiteralKind::Char(value),
+            span,
+        })
+    }
+
     pub fn string(value: String, span: Span) -> Ast {
         Ast::Literal(Literal {
             kind: LiteralKind::String(value),
@@ -250,6 +257,7 @@ pub struct Literal {
 #[derive(Debug, Clone)]
 pub enum LiteralKind {
     Int(u64),
+    Char(char),
     String(String),
 }
 

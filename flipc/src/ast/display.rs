@@ -161,6 +161,7 @@ impl Visitor for AstDisplay {
     fn visit_literal(&mut self, lit: &Literal) {
         match &lit.kind {
             LiteralKind::Int(i) => self.result.push_str(&i.to_string()),
+            LiteralKind::Char(ch) => self.result.push_str(&format!("'{}'", ch)),
             LiteralKind::String(s) => self.result.push_str(&format!("\"{}\"", s)),
         }
     }

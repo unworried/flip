@@ -330,6 +330,7 @@ pub fn parse_primary(parser: &mut Parser) -> Ast {
     match &token {
         // Temp before i split into parse_int and parse string
         Token::Int(value) => Ast::integer(value.to_owned(), span),
+        Token::Char(ch) => Ast::char(*ch, span),
         Token::String(value) => Ast::string(value.to_owned(), span),
         Token::LParen => parse_group(parser),
         // Grammar: (identifier) => Token::Ident

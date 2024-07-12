@@ -32,6 +32,19 @@ fn literal_int() {
 }
 
 #[test]
+fn literal_char() {
+    let input = "let foo = 'a';";
+
+    let expected = vec![
+        ASTNode::Let,
+        ASTNode::Variable("foo".to_string()),
+        ASTNode::Char('a'),
+    ];
+
+    assert_ast(input, expected);
+}
+
+#[test]
 fn literal_string() {
     let input = "let foo = \"hello, world!\";";
 

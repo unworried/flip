@@ -60,6 +60,16 @@ impl Lexer {
 
             b'0'..=b'9' => Token::Int(self.read_integer()),
 
+            b'\'' => {
+                self.read_char();
+                let ch = self.ch;
+                self.read_char();
+                if self.ch != b'\'' {
+                    panic!("Unexpected {}: missing trailing \'", self.ch as char);
+                }
+                Token::Char(ch as char)
+            }
+
             b'a'..=b'z' | b'A'..=b'Z' => Token::from(self.read_identifier()),
 
             b'=' | b'!' | b'>' | b'<' => {
