@@ -7,9 +7,6 @@ extern crate alloc;
 mod ast;
 pub use ast::Ast;
 
-mod codegen;
-pub use codegen::CodeGenerator;
-
 mod diagnostics;
 mod error;
 mod escape_codes;
@@ -18,5 +15,6 @@ pub mod frontend;
 mod lexer;
 mod parser;
 mod passes;
+pub use passes::CodeGenerator;
 mod source;
 mod span;
