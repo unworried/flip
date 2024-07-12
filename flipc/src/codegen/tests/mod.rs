@@ -1,3 +1,6 @@
+use std::cell::RefCell;
+use std::collections::HashMap;
+
 use crate::codegen::Register::SP;
 use flipvm::op::{Instruction, Literal12Bit, Literal7Bit, Nibble, StackOp, TestOp};
 use flipvm::Register::*;
@@ -10,6 +13,22 @@ use crate::passes::symbol_table::SymbolTableBuilder;
 use crate::passes::Pass;
 
 use super::CodeGenerator;
+
+mod expression;
+
+impl Default for CodeGenerator {
+    fn default() -> Self {
+        Self {
+            inital_offset: 0,
+            current_offset: 0,
+            instructions: Vec::new(),
+            symbol_table: RefCell::new(Default::default()),
+            scope_idx: 0,
+            labels: HashMap::new(),
+            unlinked_references: Vec::new(),
+        }
+    }
+}
 
 #[test]
 fn simple_program() {
