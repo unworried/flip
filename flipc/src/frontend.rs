@@ -8,6 +8,7 @@ use crate::lexer::Lexer;
 use crate::parser::Parser;
 use crate::passes::nameresolver::NameResolver;
 use crate::passes::symbol_table::SymbolTableBuilder;
+use crate::passes::typechecker::TypeChecker;
 use crate::passes::{Pass, SymbolTable};
 use crate::source::Source;
 
@@ -25,7 +26,8 @@ pub fn check(input: &str) -> Result<(Program, SymbolTable)> {
     // let st = nameres.resolve(&mut root);
     let (st, mut ft) = SymbolTableBuilder::run((&root, diagnostics.clone()));
     let st = NameResolver::run((&mut root, st, &mut ft, diagnostics.clone()));
-    //eprintln!("{:#?}", st);
+    //let st = TypeChecker::run((&mut root, st, &mut ft, diagnostics.clone()));
+    eprintln!("{:#?}", st);
 
     eprintln!();
     eprintln!("{}", root);

@@ -110,7 +110,7 @@ impl<'a> Pass for NameResolver<'a> {
         resolver.check_functions();
 
         resolver.check_usage(); // Fix check at root scope. Remove once functions are added.
-        resolver.symbol_table.into_inner()
+        resolver.symbol_table.into_inner() // Should this really be returned like this?
     }
 }
 

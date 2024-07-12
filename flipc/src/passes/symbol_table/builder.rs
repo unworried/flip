@@ -68,6 +68,7 @@ impl SymbolTableBuilder<'_> {
             self.symbol_table.borrow_mut().insert_symbol(
                 pattern.clone(),
                 SymbolInfo {
+                    ty: None,
                     def_type,
                     uses: 0,
                     symbol_idx,

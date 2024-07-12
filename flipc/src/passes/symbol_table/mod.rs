@@ -10,10 +10,18 @@ pub use builder::SymbolTableBuilder;
 
 pub type FunctionTable = HashMap<Pattern, FunctionInfo>;
 
+#[derive(Debug)]
+pub enum Type {
+    Int,
+    Char,
+    String,
+    Bool,
+}
+
 #[derive(Debug, Default)]
 pub struct SymbolInfo {
     // TODO: Implement Types
-    // type_: Type,
+    pub ty: Option<Type>,
     pub def_type: DefinitionType,
     pub uses: usize,
     pub symbol_idx: usize,
