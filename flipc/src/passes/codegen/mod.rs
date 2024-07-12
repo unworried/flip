@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::marker::PhantomData;
 
 use crate::ast::visitor::Visitor;
 use crate::ast::Program;
@@ -8,11 +9,13 @@ use crate::passes::SymbolTable;
 use flipvm::op::{Instruction, Literal12Bit, Literal7Bit, Nibble, StackOp};
 use flipvm::Register::{self, *};
 
+use super::Pass;
+
 mod generators;
 #[cfg(test)]
 mod tests;
 
-pub struct CodeGenerator {
+pub struct CodeGenerator<'a> {
     inital_offset: u32,
     current_offset: u32,
 
@@ -25,6 +28,8 @@ pub struct CodeGenerator {
     // TODO: Look into alternatives that arent O(n)
     //unlinked_references: HashMap<String, Vec<(usize, Register)>>, // O(1)
     unlinked_references: Vec<(usize, FutureType, Register, String)>,
+
+    _phantom: PhantomData<&'a ()>,
 }
 
 #[repr(u8)]
@@ -33,9 +38,12 @@ enum FutureType {
     AddImm,
 }
 
-// FIXME: Impl Pass?
-impl CodeGenerator {
-    pub fn run(ast: &Program, symbol_table: SymbolTable, inital_offset: u32) -> Vec<Instruction> {
+impl<'a> Pass for CodeGenerator<'a> {
+    type Input = (&'a Program, SymbolTable, u32);
+
+    type Output = Vec<Instruction>;
+
+    fn run((ast, symbol_table, inital_offset): Self::Input) -> Self::Output {
         let mut gen = CodeGenerator {
             inital_offset,
             current_offset: inital_offset,
@@ -44,6 +52,7 @@ impl CodeGenerator {
             scope_idx: 0,
             labels: HashMap::new(),
             unlinked_references: Vec::new(),
+            _phantom: PhantomData,
         };
 
         gen.emit_init();
@@ -55,7 +64,10 @@ impl CodeGenerator {
 
         gen.instructions
     }
+}
 
+// FIXME: Impl Pass?
+impl CodeGenerator<'_> {
     fn emit_init(&mut self) {
         self.emit(Instruction::Imm(
             SP,

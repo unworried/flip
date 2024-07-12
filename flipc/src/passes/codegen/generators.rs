@@ -12,7 +12,7 @@ use crate::ast::{
 
 use super::CodeGenerator;
 
-impl Visitor for CodeGenerator {
+impl Visitor for CodeGenerator<'_> {
     fn visit_function(&mut self, func: &Function) {
         self.define_label(func.pattern.name.clone());
 

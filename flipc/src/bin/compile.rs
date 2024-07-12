@@ -1,3 +1,4 @@
+use flipc::Pass;
 use std::env;
 use std::fs::File;
 use std::io::{Read, Write};
@@ -30,7 +31,7 @@ fn main() -> Result<(), String> {
     let code = String::from_utf8(content).map_err(|e| format!("failed to parse: {}", e))?;
 
     let (root, st) = frontend::check(&code).map_err(|e| format!("{}", e))?;
-    let instructions = CodeGenerator::run(&root, st, 0x0);
+    let instructions = CodeGenerator::run((&root, st, 0x0));
 
     let mut bytecode: Vec<u8> = Vec::new();
     for i in instructions {

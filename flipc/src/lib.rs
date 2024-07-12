@@ -16,5 +16,6 @@ mod lexer;
 mod parser;
 mod passes;
 pub use passes::CodeGenerator;
+pub use passes::Pass;
 mod source;
 mod span;

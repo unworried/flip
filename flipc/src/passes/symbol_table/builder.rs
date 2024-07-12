@@ -104,7 +104,7 @@ impl<'a> Pass for SymbolTableBuilder<'a> {
     }
 }
 
-impl<'a> Visitor for SymbolTableBuilder<'a> {
+impl Visitor for SymbolTableBuilder<'_> {
     fn visit_function(&mut self, func: &Function) {
         if self.functions.contains_key(&func.pattern) {
             self.diagnostics
