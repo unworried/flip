@@ -3,6 +3,7 @@ use flipvm::Register;
 
 use crate::ast::visitor::Visitor;
 use crate::ast::{Literal, LiteralKind};
+use crate::passes::SymbolTable;
 use crate::{Ast, CodeGenerator};
 
 #[test]
@@ -12,7 +13,8 @@ fn literal_int() {
         span: Default::default(),
     });
 
-    let mut gen = CodeGenerator::default();
+    let st = SymbolTable::new();
+    let mut gen = CodeGenerator::new(&st, 0x0);
 
     gen.visit_ast(&ast);
 
@@ -31,7 +33,8 @@ fn literal_char() {
         span: Default::default(),
     });
 
-    let mut gen = CodeGenerator::default();
+    let st = SymbolTable::new();
+    let mut gen = CodeGenerator::new(&st, 0x0);
 
     gen.visit_ast(&ast);
 

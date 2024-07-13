@@ -44,17 +44,7 @@ impl<'a> Pass for CodeGenerator<'a> {
     type Output = Vec<Instruction>;
 
     fn run((ast, symbol_table, inital_offset): Self::Input) -> Self::Output {
-        let mut gen = CodeGenerator {
-            inital_offset,
-            current_offset: inital_offset,
-            instructions: Vec::new(),
-            symbol_table,
-            max_scope: 0,
-            current_scope: 0,
-            labels: HashMap::new(),
-            unlinked_references: Vec::new(),
-            _phantom: PhantomData,
-        };
+        let mut gen = CodeGenerator::new(symbol_table, inital_offset);
 
         gen.emit_init();
         gen.visit_program(ast);
@@ -68,7 +58,21 @@ impl<'a> Pass for CodeGenerator<'a> {
 }
 
 // FIXME: Impl Pass?
-impl CodeGenerator<'_> {
+impl<'a> CodeGenerator<'a> {
+    fn new(symbol_table: &'a SymbolTable, inital_offset: u32) -> Self {
+        Self {
+            inital_offset,
+            current_offset: inital_offset,
+            instructions: Vec::new(),
+            symbol_table,
+            max_scope: 0,
+            current_scope: 0,
+            labels: HashMap::new(),
+            unlinked_references: Vec::new(),
+            _phantom: PhantomData,
+        }
+    }
+
     fn emit_init(&mut self) {
         self.emit(Instruction::Imm(
             SP,

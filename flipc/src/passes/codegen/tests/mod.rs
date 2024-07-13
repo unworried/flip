@@ -1,7 +1,3 @@
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::marker::PhantomData;
-
 use flipvm::op::{Instruction, Literal12Bit, Literal7Bit, Nibble, StackOp, TestOp};
 use flipvm::Register::*;
 
@@ -15,21 +11,6 @@ use crate::passes::Pass;
 use super::CodeGenerator;
 
 mod expression;
-
-impl<'a> Default for CodeGenerator<'a> {
-    fn default() -> Self {
-        Self {
-            inital_offset: 0,
-            current_offset: 0,
-            instructions: Vec::new(),
-            symbol_table: RefCell::new(Default::default()),
-            scope_idx: 0,
-            labels: HashMap::new(),
-            unlinked_references: Vec::new(),
-            _phantom: PhantomData::<&'a ()>,
-        }
-    }
-}
 
 #[test]
 fn simple_program() {
@@ -50,10 +31,10 @@ main() {
 
     let root = parser.parse();
 
-    let (st, mut ft) = SymbolTableBuilder::run((&root, diagnostics.clone()));
-    let st = NameResolver::run((&root, st, &mut ft, diagnostics.clone()));
+    let (mut st, mut ft) = SymbolTableBuilder::run((&root, diagnostics.clone()));
+    NameResolver::run((&root, &mut st, &mut ft, diagnostics.clone()));
 
-    let actual = CodeGenerator::run((&root, st, 0x0));
+    let actual = CodeGenerator::run((&root, &st, 0x0));
 
     let expected = vec![
         Instruction::Imm(SP, Literal12Bit { value: 1023 }),

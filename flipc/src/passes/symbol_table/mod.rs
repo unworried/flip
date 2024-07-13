@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
-use crate::ast::Pattern;
+use crate::ast::{Literal, LiteralKind, Pattern};
 use crate::span::Span;
+use crate::Ast;
 
 mod builder;
 
@@ -11,10 +12,28 @@ pub type FunctionTable = HashMap<Pattern, FunctionInfo>;
 
 #[derive(Debug)]
 pub enum Type {
+    Unresolved,
     Int,
     Char,
     String,
     Bool,
+}
+
+impl From<&Ast> for Type {
+    fn from(value: &Ast) -> Self {
+        match value {
+            Ast::Literal(Literal { kind, .. }) => match kind {
+                LiteralKind::Int(_) => Type::Int,
+                LiteralKind::Char(_) => Type::Char,
+                LiteralKind::String(_) => Type::String,
+            },
+            //Ast::Variable(_) => {}
+            //Ast::Call(_) => {}
+            //Ast::Binary(_) => {}
+            //Ast::Unary(_) => {}
+            _ => unreachable!("{:#?}", value),
+        }
+    }
 }
 
 #[derive(Debug)]
