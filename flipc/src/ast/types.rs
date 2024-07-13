@@ -4,7 +4,7 @@ use crate::Ast;
 
 use super::{Literal, LiteralKind};
 
-#[derive(Debug, PartialEq, Default)]
+#[derive(Debug, PartialEq, Default, Clone)]
 pub enum Type {
     #[default]
     Unresolved,

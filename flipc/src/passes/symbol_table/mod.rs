@@ -28,7 +28,7 @@ pub enum DefinitionType {
 
 #[derive(Debug, Default)]
 pub struct FunctionInfo {
-    pub return_type: Type,
+    pub ty: Type,
     pub uses: usize,
     pub local_idx: usize,
     span: Span,

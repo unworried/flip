@@ -124,7 +124,7 @@ impl Visitor for SymbolTableBuilder<'_> {
             self.functions.insert(
                 func.pattern.clone(),
                 FunctionInfo {
-                    return_type: Type::Unresolved,
+                    ty: func.return_type.clone(), // TODO: Fix hack
                     uses: 0,
                     local_idx,
                     span: func.span,

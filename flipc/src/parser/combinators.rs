@@ -29,7 +29,7 @@ pub fn parse_program(parser: &mut Parser) -> Program {
 pub fn parse_function(parser: &mut Parser) -> Option<Function> {
     let (mut token, mut span) = parser.consume();
 
-    let ty: Type = match token {
+    let return_type: Type = match token {
         Token::Ident(ref ty) => ty.clone().into(),
         _ => {
             parser
@@ -40,7 +40,7 @@ pub fn parse_function(parser: &mut Parser) -> Option<Function> {
         }
     };
 
-    if ty == Type::Error {
+    if return_type == Type::Error {
         parser.diagnostics.borrow_mut().expected_type(&token, span);
     } else {
         (token, span) = parser.consume(); // TODO: Change this?? currently in place to fix errors
@@ -67,6 +67,7 @@ pub fn parse_function(parser: &mut Parser) -> Option<Function> {
             parser.optional(Token::SemiColon);
 
             Some(Function {
+                return_type,
                 pattern,
                 parameters,
                 body,

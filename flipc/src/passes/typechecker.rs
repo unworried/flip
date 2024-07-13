@@ -92,6 +92,7 @@ impl Visitor for TypeChecker<'_> {
             .lookup_symbol(&def.pattern, self.current_scope)
         {
             let assigned_ty = def.value.deref().into();
+
             if symbol.ty != assigned_ty {
                 self.diagnostics
                     .borrow_mut()
@@ -102,7 +103,5 @@ impl Visitor for TypeChecker<'_> {
 
     fn visit_variable(&mut self, var: &Variable) {}
 
-    fn visit_call(&mut self, call: &Call) {
-
-    }
+    fn visit_call(&mut self, call: &Call) {}
 }

@@ -18,6 +18,7 @@ pub struct Program {
 
 #[derive(Debug, Clone)]
 pub struct Function {
+    pub return_type: Type,
     pub pattern: Pattern,
     pub parameters: Vec<Pattern>,
     pub body: Ast,
