@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::marker::PhantomData;
 
 use crate::ast::visitor::Visitor;
 use crate::ast::Program;
@@ -28,8 +27,6 @@ pub struct CodeGenerator<'a> {
     // TODO: Look into alternatives that arent O(n)
     //unlinked_references: HashMap<String, Vec<(usize, Register)>>, // O(1)
     unlinked_references: Vec<(usize, FutureType, Register, String)>,
-
-    _phantom: PhantomData<&'a ()>,
 }
 
 #[repr(u8)]
@@ -69,7 +66,6 @@ impl<'a> CodeGenerator<'a> {
             current_scope: 0,
             labels: HashMap::new(),
             unlinked_references: Vec::new(),
-            _phantom: PhantomData,
         }
     }
 

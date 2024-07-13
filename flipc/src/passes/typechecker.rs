@@ -1,5 +1,5 @@
 use crate::ast::visitor::{Visitor, Walkable};
-use crate::ast::{Assignment, Call, Definition, Function, If, Program, Variable, While};
+use crate::ast::{Assignment, Call, Function, If, Program, Variable, While};
 use crate::diagnostics::DiagnosticsCell;
 use crate::Pass;
 
@@ -83,8 +83,6 @@ impl Visitor for TypeChecker<'_> {
         while_expr.then.walk(self);
         self.exit_scope();
     }
-
-    fn visit_definition(&mut self, def: &Definition) {}
 
     fn visit_assignment(&mut self, def: &Assignment) {}
 
