@@ -1,12 +1,14 @@
 use std::collections::HashMap;
 use std::marker::PhantomData;
+use std::ops::Deref;
 
-use super::{DefinitionType, FunctionInfo, FunctionTable, SymbolInfo, SymbolTable};
+use super::{DefinitionType, FunctionInfo, FunctionTable, SymbolInfo, SymbolTable, Type};
 use crate::ast::visitor::{Visitor, Walkable};
-use crate::ast::{Definition, Function, If, Pattern, Program, While};
+use crate::ast::{Definition, Function, If, Literal, LiteralKind, Pattern, Program, While};
 use crate::diagnostics::DiagnosticsCell;
 use crate::passes::pass::Pass;
 use crate::span::Span;
+use crate::Ast;
 
 pub struct SymbolTableBuilder<'a> {
     symbol_table: SymbolTable,
@@ -50,7 +52,13 @@ impl SymbolTableBuilder<'_> {
             .unwrap();
     }
 
-    fn define_variable(&mut self, pattern: &Pattern, span: &Span, def_type: DefinitionType) {
+    fn define_variable(
+        &mut self,
+        pattern: &Pattern,
+        span: &Span,
+        ty: Type,
+        def_type: DefinitionType,
+    ) {
         if self.symbol_table.is_shadowing(pattern, self.current_scope) {
             self.diagnostics
                 .borrow_mut()
@@ -69,7 +77,7 @@ impl SymbolTableBuilder<'_> {
                 pattern.clone(),
                 self.current_scope,
                 SymbolInfo {
-                    ty: None,
+                    ty,
                     def_type,
                     uses: 0,
                     symbol_idx,
@@ -124,9 +132,14 @@ impl Visitor for SymbolTableBuilder<'_> {
             );
         }
         self.enter_scope();
-        func.parameters
-            .iter()
-            .for_each(|pat| self.define_variable(pat, &pat.span, DefinitionType::Argument));
+        func.parameters.iter().for_each(|pat| {
+            self.define_variable(
+                pat,
+                &pat.span,
+                Type::String,
+                /* FIXME TEMP */ DefinitionType::Argument,
+            )
+        });
         func.body.walk(self);
         self.exit_scope();
     }
@@ -146,7 +159,20 @@ impl Visitor for SymbolTableBuilder<'_> {
     }
 
     fn visit_definition(&mut self, def: &Definition) {
-        self.define_variable(&def.pattern, &def.span, DefinitionType::Local);
+        let ty = match def.value.deref() {
+            Ast::Literal(Literal { kind, .. }) => match kind {
+                LiteralKind::Int(_) => Type::Int,
+                LiteralKind::Char(_) => Type::Char,
+                LiteralKind::String(_) => Type::String,
+            },
+            //Ast::Variable(_) => {}
+            //Ast::Call(_) => {}
+            //Ast::Binary(_) => {}
+            //Ast::Unary(_) => {}
+            _ => unreachable!("{:#?}", def.value),
+        };
+
+        self.define_variable(&def.pattern, &def.span, ty, DefinitionType::Local);
         def.pattern.name.walk(self);
         def.value.walk(self);
     }

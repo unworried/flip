@@ -17,10 +17,9 @@ pub enum Type {
     Bool,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct SymbolInfo {
-    // TODO: Implement Types
-    pub ty: Option<Type>,
+    pub ty: Type,
     pub def_type: DefinitionType,
     pub uses: usize,
     pub symbol_idx: usize,

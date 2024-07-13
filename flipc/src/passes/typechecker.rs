@@ -1,18 +1,13 @@
-use std::cell::RefCell;
-use std::ops::Deref;
-
 use crate::ast::visitor::{Visitor, Walkable};
-use crate::ast::{
-    Assignment, Call, Definition, Function, If, Literal, LiteralKind, Program, Variable, While,
-};
+use crate::ast::{Assignment, Call, Definition, Function, If, Program, Variable, While};
 use crate::diagnostics::DiagnosticsCell;
-use crate::{Ast, Pass};
+use crate::Pass;
 
-use super::symbol_table::{FunctionTable, Type};
+use super::symbol_table::FunctionTable;
 use super::SymbolTable;
 
 pub struct TypeChecker<'a> {
-    symbol_table: &'a mut SymbolTable,
+    symbol_table: &'a SymbolTable,
     max_scope: usize,
     current_scope: usize,
 
@@ -39,7 +34,7 @@ impl<'a> Pass for TypeChecker<'a> {
 
 impl<'a> TypeChecker<'a> {
     pub fn new(
-        symbol_table: &'a mut SymbolTable,
+        symbol_table: &'a SymbolTable,
         functions: &'a mut FunctionTable,
         diagnostics: DiagnosticsCell,
     ) -> Self {
@@ -89,25 +84,7 @@ impl Visitor for TypeChecker<'_> {
         self.exit_scope();
     }
 
-    fn visit_definition(&mut self, def: &Definition) {
-        let def_type = match def.value.deref() {
-            Ast::Literal(Literal { kind, .. }) => match kind {
-                LiteralKind::Int(_) => Type::Int,
-                LiteralKind::Char(_) => Type::Char,
-                LiteralKind::String(_) => Type::String,
-            },
-            //Ast::Variable(_) => {}
-            //Ast::Call(_) => {}
-            //Ast::Binary(_) => {}
-            //Ast::Unary(_) => {}
-            _ => unreachable!("{:#?}", def.value),
-        };
-
-        self.symbol_table
-            .update_symbol(&def.pattern, self.current_scope, |def| {
-                def.ty = Some(def_type);
-            });
-    }
+    fn visit_definition(&mut self, def: &Definition) {}
 
     fn visit_assignment(&mut self, def: &Assignment) {}
 
