@@ -8,6 +8,7 @@ use core::fmt::{self, Display};
 use self::display::DiagnosticsDisplay;
 use crate::error::{CompilerError, Result};
 use crate::lexer::Token;
+use crate::passes::symbol_table::Type;
 use crate::source::Source;
 use crate::span::Span;
 
@@ -112,7 +113,7 @@ impl DiagnosticBag {
 
     pub fn expected_expression(&mut self, expected: &Token, span: &Span) {
         self.error(
-            format!("expected expression, found: `{}`", expected),
+            format!("expected expression, found `{}`", expected),
             span.clone(),
         );
     }
@@ -177,5 +178,12 @@ impl DiagnosticBag {
 
     pub fn main_not_found(&mut self) {
         self.program_error("`main` function not found".to_owned());
+    }
+
+    pub fn mismatched_type(&mut self, expected: &Type, found: &Type, span: &Span) {
+        self.error(
+            format!("type mismatch: expected `{}`, found `{}`", expected, found),
+            span.clone(),
+        );
     }
 }
