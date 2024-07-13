@@ -14,8 +14,6 @@
 //! - undeclared_assignment: The symbol has not been declared before it was assigned.
 //! - undeclared_reference: The symbol has not been declared before it was referenced.
 //! - reference_before_assignment: The symbol was referenced before it was declared.
-use std::cell::RefCell;
-
 use super::symbol_table::{FunctionTable, SymbolTable};
 use super::Pass;
 use crate::ast::visitor::{Visitor, Walkable};
@@ -27,29 +25,31 @@ pub trait ResolveVisitor {
 }
 
 pub struct NameResolver<'a> {
-    symbol_table: RefCell<SymbolTable>,
-    functions: &'a mut FunctionTable,
+    symbol_table: &'a mut SymbolTable,
+    max_scope: usize,
+    current_scope: usize,
 
+    functions: &'a mut FunctionTable,
     diagnostics: DiagnosticsCell,
-    scope_idx: usize,
 }
 
 impl<'a> NameResolver<'a> {
     pub fn new(
-        symbol_table: SymbolTable,
+        symbol_table: &'a mut SymbolTable,
         functions: &'a mut FunctionTable,
         diagnostics: DiagnosticsCell,
     ) -> Self {
         Self {
-            symbol_table: RefCell::new(symbol_table),
+            symbol_table,
+            max_scope: 0,
+            current_scope: 0,
             functions,
             diagnostics,
-            scope_idx: 0,
         }
     }
 
     fn check_usage(&self) {
-        for (pat, def) in self.symbol_table.borrow().symbols.iter() {
+        for (pat, def) in self.symbol_table.scopes[self.current_scope].symbols.iter() {
             if def.uses == 0 {
                 self.diagnostics
                     .borrow_mut()
@@ -68,40 +68,32 @@ impl<'a> NameResolver<'a> {
         }
     }
 
-    fn enter_scope(&mut self) -> usize {
-        let previous_symbol_table = std::mem::take(&mut self.symbol_table);
-        self.symbol_table.swap(
-            previous_symbol_table
-                .borrow()
-                .lookup_scope(self.scope_idx)
-                .unwrap(),
-        );
-        self.symbol_table.borrow_mut().parent = Some(Box::new(previous_symbol_table.into_inner()));
-
-        //self.scope_idx
-        core::mem::replace(&mut self.scope_idx, 0)
+    fn enter_scope(&mut self) {
+        self.max_scope += 1;
+        self.current_scope = self.max_scope;
     }
 
-    fn exit_scope(&mut self, index: usize) {
+    fn exit_scope(&mut self) {
         self.check_usage();
 
-        let previous_symbol_table = *self.symbol_table.borrow_mut().parent.take().unwrap();
-        let new_scope = previous_symbol_table.lookup_scope(index).unwrap();
-        self.symbol_table.swap(new_scope);
-        self.symbol_table = RefCell::new(previous_symbol_table);
-        self.scope_idx = index + 1;
+        self.current_scope = self
+            .symbol_table
+            .lookup_scope(self.current_scope)
+            .unwrap()
+            .parent
+            .unwrap();
     }
 }
 
 impl<'a> Pass for NameResolver<'a> {
     type Input = (
         &'a Program,
-        SymbolTable,
+        &'a mut SymbolTable,
         &'a mut FunctionTable,
         DiagnosticsCell,
     );
 
-    type Output = SymbolTable;
+    type Output = ();
 
     fn run((ast, st, funcs, diagnostics): Self::Input) -> Self::Output {
         let mut resolver = NameResolver::new(st, funcs, diagnostics);
@@ -110,37 +102,35 @@ impl<'a> Pass for NameResolver<'a> {
         resolver.check_functions();
 
         resolver.check_usage(); // Fix check at root scope. Remove once functions are added.
-        resolver.symbol_table.into_inner() // Should this really be returned like this?
     }
 }
 
 // FIXME: Here + Builder, move scope enter/exit to sequence visitor, does not need to be duplicated
 impl Visitor for NameResolver<'_> {
     fn visit_function(&mut self, func: &Function) {
-        let scope_idx = self.enter_scope();
+        self.enter_scope();
         func.body.walk(self);
-        self.exit_scope(scope_idx);
+        self.exit_scope();
     }
 
     fn visit_if(&mut self, if_expr: &If) {
-        let scope_idx = self.enter_scope();
+        self.enter_scope();
         if_expr.condition.walk(self);
         if_expr.then.walk(self);
-        self.exit_scope(scope_idx);
+        self.exit_scope();
     }
 
     fn visit_while(&mut self, while_expr: &While) {
-        let scope_idx = self.enter_scope();
+        self.enter_scope();
         while_expr.condition.walk(self);
         while_expr.then.walk(self);
-        self.exit_scope(scope_idx);
+        self.exit_scope();
     }
 
     fn visit_assignment(&mut self, def: &Assignment) {
         if self
             .symbol_table
-            .borrow()
-            .lookup_symbol(&def.pattern)
+            .lookup_symbol(&def.pattern, self.current_scope)
             .is_none()
         {
             self.diagnostics
@@ -152,13 +142,17 @@ impl Visitor for NameResolver<'_> {
     }
 
     fn visit_variable(&mut self, var: &Variable) {
-        if self.symbol_table.borrow().lookup_symbol(var).is_none() {
+        if self
+            .symbol_table
+            .lookup_symbol(var, self.current_scope)
+            .is_none()
+        {
             self.diagnostics
                 .borrow_mut()
                 .undefined_reference(&var.name, &var.span);
         } else {
-            let mut st = self.symbol_table.borrow_mut();
-            st.update_symbol(var, |def| def.uses += 1);
+            self.symbol_table
+                .update_symbol(var, self.current_scope, |def| def.uses += 1);
         }
     }
 

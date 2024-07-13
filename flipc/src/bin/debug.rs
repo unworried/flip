@@ -26,7 +26,8 @@ fn main() {
     //let line = r#"main() { if 1 <= 1 { if 1 <= 1 { let x = 1; }; }; }"#;
     let line = r#"main() {
         let x = 'a';
-        return fib(10);
+        let y = 10;
+        return fib(y);
     }
     
     fib(n) {

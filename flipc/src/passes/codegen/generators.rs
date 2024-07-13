@@ -19,11 +19,11 @@ impl Visitor for CodeGenerator<'_> {
         let local_off = format!("__internal_{}_local_offset", func.pattern.name);
         self.addimm_future(SP, local_off.clone());
 
-        let scope_idx = self.enter_scope();
+        self.enter_scope();
 
         func.body.walk(self);
-        let local_count = self.symbol_table.borrow().local_count();
-        self.exit_scope(scope_idx);
+        let local_count = self.symbol_table.local_count();
+        self.exit_scope();
 
         self.emit_function_exit();
         self.define_label_offset(local_off, local_count as u32 * 2);
@@ -67,9 +67,9 @@ impl Visitor for CodeGenerator<'_> {
 
         // if cond == true
         self.define_label(true_label);
-        let scope_idx = self.enter_scope();
+        self.enter_scope();
         if_expr.then.walk(self);
-        self.exit_scope(scope_idx);
+        self.exit_scope();
 
         self.imm_future(PC, out_label.clone());
         self.define_label(out_label);
@@ -89,9 +89,9 @@ impl Visitor for CodeGenerator<'_> {
         self.imm_future(PC, out_label.clone());
 
         // Resolution
-        let scope_idx = self.enter_scope();
+        self.enter_scope();
         while_expr.then.walk(self);
-        self.exit_scope(scope_idx);
+        self.exit_scope();
         self.imm_future(PC, cond_label);
         self.define_label(out_label);
     }
@@ -101,8 +101,7 @@ impl Visitor for CodeGenerator<'_> {
 
         let local_idx = self
             .symbol_table
-            .borrow()
-            .lookup_symbol(&def.pattern)
+            .lookup_symbol(&def.pattern, self.current_scope)
             .unwrap()
             .symbol_idx;
         let addr = local_idx as u8 * 2;
@@ -122,8 +121,7 @@ impl Visitor for CodeGenerator<'_> {
 
         let local_idx = self
             .symbol_table
-            .borrow()
-            .lookup_symbol(&def.pattern)
+            .lookup_symbol(&def.pattern, self.current_scope)
             .unwrap()
             .symbol_idx;
         let addr = local_idx as u8 * 2;
@@ -140,8 +138,10 @@ impl Visitor for CodeGenerator<'_> {
 
     fn visit_variable(&mut self, var: &Variable) {
         let (var_idx, def_type) = {
-            let symbol_table = self.symbol_table.borrow();
-            let var_info = symbol_table.lookup_symbol(var).unwrap();
+            let var_info = self
+                .symbol_table
+                .lookup_symbol(var, self.current_scope)
+                .unwrap();
             (var_info.symbol_idx, var_info.def_type.clone())
         };
 

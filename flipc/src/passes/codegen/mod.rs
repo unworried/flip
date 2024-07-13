@@ -1,4 +1,3 @@
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
@@ -21,8 +20,9 @@ pub struct CodeGenerator<'a> {
 
     instructions: Vec<Instruction>,
 
-    symbol_table: RefCell<SymbolTable>,
-    scope_idx: usize,
+    symbol_table: &'a SymbolTable,
+    max_scope: usize,
+    current_scope: usize,
 
     labels: HashMap<String, u32>,
     // TODO: Look into alternatives that arent O(n)
@@ -39,7 +39,7 @@ enum FutureType {
 }
 
 impl<'a> Pass for CodeGenerator<'a> {
-    type Input = (&'a Program, SymbolTable, u32);
+    type Input = (&'a Program, &'a SymbolTable, u32);
 
     type Output = Vec<Instruction>;
 
@@ -48,8 +48,9 @@ impl<'a> Pass for CodeGenerator<'a> {
             inital_offset,
             current_offset: inital_offset,
             instructions: Vec::new(),
-            symbol_table: RefCell::new(symbol_table),
-            scope_idx: 0,
+            symbol_table,
+            max_scope: 0,
+            current_scope: 0,
             labels: HashMap::new(),
             unlinked_references: Vec::new(),
             _phantom: PhantomData,
@@ -193,25 +194,17 @@ impl CodeGenerator<'_> {
         });
     }
 
-    fn enter_scope(&mut self) -> usize {
-        let previous_symbol_table = std::mem::take(&mut self.symbol_table);
-        self.symbol_table.swap(
-            previous_symbol_table
-                .borrow()
-                .lookup_scope(self.scope_idx)
-                .unwrap(),
-        );
-        self.symbol_table.borrow_mut().parent = Some(Box::new(previous_symbol_table.into_inner()));
-
-        //self.scope_idx
-        core::mem::replace(&mut self.scope_idx, 0)
+    fn enter_scope(&mut self) {
+        self.max_scope += 1;
+        self.current_scope = self.max_scope;
     }
 
-    fn exit_scope(&mut self, index: usize) {
-        let previous_symbol_table = *self.symbol_table.borrow_mut().parent.take().unwrap();
-        let new_scope = previous_symbol_table.lookup_scope(index).unwrap();
-        self.symbol_table.swap(new_scope);
-        self.symbol_table = RefCell::new(previous_symbol_table);
-        self.scope_idx = index + 1;
+    fn exit_scope(&mut self) {
+        self.current_scope = self
+            .symbol_table
+            .lookup_scope(self.current_scope)
+            .unwrap()
+            .parent
+            .unwrap();
     }
 }

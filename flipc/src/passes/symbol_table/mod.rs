@@ -1,4 +1,3 @@
-use std::cell::RefCell;
 use std::collections::HashMap;
 
 use crate::ast::Pattern;
@@ -43,43 +42,61 @@ pub struct FunctionInfo {
     span: Span,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct SymbolTable {
-    pub parent: Option<Box<SymbolTable>>,
+    pub scopes: Vec<Scope>,
+}
+
+#[derive(Debug, Default)]
+pub struct Scope {
+    pub parent: Option<usize>,
     pub symbols: HashMap<Pattern, SymbolInfo>,
-    pub scope_idx: usize,
-    scopes: Vec<RefCell<SymbolTable>>,
+}
+
+impl Scope {
+    pub fn new(parent: usize) -> Self {
+        Self {
+            parent: Some(parent),
+            symbols: HashMap::new(),
+        }
+    }
 }
 
 impl SymbolTable {
-    pub fn is_shadowing(&self, ident: &Pattern) -> bool {
-        if self.symbols.contains_key(ident) {
+    pub fn new() -> Self {
+        Self {
+            scopes: vec![Scope::default()],
+        }
+    }
+
+    pub fn is_shadowing(&self, ident: &Pattern, scope_idx: usize) -> bool {
+        if self.scopes[scope_idx].symbols.contains_key(ident) {
             true
-        } else if let Some(parent) = self.parent.as_ref() {
-            parent.is_shadowing(ident)
+        } else if let Some(parent) = self.scopes[scope_idx].parent {
+            self.is_shadowing(ident, parent)
         } else {
             false
         }
     }
 
-    pub fn lookup_symbol(&self, ident: &Pattern) -> Option<&SymbolInfo> {
-        if let Some(var) = self.symbols.get(ident) {
+    pub fn lookup_symbol(&self, ident: &Pattern, scope_idx: usize) -> Option<&SymbolInfo> {
+        if let Some(var) = self.scopes[scope_idx].symbols.get(ident) {
             Some(var)
-        } else if let Some(parent) = self.parent.as_ref() {
-            parent.lookup_symbol(ident)
+        } else if let Some(parent) = self.scopes[scope_idx].parent {
+            self.lookup_symbol(ident, parent)
         } else {
             None
         }
     }
 
-    pub fn update_symbol<F>(&mut self, ident: &Pattern, f: F)
+    pub fn update_symbol<F>(&mut self, ident: &Pattern, scope_idx: usize, f: F)
     where
         F: FnOnce(&mut SymbolInfo),
     {
-        if let Some(var) = self.symbols.get_mut(ident) {
+        if let Some(var) = self.scopes[scope_idx].symbols.get_mut(ident) {
             f(var);
-        } else if let Some(parent) = self.parent.as_mut() {
-            parent.update_symbol(ident, f);
+        } else if let Some(parent) = self.scopes[scope_idx].parent {
+            self.update_symbol(ident, parent, f);
         } else {
             unreachable!("Symbol not found in symbol table");
         }
@@ -87,31 +104,26 @@ impl SymbolTable {
 
     pub fn local_count(&self) -> usize {
         let mut count = 0;
-        count += self
-            .symbols
-            .iter()
-            .filter(|(_, v)| v.def_type == DefinitionType::Local)
-            .count();
-
         for scope in self.scopes.iter() {
-            count += scope.borrow().local_count();
+            count += scope
+                .symbols
+                .iter()
+                .filter(|(_, v)| v.def_type == DefinitionType::Local)
+                .count();
         }
 
         count
     }
 
-    pub fn lookup_scope(&self, idx: usize) -> Option<&RefCell<SymbolTable>> {
+    pub fn lookup_scope(&self, idx: usize) -> Option<&Scope> {
         self.scopes.get(idx)
     }
 
-    pub fn insert_scope(&mut self) -> usize {
-        self.scopes.push(Default::default());
-        let idx = self.scope_idx;
-        self.scope_idx += 1;
-        idx
+    pub fn insert_scope(&mut self, parent: usize) {
+        self.scopes.push(Scope::new(parent));
     }
 
-    pub fn insert_symbol(&mut self, ident: Pattern, variable: SymbolInfo) {
-        self.symbols.insert(ident, variable);
+    pub fn insert_symbol(&mut self, ident: Pattern, scope_idx: usize, variable: SymbolInfo) {
+        self.scopes[scope_idx].symbols.insert(ident, variable);
     }
 }
