@@ -61,7 +61,7 @@ impl SymbolTableBuilder<'_> {
         if self.symbol_table.is_shadowing(pattern, self.current_scope) {
             self.diagnostics
                 .borrow_mut()
-                .variable_already_declared(&pattern.name, &pattern.span);
+                .variable_already_declared(&pattern.name, pattern.span);
         } else {
             let symbol_idx = match def_type {
                 DefinitionType::Local => self.symbol_table.scopes[self.current_scope].symbols.len(),
@@ -118,7 +118,7 @@ impl Visitor for SymbolTableBuilder<'_> {
         if self.functions.contains_key(&func.pattern) {
             self.diagnostics
                 .borrow_mut()
-                .function_already_declared(&func.pattern.name, &func.pattern.span);
+                .function_already_declared(&func.pattern.name, func.pattern.span);
         } else {
             let local_idx = self.functions.len();
             self.functions.insert(

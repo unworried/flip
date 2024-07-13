@@ -52,7 +52,7 @@ impl<'a> Parser<'a> {
         if self.current_token.0 == Token::Illegal {
             self.diagnostics
                 .borrow_mut()
-                .illegal_token(&self.current_token.1);
+                .illegal_token(self.current_token.1);
 
             self.step();
         }
@@ -76,7 +76,7 @@ impl<'a> Parser<'a> {
         if token != expected {
             self.diagnostics
                 .borrow_mut()
-                .expected_token(&expected, &token, &span);
+                .expected_token(&expected, &token, span);
 
             return false;
         }
@@ -101,7 +101,7 @@ impl<'a> Parser<'a> {
             self.diagnostics.borrow_mut().expected_token(
                 self.current_token(),
                 &Token::Whitespace,
-                &Span::new(self.current_token.1.end + 1, self.next_token.1.start - 1),
+                Span::new(self.current_token.1.end + 1, self.next_token.1.start - 1),
             );
         }
         self.step();

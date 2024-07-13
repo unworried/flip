@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use crate::ast::visitor::{Visitor, Walkable};
 use crate::ast::{Assignment, Call, Function, If, Program, Variable, While};
 use crate::diagnostics::DiagnosticsCell;
@@ -84,7 +86,19 @@ impl Visitor for TypeChecker<'_> {
         self.exit_scope();
     }
 
-    fn visit_assignment(&mut self, def: &Assignment) {}
+    fn visit_assignment(&mut self, def: &Assignment) {
+        if let Some(symbol) = self
+            .symbol_table
+            .lookup_symbol(&def.pattern, self.current_scope)
+        {
+            let assigned_ty = def.value.deref().into();
+            if symbol.ty != assigned_ty {
+                self.diagnostics
+                    .borrow_mut()
+                    .mismatched_type(&symbol.ty, &assigned_ty, def.span);
+            }
+        }
+    }
 
     fn visit_variable(&mut self, var: &Variable) {}
 

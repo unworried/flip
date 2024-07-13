@@ -100,90 +100,87 @@ impl DiagnosticBag {
         });
     }
 
-    pub fn expected_token(&mut self, expected: &Token, actual: &Token, span: &Span) {
+    pub fn expected_token(&mut self, expected: &Token, actual: &Token, span: Span) {
         self.error(
             format!("expected: '{}', found: `{}`", expected, actual),
-            span.clone(),
+            span,
         );
     }
 
-    pub fn unexpected_token(&mut self, token: &Token, span: &Span) {
-        self.error(format!("unexpected token: `{}`", token), span.clone());
+    pub fn unexpected_token(&mut self, token: &Token, span: Span) {
+        self.error(format!("unexpected token: `{}`", token), span);
     }
 
-    pub fn expected_expression(&mut self, expected: &Token, span: &Span) {
-        self.error(
-            format!("expected expression, found `{}`", expected),
-            span.clone(),
-        );
+    pub fn expected_expression(&mut self, expected: &Token, span: Span) {
+        self.error(format!("expected expression, found `{}`", expected), span);
     }
 
-    pub fn illegal_token(&mut self, span: &Span) {
-        self.error("illegal token".to_owned(), span.clone());
+    pub fn illegal_token(&mut self, span: Span) {
+        self.error("illegal token".to_owned(), span);
     }
 
-    pub fn unknown_statement(&mut self, token: &Token, span: &Span) {
-        self.error(format!("unknown statement `{}`", token), span.clone());
+    pub fn unknown_statement(&mut self, token: &Token, span: Span) {
+        self.error(format!("unknown statement `{}`", token), span);
     }
 
-    pub fn invalid_operator(&mut self, token: &Token, span: &Span) {
-        self.error(format!("invalid operator `{}`", token), span.clone());
+    pub fn invalid_operator(&mut self, token: &Token, span: Span) {
+        self.error(format!("invalid operator `{}`", token), span);
     }
 
-    pub fn unknown_expression(&mut self, token: &Token, span: &Span) {
-        self.error(format!("unknown expression `{}`", token), span.clone());
+    pub fn unknown_expression(&mut self, token: &Token, span: Span) {
+        self.error(format!("unknown expression `{}`", token), span);
     }
 
-    pub fn variable_already_declared(&mut self, pattern: &String, span: &Span) {
+    pub fn variable_already_declared(&mut self, pattern: &String, span: Span) {
         self.error(
             format!("variable: `{}` already exists in scope", pattern),
-            span.clone(),
+            span,
         );
     }
 
-    pub fn function_already_declared(&mut self, pattern: &String, span: &Span) {
+    pub fn function_already_declared(&mut self, pattern: &String, span: Span) {
         // TODO: better message maybe?
-        self.error(
-            format!("function: `{}` already exists", pattern),
-            span.clone(),
-        );
+        self.error(format!("function: `{}` already exists", pattern), span);
     }
 
-    pub fn undeclared_assignment(&mut self, ident: &String, span: &Span) {
-        self.error(format!("undeclared symbol: `{}`", ident), span.clone());
+    pub fn undeclared_assignment(&mut self, ident: &String, span: Span) {
+        self.error(format!("undeclared symbol: `{}`", ident), span);
     }
 
-    pub fn undefined_reference(&mut self, ident: &String, span: &Span) {
-        self.error(format!("symbol: `{}` is undefined", ident), span.clone());
+    pub fn undefined_reference(&mut self, ident: &String, span: Span) {
+        self.error(format!("symbol: `{}` is undefined", ident), span);
     }
 
-    pub fn reference_before_assignment(&mut self, ident: &String, span: &Span) {
+    pub fn reference_before_assignment(&mut self, ident: &String, span: Span) {
         self.error(
             format!("symbol: `{}` referenced before assignment", ident),
-            span.clone(),
+            span,
         );
     }
 
-    pub fn unused_variable(&mut self, ident: &String, span: &Span) {
-        self.warning(format!("unused variable: `{}`", ident), span.clone());
+    pub fn unused_variable(&mut self, ident: &String, span: Span) {
+        self.warning(format!("unused variable: `{}`", ident), span);
     }
 
-    pub fn unused_function(&mut self, ident: &String, span: &Span) {
-        self.warning(format!("unused function: `{}`", ident), span.clone());
+    pub fn unused_function(&mut self, ident: &String, span: Span) {
+        self.warning(format!("unused function: `{}`", ident), span);
     }
 
-    pub fn empty_block(&mut self, span: &Span) {
-        self.warning("empty block found".to_owned(), span.clone());
+    pub fn empty_block(&mut self, span: Span) {
+        self.warning("empty block found".to_owned(), span);
     }
 
     pub fn main_not_found(&mut self) {
         self.program_error("`main` function not found".to_owned());
     }
 
-    pub fn mismatched_type(&mut self, expected: &Type, found: &Type, span: &Span) {
+    pub fn mismatched_type(&mut self, expected: &Type, found: &Type, span: Span) {
         self.error(
-            format!("type mismatch: expected `{}`, found `{}`", expected, found),
-            span.clone(),
+            format!(
+                "mismatched types: expected `{}`, found `{}`",
+                expected, found
+            ),
+            span,
         );
     }
 }

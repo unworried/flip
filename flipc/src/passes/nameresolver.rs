@@ -53,7 +53,7 @@ impl<'a> NameResolver<'a> {
             if def.uses == 0 {
                 self.diagnostics
                     .borrow_mut()
-                    .unused_variable(&pat.name, &pat.span);
+                    .unused_variable(&pat.name, pat.span);
             }
         }
     }
@@ -63,7 +63,7 @@ impl<'a> NameResolver<'a> {
             if func.uses == 0 {
                 self.diagnostics
                     .borrow_mut()
-                    .unused_function(&pat.name, &pat.span);
+                    .unused_function(&pat.name, pat.span);
             }
         }
     }
@@ -135,7 +135,7 @@ impl Visitor for NameResolver<'_> {
         {
             self.diagnostics
                 .borrow_mut()
-                .undeclared_assignment(&def.pattern.name, &def.pattern.span);
+                .undeclared_assignment(&def.pattern.name, def.pattern.span);
         }
 
         def.value.walk(self);
@@ -149,7 +149,7 @@ impl Visitor for NameResolver<'_> {
         {
             self.diagnostics
                 .borrow_mut()
-                .undefined_reference(&var.name, &var.span);
+                .undefined_reference(&var.name, var.span);
         } else {
             self.symbol_table
                 .update_symbol(var, self.current_scope, |def| def.uses += 1);
@@ -160,7 +160,7 @@ impl Visitor for NameResolver<'_> {
         if self.functions.get(&call.pattern).is_none() {
             self.diagnostics
                 .borrow_mut()
-                .undefined_reference(&call.pattern.name, &call.pattern.span);
+                .undefined_reference(&call.pattern.name, call.pattern.span);
         } else {
             let func = self.functions.get_mut(&call.pattern).expect("unreachable");
             func.uses += 1;

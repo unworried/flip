@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt;
 
 use crate::ast::{Literal, LiteralKind, Pattern};
 use crate::span::Span;
@@ -10,13 +11,23 @@ pub use builder::SymbolTableBuilder;
 
 pub type FunctionTable = HashMap<Pattern, FunctionInfo>;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Type {
     Unresolved,
     Int,
     Char,
     String,
-    Bool,
+}
+
+impl fmt::Display for Type {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Type::Unresolved => write!(f, "unresolved"),
+            Type::Int => write!(f, "int"),
+            Type::Char => write!(f, "char"),
+            Type::String => write!(f, "string"),
+        }
+    }
 }
 
 impl From<&Ast> for Type {

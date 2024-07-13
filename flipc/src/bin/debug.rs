@@ -26,6 +26,7 @@ fn main() {
     //let line = r#"main() { if 1 <= 1 { if 1 <= 1 { let x = 1; }; }; }"#;
     let line = r#"main() {
         let x = 'a';
+        x = "a";
         let y = 10;
         return fib(y);
     }
@@ -39,9 +40,9 @@ fn main() {
             return 1;
         };
 
-        let t1 = fib(n - 1);
-        let t2 = fib(n - 2);
-        return t1 + t2;
+        # let t1 = fib(n - 1);
+        # let t2 = fib(n - 2);
+        # return t1 + t2;
     }"#;
     match frontend::check(line) {
         Ok(_) => eprintln!("No errors found"),

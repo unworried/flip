@@ -59,7 +59,7 @@ pub fn parse_function(parser: &mut Parser) -> Option<Function> {
             parser
                 .diagnostics
                 .borrow_mut()
-                .unexpected_token(&token, &span);
+                .unexpected_token(&token, span);
             None
         }
     }
@@ -87,7 +87,7 @@ fn parse_parameters(parser: &mut Parser) -> Vec<Pattern> {
                 parser
                     .diagnostics
                     .borrow_mut()
-                    .unexpected_token(&token, &param_span);
+                    .unexpected_token(&token, param_span);
                 parser.step_until(&Token::RParen);
                 break;
             }
@@ -113,7 +113,7 @@ pub fn parse_sequence(parser: &mut Parser, end_delim: Token) -> Ast {
 
     let span = Span::combine(vec![&start_span, &parser.current_span()]);
     if statements.is_empty() {
-        parser.diagnostics.borrow_mut().empty_block(&span);
+        parser.diagnostics.borrow_mut().empty_block(span);
     }
 
     Ast::sequence(statements, span)
@@ -141,7 +141,7 @@ pub fn parse_statement(parser: &mut Parser) -> Ast {
             parser
                 .diagnostics
                 .borrow_mut()
-                .unknown_statement(&token, &span);
+                .unknown_statement(&token, span);
             Ast::Error
         } // Handle Err
     };
@@ -171,7 +171,7 @@ pub fn parse_let(parser: &mut Parser) -> Ast {
             parser
                 .diagnostics
                 .borrow_mut()
-                .unexpected_token(value, &start_span);
+                .unexpected_token(value, start_span);
             return Ast::Error;
         }
     };
