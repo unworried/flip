@@ -102,5 +102,7 @@ impl Visitor for TypeChecker<'_> {
 
     fn visit_variable(&mut self, var: &Variable) {}
 
-    fn visit_call(&mut self, call: &Call) {}
+    fn visit_call(&mut self, call: &Call) {
+
+    }
 }

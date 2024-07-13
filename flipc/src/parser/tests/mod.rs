@@ -10,11 +10,13 @@ mod validator;
 #[test]
 fn simple_program() {
     let input = r#"
-main() {
+int main() {
     let x = 1;
     if x == 2 {
         x = 3;
     };
+
+    return x;
 }
         "#;
 
@@ -30,6 +32,8 @@ main() {
             ASTNode::Integer(2),
             ASTNode::Variable("x".to_string()),
             ASTNode::Integer(3),
+            ASTNode::Return,
+            ASTNode::Variable("x".to_string()),
         ],
     )]);
 
@@ -40,13 +44,15 @@ main() {
 fn simple_program_newline() {
     let input = r#"
         
-main() {
+int main() {
 
 
     let x = 1;
     if x == 2 {
         x = 3;
     };
+
+    return x;
 }
 
 "#;
@@ -63,6 +69,8 @@ main() {
             ASTNode::Integer(2),
             ASTNode::Variable("x".to_string()),
             ASTNode::Integer(3),
+            ASTNode::Return,
+            ASTNode::Variable("x".to_string()),
         ],
     )]);
 
@@ -72,7 +80,7 @@ main() {
 #[test]
 fn simple_program_multiple_functions() {
     let input = r#"
-main() {
+void main() {
     let x = 5;
     while x >= 3 {
         x = x - 1;
@@ -81,7 +89,7 @@ main() {
     foo();
 }
 
-foo() {
+void foo() {
     let x = 4;
     if x == 4 {
         x = 5;

@@ -4,7 +4,7 @@ use super::validator::{assert_program, ASTNode};
 
 #[test]
 fn function_no_parameters() {
-    let input = r#"main() { x = 4; }"#;
+    let input = r#"void main() { x = 4; }"#;
     let expected = HashMap::from([(
         "main".to_string(),
         vec![ASTNode::Variable("x".to_string()), ASTNode::Integer(4)],
@@ -15,7 +15,7 @@ fn function_no_parameters() {
 
 #[test]
 fn function_no_parameters_newline() {
-    let input = r#"main() { 
+    let input = r#"void main() { 
         x = 4; 
     }"#;
     let expected = HashMap::from([(
@@ -29,7 +29,7 @@ fn function_no_parameters_newline() {
 #[test]
 #[should_panic(expected = "diagnostics returned: [\"expected: '}', found: `EoF`\"]")]
 fn function_no_parameters_missing_rbrace() {
-    let input = r#"main() { x = 4; "#;
+    let input = r#"void main() { x = 4; "#;
     let expected = HashMap::from([(
         "main".to_string(),
         vec![ASTNode::Variable("x".to_string()), ASTNode::Integer(4)],
@@ -41,7 +41,7 @@ fn function_no_parameters_missing_rbrace() {
 #[test]
 #[should_panic(expected = "diagnostics returned: [\"expected: '}', found: `EoF`\"]")]
 fn function_no_parameters_missing_rbrace_newline() {
-    let input = r#"main() { 
+    let input = r#"void main() { 
         x = 4; 
     "#;
     let expected = HashMap::from([(
@@ -54,7 +54,7 @@ fn function_no_parameters_missing_rbrace_newline() {
 
 #[test]
 fn function_parameters() {
-    let input = r#"main(x, y) { x = 4; }"#;
+    let input = r#"void main(x, y) { x = 4; }"#;
     let expected = HashMap::from([(
         "main".to_string(),
         vec![
@@ -70,7 +70,7 @@ fn function_parameters() {
 
 #[test]
 fn function_parameters_newline() {
-    let input = r#"main(x, y) { 
+    let input = r#"void main(x, y) { 
         x = 4; 
     }"#;
     let expected = HashMap::from([(
@@ -88,7 +88,7 @@ fn function_parameters_newline() {
 
 #[test]
 fn function_trailing_semicolon() {
-    let input = r#"main(x, y){x=4;};"#;
+    let input = r#"void main(x, y){x=4;};"#;
     let expected = HashMap::from([(
         "main".to_string(),
         vec![
@@ -105,7 +105,7 @@ fn function_trailing_semicolon() {
 #[test]
 #[should_panic(expected = "diagnostics returned: [\"unexpected token: `;`\"]")]
 fn function_2_trailing_semicolon() {
-    let input = r#"main(x, y){x=4;};;"#;
+    let input = r#"void main(x, y){x=4;};;"#;
     let expected = HashMap::from([(
         "main".to_string(),
         vec![
@@ -122,7 +122,7 @@ fn function_2_trailing_semicolon() {
 #[test]
 #[should_panic(expected = "diagnostics returned: [\"unexpected token: `;`\"]")]
 fn function_2_trailing_semicolon_newline() {
-    let input = r#"main(x, y) { 
+    let input = r#"void main(x, y) { 
         x = 4; 
 };;"#;
     let expected = HashMap::from([(
@@ -140,7 +140,7 @@ fn function_2_trailing_semicolon_newline() {
 
 #[test]
 fn function_trailing_semicolon_newline() {
-    let input = r#"main(x, y) { 
+    let input = r#"void main(x, y) { 
         x = 4; 
     };"#;
     let expected = HashMap::from([(
@@ -159,7 +159,7 @@ fn function_trailing_semicolon_newline() {
 #[test]
 #[should_panic(expected = "diagnostics returned: [\"expected: ',', found: `Ident(y)`\"]")]
 fn function_parameters_missing_comma() {
-    let input = r#"main(x y) { 
+    let input = r#"void main(x y) { 
         x = 4; 
     };"#;
     let expected = HashMap::from([(
@@ -178,7 +178,7 @@ fn function_parameters_missing_comma() {
 
 #[test]
 fn function_call() {
-    let input = r#"main() { x = 4; a(); }"#;
+    let input = r#"void main() { x = 4; a(); }"#;
     let expected = HashMap::from([(
         "main".to_string(),
         vec![
@@ -193,7 +193,7 @@ fn function_call() {
 
 #[test]
 fn function_call_variable_arg() {
-    let input = r#"main() { x = 4; a(x); }"#;
+    let input = r#"void main() { x = 4; a(x); }"#;
     let expected = HashMap::from([(
         "main".to_string(),
         vec![
@@ -209,7 +209,7 @@ fn function_call_variable_arg() {
 
 #[test]
 fn function_call_variable_expr_arg() {
-    let input = r#"main() { x = 4; a(x*4); }"#;
+    let input = r#"void main() { x = 4; a(x*4); }"#;
     let expected = HashMap::from([(
         "main".to_string(),
         vec![
@@ -227,7 +227,7 @@ fn function_call_variable_expr_arg() {
 
 #[test]
 fn function_call_multiple_variable_args() {
-    let input = r#"main() { x = 4; a(x, x); }"#;
+    let input = r#"void main() { x = 4; a(x, x); }"#;
     let expected = HashMap::from([(
         "main".to_string(),
         vec![
@@ -244,7 +244,7 @@ fn function_call_multiple_variable_args() {
 
 #[test]
 fn function_call_multiple_variable_expr_args() {
-    let input = r#"main() { x = 4; a(-(x/2), 4+x); }"#;
+    let input = r#"void main() { x = 4; a(-(x/2), 4+x); }"#;
     let expected = HashMap::from([(
         "main".to_string(),
         vec![
@@ -266,7 +266,7 @@ fn function_call_multiple_variable_expr_args() {
 
 #[test]
 fn function_call_literal_arg() {
-    let input = r#"main() { x = 4; a(210); }"#;
+    let input = r#"void main() { x = 4; a(210); }"#;
     let expected = HashMap::from([(
         "main".to_string(),
         vec![
@@ -282,7 +282,7 @@ fn function_call_literal_arg() {
 
 #[test]
 fn function_call_multiple_literal_args() {
-    let input = r#"main() { x = 4; a("Hello World!", -340); }"#;
+    let input = r#"void main() { x = 4; a("Hello World!", -340); }"#;
     let expected = HashMap::from([(
         "main".to_string(),
         vec![
@@ -300,7 +300,7 @@ fn function_call_multiple_literal_args() {
 
 #[test]
 fn function_call_expr_arg() {
-    let input = r#"main() { x = 4; a((4+2)*5+7); }"#;
+    let input = r#"void main() { x = 4; a((4+2)*5+7); }"#;
     let expected = HashMap::from([(
         "main".to_string(),
         vec![
@@ -322,7 +322,7 @@ fn function_call_expr_arg() {
 
 #[test]
 fn function_call_multiple_expr_args() {
-    let input = r#"main() { x = 4; a(-(5/5) * 4, 77 + 1); }"#;
+    let input = r#"void main() { x = 4; a(-(5/5) * 4, 77 + 1); }"#;
     let expected = HashMap::from([(
         "main".to_string(),
         vec![
@@ -346,7 +346,7 @@ fn function_call_multiple_expr_args() {
 
 #[test]
 fn function_call_multiple_mixed_args() {
-    let input = r#"main() { x = 4; a(-(x/2) * 4/2, "hi there", x - 1*1*1); }"#;
+    let input = r#"void main() { x = 4; a(-(x/2) * 4/2, "hi there", x - 1*1*1); }"#;
     let expected = HashMap::from([(
         "main".to_string(),
         vec![

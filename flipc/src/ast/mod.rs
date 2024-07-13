@@ -6,7 +6,10 @@ use crate::span::Span;
 
 mod display;
 pub mod ptr;
+mod types;
 pub mod visitor;
+
+pub use types::Type;
 
 #[derive(Debug)]
 pub struct Program {

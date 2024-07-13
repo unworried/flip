@@ -1,3 +1,4 @@
+use crate::ast::Type;
 use alloc::borrow::ToOwned;
 use alloc::rc::Rc;
 use alloc::string::String;
@@ -8,7 +9,6 @@ use core::fmt::{self, Display};
 use self::display::DiagnosticsDisplay;
 use crate::error::{CompilerError, Result};
 use crate::lexer::Token;
-use crate::passes::symbol_table::Type;
 use crate::source::Source;
 use crate::span::Span;
 
@@ -182,5 +182,9 @@ impl DiagnosticBag {
             ),
             span,
         );
+    }
+
+    pub fn expected_type(&mut self, expected: &Token, span: Span) {
+        self.error(format!("expected type, found `{}`", expected), span);
     }
 }

@@ -1,6 +1,6 @@
 use std::cmp;
 
-use crate::ast::{Ast, BinOp, Function, Pattern, Program, UnOp};
+use crate::ast::{Ast, BinOp, Function, Pattern, Program, Type, UnOp};
 use crate::lexer::Token;
 use crate::parser::Parser;
 use crate::span::Span;
@@ -27,7 +27,25 @@ pub fn parse_program(parser: &mut Parser) -> Program {
 }
 
 pub fn parse_function(parser: &mut Parser) -> Option<Function> {
-    let (token, span) = parser.consume();
+    let (mut token, mut span) = parser.consume();
+
+    let ty: Type = match token {
+        Token::Ident(ref ty) => ty.clone().into(),
+        _ => {
+            parser
+                .diagnostics
+                .borrow_mut()
+                .unexpected_token(&token, span);
+            return None;
+        }
+    };
+
+    if ty == Type::Error {
+        parser.diagnostics.borrow_mut().expected_type(&token, span);
+    } else {
+        (token, span) = parser.consume(); // TODO: Change this?? currently in place to fix errors
+    }
+
     match token {
         Token::Ident(name) => {
             // Parameters

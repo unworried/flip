@@ -1,51 +1,13 @@
 use std::collections::HashMap;
-use std::fmt;
 
-use crate::ast::{Literal, LiteralKind, Pattern};
+use crate::ast::{Pattern, Type};
 use crate::span::Span;
-use crate::Ast;
 
 mod builder;
 
 pub use builder::SymbolTableBuilder;
 
 pub type FunctionTable = HashMap<Pattern, FunctionInfo>;
-
-#[derive(Debug, PartialEq)]
-pub enum Type {
-    Unresolved,
-    Int,
-    Char,
-    String,
-}
-
-impl fmt::Display for Type {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Type::Unresolved => write!(f, "unresolved"),
-            Type::Int => write!(f, "int"),
-            Type::Char => write!(f, "char"),
-            Type::String => write!(f, "string"),
-        }
-    }
-}
-
-impl From<&Ast> for Type {
-    fn from(value: &Ast) -> Self {
-        match value {
-            Ast::Literal(Literal { kind, .. }) => match kind {
-                LiteralKind::Int(_) => Type::Int,
-                LiteralKind::Char(_) => Type::Char,
-                LiteralKind::String(_) => Type::String,
-            },
-            //Ast::Variable(_) => {}
-            //Ast::Call(_) => {}
-            //Ast::Binary(_) => {}
-            //Ast::Unary(_) => {}
-            _ => unreachable!("{:#?}", value),
-        }
-    }
-}
 
 #[derive(Debug)]
 pub struct SymbolInfo {
@@ -66,6 +28,7 @@ pub enum DefinitionType {
 
 #[derive(Debug, Default)]
 pub struct FunctionInfo {
+    pub return_type: Type,
     pub uses: usize,
     pub local_idx: usize,
     span: Span,

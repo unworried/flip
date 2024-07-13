@@ -27,7 +27,7 @@ pub fn check(input: &str) -> Result<(Program, SymbolTable)> {
     let (mut st, mut ft) = SymbolTableBuilder::run((&root, diagnostics.clone()));
     NameResolver::run((&mut root, &mut st, &mut ft, diagnostics.clone()));
     TypeChecker::run((&mut root, &mut st, &mut ft, diagnostics.clone()));
-    //eprintln!("{:#?}", st);
+    eprintln!("{:#?}", st);
 
     eprintln!();
     eprintln!("{}", root);

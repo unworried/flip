@@ -1,9 +1,9 @@
-main() {
+int main() {
     let n = 1;
     return fib(n);
 }
 
-fib(n) {
+int fib(n) {
     if n == 0 {
         return 0;
     };

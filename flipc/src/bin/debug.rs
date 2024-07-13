@@ -24,14 +24,14 @@ fn main() {
     //let line = "while \"TMP\" { \nlet x = \"hello, world!\"; \nlet y = \"hello, world 2!\"; \nlet z = \"hello, world 3!\"; \n };";
 
     //let line = r#"main() { if 1 <= 1 { if 1 <= 1 { let x = 1; }; }; }"#;
-    let line = r#"main() {
+    let line = r#"int main() {
         let x = 'a';
         x = "a";
         let y = 10;
         return fib(y);
     }
     
-    fib(n) {
+    int fib(n) {
         if n == 0 {
             return 0;
         };
@@ -40,9 +40,9 @@ fn main() {
             return 1;
         };
 
-        # let t1 = fib(n - 1);
-        # let t2 = fib(n - 2);
-        # return t1 + t2;
+        let t1 = fib(n - 1);
+        let t2 = fib(n - 2);
+        return t1 + t2;
     }"#;
     match frontend::check(line) {
         Ok(_) => eprintln!("No errors found"),

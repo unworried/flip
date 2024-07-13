@@ -64,6 +64,7 @@ pub enum ASTNode {
     Unary,
     Variable(String),
     Call(String),
+    Return,
 }
 
 pub struct AstValidator {
@@ -118,6 +119,11 @@ impl Visitor for AstValidator {
         self.actual
             .push(ASTNode::Call(call.pattern.name.to_owned()));
         call.arguments.iter().for_each(|arg| arg.walk(self));
+    }
+
+    fn visit_return(&mut self, ret: &Ast) {
+        self.actual.push(ASTNode::Return);
+        ret.walk(self);
     }
 
     fn visit_binary(&mut self, bin: &Binary) {
