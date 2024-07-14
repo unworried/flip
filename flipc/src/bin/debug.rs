@@ -24,9 +24,8 @@ fn main() {
     //let line = "while \"TMP\" { \nlet x = \"hello, world!\"; \nlet y = \"hello, world 2!\"; \nlet z = \"hello, world 3!\"; \n };";
 
     //let line = r#"main() { if 1 <= 1 { if 1 <= 1 { let x = 1; }; }; }"#;
-    let line = r#"int main() {
+    let line = r#"void main() {
         let x = 'a';
-        x = "a";
         let y = 10;
         return fib(y);
     }
